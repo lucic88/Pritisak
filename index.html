@@ -219,7 +219,7 @@
 <body>
 
 <header>
-  <div class="header-title" style="flex-direction:column;align-items:flex-start;gap:2px;"><div style="display:flex;align-items:center;gap:8px;"><span>🫀</span> Pritisak</div><span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);">v5.2</span></div>
+  <div class="header-title" style="flex-direction:column;align-items:flex-start;gap:2px;"><div style="display:flex;align-items:center;gap:8px;"><span>🫀</span> Pritisak</div><span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);">v5.3</span></div>
   <div style="display:flex;gap:8px;">
     <button class="icon-btn" onclick="triggerImport()" title="Import CSV">⬆️</button>
     <button class="icon-btn" onclick="openExportModal()" title="Export CSV">⬇️</button>
@@ -1103,7 +1103,7 @@ function generateReport() {
     const time = String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0');
     const date = dt.getDate()+'. '+MNS[dt.getMonth()]+' '+dt.getFullYear()+'.';
     const commentRow = e.comment ? `<tr><td colspan="5" style="padding:2px 10px 8px;color:#94a3b8;font-style:italic;font-size:11px;border-bottom:1px solid #f1f5f9;">💬 ${e.comment}</td></tr>` : '';
-    return `<tr><td><div style="font-size:12px;">${date}</div><div style="font-size:11px;color:#94a3b8;margin-top:1px;">${time}</div></td><td style="white-space:nowrap;">${tagLbl}</td><td style="font-weight:600;white-space:nowrap;">${e.sys}/${e.dia}</td><td>${e.pulse||'&mdash;'}</td><td>${statusBadge(e.sys,e.dia)}</td></tr>${commentRow}`;
+    return `<tr><td style="white-space:nowrap;"><div style="font-size:12px;">${date}</div><div style="font-size:11px;color:#94a3b8;margin-top:1px;">${time}</div></td><td style="white-space:nowrap;">${tagLbl}</td><td style="font-weight:600;white-space:nowrap;">${e.sys}/${e.dia}</td><td style="white-space:nowrap;">${e.pulse||'&mdash;'}</td><td>${statusBadge(e.sys,e.dia)}</td></tr>${commentRow}`;
   }).join('');
 
   // Chart data
@@ -1220,11 +1220,10 @@ h1{font-size:24px;font-weight:700;color:#0f172a;margin-bottom:2px;}
 .zlegend{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;}
 .zitem{display:flex;align-items:center;gap:4px;font-size:11px;color:#64748b;}
 .zdot{width:10px;height:10px;border-radius:2px;flex-shrink:0;}
-table{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed;box-sizing:border-box;}
-th{background:#f8fafc;padding:8px 10px;text-align:left;font-size:10px;letter-spacing:0.5px;text-transform:uppercase;color:#94a3b8;font-weight:600;border-bottom:1px solid #e2e8f0;}
-td{padding:8px 10px;border-bottom:1px solid #f8fafc;word-wrap:break-word;overflow-wrap:break-word;vertical-align:top;}
+table{width:100%;border-collapse:collapse;font-size:12px;table-layout:auto;}
+th{background:#f8fafc;padding:7px 9px;text-align:left;font-size:10px;letter-spacing:0.5px;text-transform:uppercase;color:#94a3b8;font-weight:600;border-bottom:1px solid #e2e8f0;white-space:nowrap;}
+td{padding:7px 9px;border-bottom:1px solid #f8fafc;vertical-align:top;}
 tr:last-child td{border-bottom:none;}
-.col-dt{width:24%} .col-tag{width:12%} .col-bp{width:17%} .col-pulse{width:10%} .col-status{width:37%}
 .badge{display:inline-block;padding:2px 6px;border-radius:20px;font-size:10px;font-weight:600;}
 .b-low{background:#dbeafe;color:#2563eb;} .b-ideal{background:#dcfce7;color:#16a34a;}
 .b-normal{background:#d1fae5;color:#059669;} .b-elevated{background:#fef3c7;color:#d97706;}
@@ -1318,7 +1317,7 @@ ${morningEveningChart}
 <!-- TABELA -->
 <div class="card">
   <div class="stitle">Sva mjerenja</div>
-  <table><colgroup><col class="col-dt"><col class="col-tag"><col class="col-bp"><col class="col-pulse"><col class="col-status"></colgroup>
+  <table>
   <thead><tr><th>Datum / Vrij.</th><th>Tag</th><th>Pritisak</th><th>Puls</th><th>Status</th></tr></thead>
   <tbody>${rows}</tbody></table>
 </div>
@@ -1354,7 +1353,7 @@ ${morningEveningChart}
   </div>
 </div>
 
-<div class="footer">Generisano: ${genDate} &nbsp;·&nbsp; Mjerač Pritiska v5.2</div>
+<div class="footer">Generisano: ${genDate} &nbsp;·&nbsp; Mjerač Pritiska v5.3</div>
 </div>
 
 <script>
