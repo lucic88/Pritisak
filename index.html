@@ -219,7 +219,7 @@
 <body>
 
 <header>
-  <div class="header-title" style="flex-direction:column;align-items:flex-start;gap:2px;"><div style="display:flex;align-items:center;gap:8px;"><span>🫀</span> Pritisak</div><span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);">v4.2</span></div>
+  <div class="header-title" style="flex-direction:column;align-items:flex-start;gap:2px;"><div style="display:flex;align-items:center;gap:8px;"><span>🫀</span> Pritisak</div><span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);">v4.3</span></div>
   <div style="display:flex;gap:8px;">
     <button class="icon-btn" onclick="triggerImport()" title="Import CSV">⬆️</button>
     <button class="icon-btn" onclick="openExportModal()" title="Export CSV">⬇️</button>
@@ -1014,6 +1014,8 @@ function generateReport() {
   const avgPulse = avg(pulses);
   const minSys   = Math.min(...data.map(e=>e.sys));
   const maxSys   = Math.max(...data.map(e=>e.sys));
+  const minDia   = Math.min(...data.map(e=>e.dia));
+  const maxDia   = Math.max(...data.map(e=>e.dia));
 
   // Morning vs Evening split
   const morning = data.filter(e=>e.tag==='jutarnje');
@@ -1041,12 +1043,12 @@ function generateReport() {
   const lmSys = avg(lastMonth.map(e=>e.sys));
 
   const trendIcon = (curr, prev) => {
-    if (!curr||!prev) return '<span class="trend-neutral">—</span>';
+    if (!curr||!prev) return '<span class="tneut">&mdash;</span>';
     const diff = curr - prev;
-    if (Math.abs(diff)<2) return `<span class="trend-neutral">→ ${curr}</span>`;
+    if (Math.abs(diff)<2) return `<span class="tneut">→ ${curr}</span>`;
     return diff>0
-      ? `<span class="trend-up">↑ ${curr} (+${diff})</span>`
-      : `<span class="trend-down">↓ ${curr} (${diff})</span>`;
+      ? `<span class="tup">↑ ${curr} (+${diff})</span>`
+      : `<span class="tdown">↓ ${curr} (${diff})</span>`;
   };
 
   const tagName = {sve:'Sva',jutarnje:'Jutarnja',vecernje:'Večernja',ostalo:'Ostala'}[shareTag];
@@ -1058,9 +1060,9 @@ function generateReport() {
   const statusBadge = (s,d) => {
     const st = bpStatus(s,d);
     const cls = {
-      'bp-low':'badge-low','bp-ideal':'badge-ideal','bp-normal':'badge-normal',
-      'bp-elevated':'badge-elevated','bp-high1':'badge-high1','bp-high2':'badge-high2','bp-crisis':'badge-crisis'
-    }[st.cls]||'badge-normal';
+      'bp-low':'b-low','bp-ideal':'b-ideal','bp-normal':'b-normal',
+      'bp-elevated':'b-elevated','bp-high1':'b-high1','bp-high2':'b-high2','bp-crisis':'b-crisis'
+    }[st.cls]||'b-normal';
     return `<span class="badge ${cls}">${st.label}</span>`;
   };
   const MNS = ['jan','feb','mar','apr','maj','jun','jul','aug','sep','okt','nov','dec'];
@@ -1087,57 +1089,57 @@ function generateReport() {
 
   // Morning vs Evening card
   const cmpMorningEvening = (mAvgSys||eAvgSys) ? `
-  <div class="section-title">Jutarnje vs Večernje</div>
-  <div class="compare-grid" style="margin-bottom:16px;">
-    <div class="compare-card morning">
-      <div class="compare-label">🌅 Jutarnje (${morning.length} mj.)</div>
-      <div class="compare-val">${mAvgSys||'—'}/${mAvgDia||'—'}</div>
-      <div class="compare-sub">Prosjek mmHg</div>
+  <div class="stitle">Jutarnje vs Večernje</div>
+  <div class="cgrid">
+    <div class="cc morning">
+      <div class="clabel">🌅 Jutarnje (${morning.length} mj.)</div>
+      <div class="cval">${mAvgSys||'&mdash;'}/${mAvgDia||'&mdash;'}</div>
+      <div class="csub">Prosjek mmHg</div>
     </div>
-    <div class="compare-card evening">
-      <div class="compare-label">🌙 Večernje (${evening.length} mj.)</div>
-      <div class="compare-val">${eAvgSys||'—'}/${eAvgDia||'—'}</div>
-      <div class="compare-sub">Prosjek mmHg</div>
+    <div class="cc evening">
+      <div class="clabel">🌙 Večernje (${evening.length} mj.)</div>
+      <div class="cval">${eAvgSys||'&mdash;'}/${eAvgDia||'&mdash;'}</div>
+      <div class="csub">Prosjek mmHg</div>
     </div>
   </div>` : '';
 
   // Week comparison
   const cmpWeeks = (twSys||lwSys) ? `
-  <div class="section-title">Ova vs Prošla sedmica</div>
-  <div class="compare-grid" style="margin-bottom:16px;">
-    <div class="compare-card thisweek">
-      <div class="compare-label">📅 Ova sedmica (${thisWeek.length} mj.)</div>
-      <div class="compare-val">${trendIcon(twSys, lwSys)}</div>
-      <div class="compare-sub">Prosjek Sistolni mmHg</div>
+  <div class="stitle">Ova vs Prošla sedmica</div>
+  <div class="cgrid">
+    <div class="cc thisweek">
+      <div class="clabel">📅 Ova sedmica (${thisWeek.length} mj.)</div>
+      <div class="cval">${trendIcon(twSys, lwSys)}</div>
+      <div class="csub">Prosjek Sistolni mmHg</div>
     </div>
-    <div class="compare-card lastweek">
-      <div class="compare-label">📅 Prošla sedmica (${lastWeek.length} mj.)</div>
-      <div class="compare-val">${lwSys||'—'}</div>
-      <div class="compare-sub">Prosjek Sistolni mmHg</div>
+    <div class="cc lastweek">
+      <div class="clabel">📅 Prošla sedmica (${lastWeek.length} mj.)</div>
+      <div class="cval">${lwSys||'&mdash;'}</div>
+      <div class="csub">Prosjek Sistolni mmHg</div>
     </div>
   </div>` : '';
 
   // Month comparison
   const cmpMonths = (tmSys||lmSys) ? `
-  <div class="section-title">Ovaj vs Prošli mjesec</div>
-  <div class="compare-grid" style="margin-bottom:16px;">
-    <div class="compare-card thismonth">
-      <div class="compare-label">🗓️ Ovaj mjesec (${thisMonth.length} mj.)</div>
-      <div class="compare-val">${trendIcon(tmSys, lmSys)}</div>
-      <div class="compare-sub">Prosjek Sistolni mmHg</div>
+  <div class="stitle">Ovaj vs Prošli mjesec</div>
+  <div class="cgrid">
+    <div class="cc thismonth">
+      <div class="clabel">🗓️ Ovaj mjesec (${thisMonth.length} mj.)</div>
+      <div class="cval">${trendIcon(tmSys, lmSys)}</div>
+      <div class="csub">Prosjek Sistolni mmHg</div>
     </div>
-    <div class="compare-card lastmonth">
-      <div class="compare-label">🗓️ Prošli mjesec (${lastMonth.length} mj.)</div>
-      <div class="compare-val">${lmSys||'—'}</div>
-      <div class="compare-sub">Prosjek Sistolni mmHg</div>
+    <div class="cc lastmonth">
+      <div class="clabel">🗓️ Prošli mjesec (${lastMonth.length} mj.)</div>
+      <div class="cval">${lmSys||'&mdash;'}</div>
+      <div class="csub">Prosjek Sistolni mmHg</div>
     </div>
   </div>` : '';
 
   // Morning vs Evening chart (only if both have data)
   const morningEveningChart = (morning.length>0 && evening.length>0) ? `
   <div class="card">
-    <div class="section-title">Poređenje jutarnjeg i večernjeg mjerenja</div>
-    <div class="chart-wrap-sm"><canvas id="me-chart"></canvas></div>
+    <div class="stitle">Poređenje jutarnjeg i večernjeg mjerenja</div>
+    <div class="chart-sm"><canvas id="me-chart"></canvas></div>
     <p style="font-size:11px;color:#94a3b8;margin-top:8px;">X osa prikazuje redni broj mjerenja, ne kalendarski datum.</p>
   </div>` : '';
 
@@ -1150,7 +1152,7 @@ function generateReport() {
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Izvjestaj pritiska</title>
+<title>Izvještaj pritiska</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"><\/script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"><\/script>
 <style>
@@ -1159,28 +1161,28 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#f1f5f9;color:#1e293
 .wrap{max-width:920px;margin:0 auto;padding:24px 16px 60px;}
 h1{font-size:24px;font-weight:700;color:#0f172a;margin-bottom:2px;}
 .subtitle{color:#64748b;font-size:13px;margin-bottom:24px;}
-.section-title{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#94a3b8;margin-bottom:10px;font-weight:600;}
+.stitle{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#94a3b8;margin-bottom:10px;font-weight:600;}
 .card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:20px;margin-bottom:16px;}
 .stats3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;}
 .stat{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px;text-align:center;}
-.stat-label{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#94a3b8;margin-bottom:4px;}
-.stat-val{font-size:24px;font-weight:700;color:#0f172a;letter-spacing:-1px;line-height:1;}
-.stat-unit{font-size:10px;color:#94a3b8;margin-top:2px;}
-.compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
-.ccard{border-radius:12px;padding:14px;}
-.ccard.morning{background:#fffbeb;border:1px solid #fde68a;}
-.ccard.evening{background:#f5f3ff;border:1px solid #ddd6fe;}
-.ccard.thisweek{background:#f0fdf4;border:1px solid #bbf7d0;}
-.ccard.lastweek{background:#f8fafc;border:1px solid #e2e8f0;}
-.ccard.thismonth{background:#eff6ff;border:1px solid #bfdbfe;}
-.ccard.lastmonth{background:#f8fafc;border:1px solid #e2e8f0;}
+.slabel{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#94a3b8;margin-bottom:4px;}
+.sval{font-size:24px;font-weight:700;color:#0f172a;letter-spacing:-1px;line-height:1;}
+.sunit{font-size:10px;color:#94a3b8;margin-top:2px;}
+.cgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+.cc{border-radius:12px;padding:14px;}
+.cc.morning{background:#fffbeb;border:1px solid #fde68a;}
+.cc.evening{background:#f5f3ff;border:1px solid #ddd6fe;}
+.cc.thisweek{background:#f0fdf4;border:1px solid #bbf7d0;}
+.cc.lastweek{background:#f8fafc;border:1px solid #e2e8f0;}
+.cc.thismonth{background:#eff6ff;border:1px solid #bfdbfe;}
+.cc.lastmonth{background:#f8fafc;border:1px solid #e2e8f0;}
 .clabel{font-size:10px;font-weight:600;color:#64748b;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;}
 .cval{font-size:20px;font-weight:700;color:#0f172a;letter-spacing:-0.5px;}
 .csub{font-size:11px;color:#94a3b8;margin-top:2px;}
 .tup{color:#ef4444;} .tdown{color:#22c55e;} .tneut{color:#94a3b8;}
-.chart-wrap{position:relative;height:240px;margin-bottom:4px;}
-.chart-sm{position:relative;height:180px;margin-bottom:4px;}
-.zone-legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;}
+.chart-wrap{position:relative;height:250px;margin-bottom:4px;}
+.chart-sm{position:relative;height:190px;margin-bottom:4px;}
+.zlegend{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;}
 .zitem{display:flex;align-items:center;gap:4px;font-size:11px;color:#64748b;}
 .zdot{width:10px;height:10px;border-radius:2px;flex-shrink:0;}
 table{width:100%;border-collapse:collapse;font-size:12px;}
@@ -1192,72 +1194,94 @@ tr:last-child td{border-bottom:none;}
 .b-normal{background:#d1fae5;color:#059669;} .b-elevated{background:#fef3c7;color:#d97706;}
 .b-high1{background:#fee2e2;color:#dc2626;} .b-high2{background:#fecaca;color:#b91c1c;}
 .b-crisis{background:#dc2626;color:#fff;}
+.note{background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:12px;font-size:12px;color:#1e40af;line-height:1.6;margin-top:12px;}
 .footer{text-align:center;color:#94a3b8;font-size:11px;margin-top:24px;}
 @media print{body{background:#fff;}.card{break-inside:avoid;}}
-@media(max-width:600px){.stats3,.compare-grid{grid-template-columns:1fr 1fr;}}
+@media(max-width:600px){.stats3,.cgrid{grid-template-columns:1fr 1fr;}.sval{font-size:18px;}}
 <\/style>
 </head>
 <body>
 <div class="wrap">
-<h1>Izvjestaj krvnog pritiska</h1>
-<div class="subtitle">${tagName} mjerenja &nbsp;·&nbsp; ${fromFmt} - ${toFmt} &nbsp;·&nbsp; Ukupno: <strong>${data.length}</strong> mjerenja</div>
 
-<div class="section-title">Ukupni prosjek</div>
+<h1>🫀 Izvještaj krvnog pritiska</h1>
+<div class="subtitle">${tagName} mjerenja &nbsp;·&nbsp; ${fromFmt} &ndash; ${toFmt} &nbsp;·&nbsp; Ukupno: <strong>${data.length}</strong> mjerenja</div>
+
+<div class="stitle">Ukupni prosjek</div>
 <div class="stats3">
-  <div class="stat"><div class="stat-label">Prosjek Sistolni</div><div class="stat-val">${avgSys}</div><div class="stat-unit">mmHg</div></div>
-  <div class="stat"><div class="stat-label">Prosjek Dijastolni</div><div class="stat-val">${avgDia}</div><div class="stat-unit">mmHg</div></div>
-  <div class="stat"><div class="stat-label">Prosjek Puls</div><div class="stat-val">${avgPulse||'&mdash;'}</div><div class="stat-unit">bpm</div></div>
+  <div class="stat"><div class="slabel">Prosjek Sistolni</div><div class="sval">${avgSys}</div><div class="sunit">mmHg</div></div>
+  <div class="stat"><div class="slabel">Prosjek Dijastolni</div><div class="sval">${avgDia}</div><div class="sunit">mmHg</div></div>
+  <div class="stat"><div class="slabel">Prosjek Puls</div><div class="sval">${avgPulse||'&mdash;'}</div><div class="sunit">bpm</div></div>
 </div>
 <div class="stats3" style="margin-bottom:24px;">
-  <div class="stat"><div class="stat-label">Min Sistolni</div><div class="stat-val" style="color:#22c55e;">${minSys}</div><div class="stat-unit">mmHg</div></div>
-  <div class="stat"><div class="stat-label">Max Sistolni</div><div class="stat-val" style="color:#ef4444;">${maxSys}</div><div class="stat-unit">mmHg</div></div>
-  <div class="stat"><div class="stat-label">Broj mjerenja</div><div class="stat-val">${data.length}</div><div class="stat-unit">ukupno</div></div>
+  <div class="stat"><div class="slabel">Min Sistolni</div><div class="sval" style="color:#22c55e;">${minSys}</div><div class="sunit">mmHg</div></div>
+  <div class="stat"><div class="slabel">Max Sistolni</div><div class="sval" style="color:#ef4444;">${maxSys}</div><div class="sunit">mmHg</div></div>
+  <div class="stat"><div class="slabel">Min / Max Dia</div><div class="sval" style="font-size:16px;">${minDia} / ${maxDia}</div><div class="sunit">mmHg</div></div>
 </div>
 
 ${cmpMorningEvening}
 ${cmpWeeks}
 ${cmpMonths}
 
+<!-- SISTOLNI GRAFIK SA ZONAMA -->
 <div class="card">
-  <div class="section-title">Kretanje pritiska sa zonama</div>
-  <div class="chart-wrap"><canvas id="bp-chart"></canvas></div>
-  <div class="zone-legend">
-    <div class="zitem"><div class="zdot" style="background:#dcfce7;border:1px solid #86efac;"></div> Idealan (&lt;120)</div>
-    <div class="zitem"><div class="zdot" style="background:#fef9c3;border:1px solid #fde047;"></div> Vis. norm. (130-139)</div>
-    <div class="zitem"><div class="zdot" style="background:#fee2e2;border:1px solid #fca5a5;"></div> Visok I (140-159)</div>
-    <div class="zitem"><div class="zdot" style="background:#fecaca;border:1px solid #f87171;"></div> Visok II (160+)</div>
+  <div class="stitle">Kretanje sistolnog pritiska &mdash; sa zonama</div>
+  <div class="chart-wrap"><canvas id="sys-chart"></canvas></div>
+  <div class="zlegend">
+    <div class="zitem"><div class="zdot" style="background:rgba(220,252,231,0.8);border:1px solid #86efac;"></div> Idealan (&lt;120)</div>
+    <div class="zitem"><div class="zdot" style="background:rgba(254,249,195,0.8);border:1px solid #fde047;"></div> Vis. norm. (120&ndash;129)</div>
+    <div class="zitem"><div class="zdot" style="background:rgba(254,243,199,0.8);border:1px solid #fcd34d;"></div> Pred-hiper. (130&ndash;139)</div>
+    <div class="zitem"><div class="zdot" style="background:rgba(254,226,226,0.8);border:1px solid #fca5a5;"></div> Visok I (140&ndash;159)</div>
+    <div class="zitem"><div class="zdot" style="background:rgba(254,202,202,0.8);border:1px solid #f87171;"></div> Visok II (160+)</div>
   </div>
 </div>
 
+<!-- DIJASTOLNI GRAFIK SA ZONAMA -->
 <div class="card">
-  <div class="section-title">Kretanje pulsa</div>
+  <div class="stitle">Kretanje dijastolnog pritiska &mdash; sa zonama</div>
+  <div class="chart-wrap"><canvas id="dia-chart"></canvas></div>
+  <div class="zlegend">
+    <div class="zitem"><div class="zdot" style="background:rgba(220,252,231,0.8);border:1px solid #86efac;"></div> Idealan (&lt;80)</div>
+    <div class="zitem"><div class="zdot" style="background:rgba(254,249,195,0.8);border:1px solid #fde047;"></div> Normalan (80&ndash;84)</div>
+    <div class="zitem"><div class="zdot" style="background:rgba(254,243,199,0.8);border:1px solid #fcd34d;"></div> Pred-hiper. (85&ndash;89)</div>
+    <div class="zitem"><div class="zdot" style="background:rgba(254,226,226,0.8);border:1px solid #fca5a5;"></div> Visok I (90&ndash;99)</div>
+    <div class="zitem"><div class="zdot" style="background:rgba(254,202,202,0.8);border:1px solid #f87171;"></div> Visok II (100+)</div>
+  </div>
+</div>
+
+<!-- PULS GRAFIK -->
+<div class="card">
+  <div class="stitle">Kretanje pulsa</div>
   <div class="chart-sm"><canvas id="pulse-chart"></canvas></div>
 </div>
 
 ${morningEveningChart}
 
+<!-- TABELA -->
 <div class="card">
-  <div class="section-title">Sva mjerenja</div>
+  <div class="stitle">Sva mjerenja</div>
   <table><thead><tr><th>Datum</th><th>Vrij.</th><th>Tag</th><th>Pritisak</th><th>Puls</th><th>Status</th><th>Komentar</th></tr></thead>
   <tbody>${rows}</tbody></table>
 </div>
 
+<!-- REFERENTNE VRIJEDNOSTI -->
 <div class="card">
-  <div class="section-title">Referentne vrijednosti</div>
-  <table><thead><tr><th>Kategorija</th><th>Sistolni</th><th>Dijastolni</th><th>Napomena</th></tr></thead>
-  <tbody>
-    <tr><td><span class="badge b-low">Nizak</span></td><td>&lt;90</td><td>&lt;60</td><td style="color:#64748b;">Hipotenzija</td></tr>
-    <tr><td><span class="badge b-ideal">Idealan</span></td><td>&lt;120</td><td>&lt;80</td><td style="color:#64748b;">Optimalne vrijednosti</td></tr>
-    <tr><td><span class="badge b-normal">Normalan</span></td><td>120-129</td><td>80-84</td><td style="color:#64748b;">Prihvatljivo</td></tr>
-    <tr><td><span class="badge b-elevated">Vis. norm.</span></td><td>130-139</td><td>85-89</td><td style="color:#64748b;">Pred-hipertenzija</td></tr>
-    <tr><td><span class="badge b-high1">Visok I</span></td><td>140-159</td><td>90-99</td><td style="color:#64748b;">Blaga hipertenzija</td></tr>
-    <tr><td><span class="badge b-high2">Visok II</span></td><td>160-179</td><td>100-109</td><td style="color:#64748b;">Umjerena hipertenzija</td></tr>
-    <tr><td><span class="badge b-crisis">Kriza</span></td><td>&gt;180</td><td>&gt;110</td><td style="color:#dc2626;font-weight:600;">Hitna pomoc!</td></tr>
-  </tbody></table>
-  <p style="font-size:11px;color:#94a3b8;margin-top:10px;line-height:1.6;">Napomena: Jedno mjerenje ne znaci dijagnozu. Konsultuj se s ljekarom ako su vrijednosti cesto van opsega.</p>
+  <div class="stitle">Referentne vrijednosti</div>
+  <table>
+    <thead><tr><th>Kategorija</th><th>Sistolni</th><th>Dijastolni</th><th>Napomena</th></tr></thead>
+    <tbody>
+      <tr><td><span class="badge b-low">Nizak</span></td><td>&lt;90</td><td>&lt;60</td><td style="color:#64748b;">Hipotenzija &mdash; problem samo uz simptome</td></tr>
+      <tr><td><span class="badge b-ideal">Idealan</span></td><td>&lt;120</td><td>&lt;80</td><td style="color:#64748b;">Optimalne vrijednosti</td></tr>
+      <tr><td><span class="badge b-normal">Normalan</span></td><td>120&ndash;129</td><td>80&ndash;84</td><td style="color:#64748b;">Prihvatljivo</td></tr>
+      <tr><td><span class="badge b-elevated">Vis. norm.</span></td><td>130&ndash;139</td><td>85&ndash;89</td><td style="color:#64748b;">Pred-hipertenzija</td></tr>
+      <tr><td><span class="badge b-high1">Visok I</span></td><td>140&ndash;159</td><td>90&ndash;99</td><td style="color:#64748b;">Blaga hipertenzija</td></tr>
+      <tr><td><span class="badge b-high2">Visok II</span></td><td>160&ndash;179</td><td>100&ndash;109</td><td style="color:#64748b;">Umjerena hipertenzija</td></tr>
+      <tr><td><span class="badge b-crisis">⚠️ Kriza</span></td><td>&gt;180</td><td>&gt;110</td><td style="color:#dc2626;font-weight:600;">Hitna medicinska pomoć!</td></tr>
+    </tbody>
+  </table>
+  <div class="note">💡 Jedno mjerenje ne znači dijagnozu. Pritisak varira u zavisnosti od stresa, fizičke aktivnosti i doba dana. Ako su vrijednosti često van normalnog opsega &mdash; konsultuj se s ljekarom.</div>
 </div>
 
-<div class="footer">Generisano: ${genDate} &nbsp;·&nbsp; Mjerac Pritiska v4.2</div>
+<div class="footer">Generisano: ${genDate} &nbsp;·&nbsp; Mjerač Pritiska v4.3</div>
 </div>
 
 <script>
@@ -1265,8 +1289,8 @@ try { Chart.register(window['chartjs-plugin-annotation']); } catch(e) {}
 const PL = ${JSON.stringify(chartPayload)};
 const { labels, sysVals, diaVals, pulseVals, morningSys, morningDia, eveningSys, eveningDia } = PL;
 
-const base = (yMin,yMax,extra) => ({
-  responsive:true,maintainAspectRatio:false,
+const mkBase = (yMin, yMax, extra) => ({
+  responsive:true, maintainAspectRatio:false,
   interaction:{mode:'index',intersect:false},
   plugins:{
     legend:{position:'top',labels:{font:{size:11},usePointStyle:true,padding:10}},
@@ -1279,49 +1303,67 @@ const base = (yMin,yMax,extra) => ({
   }
 });
 
-const allBP = [...sysVals,...diaVals].filter(v=>v!=null);
-const bpMin = allBP.length?Math.max(50,Math.min(...allBP)-10):50;
-const bpMax = allBP.length?Math.min(210,Math.max(...allBP)+15):210;
-
-const annotations = {
-  zIdeal:   {type:'box',yMin:0,  yMax:120,backgroundColor:'rgba(220,252,231,0.3)',borderWidth:0},
-  zNormal:  {type:'box',yMin:120,yMax:130,backgroundColor:'rgba(254,249,195,0.3)',borderWidth:0},
-  zElevated:{type:'box',yMin:130,yMax:140,backgroundColor:'rgba(254,243,199,0.4)',borderWidth:0},
-  zHigh1:   {type:'box',yMin:140,yMax:160,backgroundColor:'rgba(254,226,226,0.4)',borderWidth:0},
-  zHigh2:   {type:'box',yMin:160,yMax:300,backgroundColor:'rgba(254,202,202,0.45)',borderWidth:0},
-  l120:{type:'line',yMin:120,yMax:120,borderColor:'rgba(34,197,94,0.5)',borderWidth:1,borderDash:[5,4]},
-  l130:{type:'line',yMin:130,yMax:130,borderColor:'rgba(234,179,8,0.5)',borderWidth:1,borderDash:[5,4]},
-  l140:{type:'line',yMin:140,yMax:140,borderColor:'rgba(239,68,68,0.5)',borderWidth:1,borderDash:[5,4]},
-  l160:{type:'line',yMin:160,yMax:160,borderColor:'rgba(185,28,28,0.5)',borderWidth:1,borderDash:[5,4]},
+// SISTOLNI chart with zones
+const sysMin = Math.max(50, Math.min(...sysVals)-15);
+const sysMax = Math.min(210, Math.max(...sysVals)+15);
+const sysAnnot = {
+  zI: {type:'box',yMin:0,  yMax:120,backgroundColor:'rgba(220,252,231,0.25)',borderWidth:0},
+  zN: {type:'box',yMin:120,yMax:130,backgroundColor:'rgba(254,249,195,0.30)',borderWidth:0},
+  zE: {type:'box',yMin:130,yMax:140,backgroundColor:'rgba(254,243,199,0.35)',borderWidth:0},
+  zH1:{type:'box',yMin:140,yMax:160,backgroundColor:'rgba(254,226,226,0.35)',borderWidth:0},
+  zH2:{type:'box',yMin:160,yMax:300,backgroundColor:'rgba(254,202,202,0.40)',borderWidth:0},
+  l120:{type:'line',yMin:120,yMax:120,borderColor:'rgba(34,197,94,0.5)',borderWidth:1,borderDash:[5,4],label:{content:'120',display:true,position:'end',color:'#16a34a',font:{size:9}}},
+  l130:{type:'line',yMin:130,yMax:130,borderColor:'rgba(234,179,8,0.5)',borderWidth:1,borderDash:[5,4],label:{content:'130',display:true,position:'end',color:'#d97706',font:{size:9}}},
+  l140:{type:'line',yMin:140,yMax:140,borderColor:'rgba(239,68,68,0.5)',borderWidth:1,borderDash:[5,4],label:{content:'140',display:true,position:'end',color:'#dc2626',font:{size:9}}},
+  l160:{type:'line',yMin:160,yMax:160,borderColor:'rgba(185,28,28,0.5)',borderWidth:1,borderDash:[5,4],label:{content:'160',display:true,position:'end',color:'#b91c1c',font:{size:9}}},
 };
+new Chart(document.getElementById('sys-chart'),{type:'line',data:{labels,datasets:[
+  {label:'Sistolni',data:sysVals,borderColor:'#3b82f6',borderWidth:2.5,pointRadius:4,pointBackgroundColor:'#3b82f6',tension:0.3,fill:false}
+]},options:mkBase(sysMin,sysMax,{annotation:{annotations:sysAnnot}})});
 
-new Chart(document.getElementById('bp-chart'),{type:'line',data:{labels,datasets:[
-  {label:'Sistolni',data:sysVals,borderColor:'#3b82f6',borderWidth:2.5,pointRadius:4,pointBackgroundColor:'#3b82f6',tension:0.3,fill:false},
+// DIJASTOLNI chart with zones
+const diaMin2 = Math.max(40, Math.min(...diaVals)-15);
+const diaMax2 = Math.min(160, Math.max(...diaVals)+15);
+const diaAnnot = {
+  zI: {type:'box',yMin:0, yMax:80, backgroundColor:'rgba(220,252,231,0.25)',borderWidth:0},
+  zN: {type:'box',yMin:80, yMax:85, backgroundColor:'rgba(254,249,195,0.30)',borderWidth:0},
+  zE: {type:'box',yMin:85, yMax:90, backgroundColor:'rgba(254,243,199,0.35)',borderWidth:0},
+  zH1:{type:'box',yMin:90, yMax:100,backgroundColor:'rgba(254,226,226,0.35)',borderWidth:0},
+  zH2:{type:'box',yMin:100,yMax:200,backgroundColor:'rgba(254,202,202,0.40)',borderWidth:0},
+  l80: {type:'line',yMin:80, yMax:80, borderColor:'rgba(34,197,94,0.5)',borderWidth:1,borderDash:[5,4],label:{content:'80',display:true,position:'end',color:'#16a34a',font:{size:9}}},
+  l85: {type:'line',yMin:85, yMax:85, borderColor:'rgba(234,179,8,0.4)',borderWidth:1,borderDash:[5,4],label:{content:'85',display:true,position:'end',color:'#d97706',font:{size:9}}},
+  l90: {type:'line',yMin:90, yMax:90, borderColor:'rgba(239,68,68,0.5)',borderWidth:1,borderDash:[5,4],label:{content:'90',display:true,position:'end',color:'#dc2626',font:{size:9}}},
+  l100:{type:'line',yMin:100,yMax:100,borderColor:'rgba(185,28,28,0.5)',borderWidth:1,borderDash:[5,4],label:{content:'100',display:true,position:'end',color:'#b91c1c',font:{size:9}}},
+};
+new Chart(document.getElementById('dia-chart'),{type:'line',data:{labels,datasets:[
   {label:'Dijastolni',data:diaVals,borderColor:'#22c55e',borderWidth:2.5,pointRadius:4,pointBackgroundColor:'#22c55e',tension:0.3,fill:false}
-]},options:base(bpMin,bpMax,{annotation:{annotations}})});
+]},options:mkBase(diaMin2,diaMax2,{annotation:{annotations:diaAnnot}})});
 
+// PULS chart
 const pv = pulseVals.filter(v=>v!=null);
 const pMin = pv.length?Math.max(30,Math.min(...pv)-10):30;
 const pMax = pv.length?Math.min(200,Math.max(...pv)+10):200;
 new Chart(document.getElementById('pulse-chart'),{type:'line',data:{labels,datasets:[
   {label:'Puls',data:pulseVals,borderColor:'#ef4444',borderWidth:2.5,pointRadius:4,pointBackgroundColor:'#ef4444',tension:0.3,fill:false,spanGaps:true}
-]},options:{...base(pMin,pMax),plugins:{...base(pMin,pMax).plugins,legend:{display:false}}}});
+]},options:{...mkBase(pMin,pMax),plugins:{...mkBase(pMin,pMax).plugins,legend:{display:false}}}});
 
+// JUTARNJE vs VEČERNJE chart
 const meEl = document.getElementById('me-chart');
 if (meEl && morningSys.length && eveningSys.length) {
   const meAll = [...morningSys,...morningDia,...eveningSys,...eveningDia].filter(v=>v!=null);
   const meMin = meAll.length?Math.max(50,Math.min(...meAll)-10):50;
   const meMax = meAll.length?Math.min(210,Math.max(...meAll)+15):210;
-  const meLabels = Array.from({length:Math.max(morningSys.length,eveningSys.length)},(_,i)=>i+1);
+  const meLabels = Array.from({length:Math.max(morningSys.length,eveningSys.length)},(_,i)=>'Mj. '+(i+1));
   new Chart(meEl,{type:'line',data:{labels:meLabels,datasets:[
-    {label:'Jut. Sistolni',data:morningSys,borderColor:'#f59e0b',borderWidth:2,pointRadius:3,tension:0.3,fill:false},
-    {label:'Jut. Dijastolni',data:morningDia,borderColor:'#fbbf24',borderWidth:2,pointRadius:3,tension:0.3,fill:false,borderDash:[4,3]},
-    {label:'Vec. Sistolni',data:eveningSys,borderColor:'#8b5cf6',borderWidth:2,pointRadius:3,tension:0.3,fill:false},
-    {label:'Vec. Dijastolni',data:eveningDia,borderColor:'#a78bfa',borderWidth:2,pointRadius:3,tension:0.3,fill:false,borderDash:[4,3]},
-  ]},options:base(meMin,meMax)});
+    {label:'🌅 Jut. Sistolni', data:morningSys, borderColor:'#f59e0b',borderWidth:2,pointRadius:3,tension:0.3,fill:false},
+    {label:'🌅 Jut. Dijastolni',data:morningDia,borderColor:'#fbbf24',borderWidth:2,pointRadius:3,tension:0.3,fill:false,borderDash:[4,3]},
+    {label:'🌙 Več. Sistolni',  data:eveningSys, borderColor:'#8b5cf6',borderWidth:2,pointRadius:3,tension:0.3,fill:false},
+    {label:'🌙 Več. Dijastolni',data:eveningDia, borderColor:'#a78bfa',borderWidth:2,pointRadius:3,tension:0.3,fill:false,borderDash:[4,3]},
+  ]},options:mkBase(meMin,meMax)});
 }
 <\/script>
 </body></html>`;
+
 
   const blob2 = new Blob([html], {type:'text/html;charset=utf-8;'});
   const url = URL.createObjectURL(blob2);
