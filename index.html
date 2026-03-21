@@ -44,9 +44,11 @@
       background: var(--surface); border: 1px solid var(--border); color: var(--text-muted);
       width: 36px; height: 36px; border-radius: 8px;
       display: flex; align-items: center; justify-content: center;
-      cursor: pointer; font-size: 16px; transition: all 0.15s;
+      cursor: pointer; transition: all 0.2s;
     }
+    .icon-btn:hover { color: var(--accent); border-color: var(--accent); }
     .icon-btn:active { background: var(--surface2); transform: scale(0.95); }
+    .icon-btn svg { display: block; }
 
     nav {
       display: flex; flex-direction: row; flex-wrap: nowrap;
@@ -149,8 +151,10 @@
 
     .entry-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
     .entry-datetime { font-size: 11px; color: var(--text-muted); line-height: 1.5; }
-    .del-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 14px; padding: 2px 4px; border-radius: 4px; }
-    .del-btn:active { color: var(--warn); }
+    .del-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px 6px; border-radius: 6px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+    .del-btn:hover { background: var(--surface2); }
+    .del-btn:active { color: var(--warn); transform: scale(0.9); }
+    .del-btn svg { display: block; }
 
     .entry-bp { display: flex; align-items: baseline; gap: 4px; margin-bottom: 4px; flex-wrap: wrap; }
     .bp-value { font-size: 28px; letter-spacing: -1px; color: var(--text); line-height: 1; }
@@ -221,18 +225,53 @@
 <body>
 
 <header>
-  <div class="header-title" style="flex-direction:column;align-items:flex-start;gap:2px;"><div style="display:flex;align-items:center;gap:8px;"><span>🫀</span> Pritisak</div><span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);">v5.9.1</span></div>
+  <div class="header-title" style="flex-direction:column;align-items:flex-start;gap:2px;"><div style="display:flex;align-items:center;gap:8px;"><span>🫀</span> Pritisak</div><span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);">v5.9.5</span></div>
   <div style="display:flex;gap:8px;">
-    <button class="icon-btn" onclick="triggerImport()" title="Import CSV">⬆️</button>
-    <button class="icon-btn" onclick="openExportModal()" title="Export CSV">⬇️</button>
-    <button class="icon-btn" onclick="openShareModal()" title="Dijeli izvještaj">📤</button>
-    <button class="icon-btn" onclick="openHelpModal()" title="Opsezi pritiska">ℹ️</button>
-    <button class="icon-btn" onclick="openDeleteModal()" title="Brisanje podataka">🗑️</button>
+    <button class="icon-btn" onclick="openImportModal()" title="Import backup">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    </button>
+    <button class="icon-btn" onclick="openExportModal()" title="Export backup">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    </button>
+    <button class="icon-btn" onclick="openShareModal()" title="Generiši izvještaj">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+    </button>
+    <button class="icon-btn" onclick="openHelpModal()" title="Opsezi pritiska">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    </button>
+    <button class="icon-btn" onclick="openDeleteModal()" title="Brisanje podataka">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+    </button>
   </div>
 </header>
 
 <!-- Hidden file input for import -->
-<input type="file" id="csv-import-input" accept=".csv" style="display:none" onchange="importCSV(event)" />
+<input type="file" id="csv-import-input" accept=".csv" style="display:none" onchange="previewImport(event)" />
+
+<!-- IMPORT MODAL -->
+<div id="import-modal" style="display:none; position:fixed; inset:0; z-index:500; background:rgba(0,0,0,0.7); padding:20px; align-items:flex-end;">
+  <div style="background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:20px; width:100%; max-width:480px; margin:0 auto;">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
+      <div style="font-family:var(--serif); font-size:18px;">⬆️ Import backup</div>
+      <button onclick="closeImportModal()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);width:32px;height:32px;border-radius:8px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
+    </div>
+    <div style="font-size:12px; color:var(--text-muted); margin-bottom:16px; line-height:1.6;">Odaberi CSV fajl koji si prethodno exportovao. Duplikati se automatski preskaču.</div>
+
+    <div id="import-drop-zone" style="border:2px dashed var(--border); border-radius:10px; padding:24px 16px; text-align:center; margin-bottom:14px; cursor:pointer; transition:border-color 0.2s;" onclick="document.getElementById('csv-import-input').click()">
+      <div style="font-size:28px; margin-bottom:8px;">📂</div>
+      <div style="font-size:13px; color:var(--text);">Tapni da odabereš fajl</div>
+      <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">Podržani format: .csv</div>
+      <div id="import-filename" style="font-size:12px; color:var(--accent); margin-top:8px; display:none;"></div>
+    </div>
+
+    <div id="import-preview" style="display:none; background:rgba(63,185,80,0.08); border:1px solid rgba(63,185,80,0.2); border-radius:8px; padding:10px 14px; font-size:12px; color:var(--accent2); margin-bottom:14px;"></div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+      <button class="btn-secondary" onclick="closeImportModal()">Odustani</button>
+      <button id="import-confirm-btn" class="btn-primary" style="margin:0; opacity:0.4; pointer-events:none;" onclick="confirmImport()">📥 Uvezi</button>
+    </div>
+  </div>
+</div>
 
 <!-- EXPORT MODAL -->
 <div id="export-modal" style="display:none; position:fixed; inset:0; z-index:500; background:rgba(0,0,0,0.7); padding:20px; align-items:flex-end;">
@@ -284,7 +323,10 @@
 <!-- HELP MODAL -->
 <div id="help-modal" style="display:none; position:fixed; inset:0; z-index:500; background:rgba(0,0,0,0.7); padding:16px; align-items:center; overflow-y:auto;">
   <div style="background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:20px; width:100%; max-width:480px; margin:auto;">
-    <div style="font-family:var(--serif); font-size:20px; margin-bottom:4px;">ℹ️ Opsezi krvnog pritiska</div>
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
+      <div style="font-family:var(--serif); font-size:20px;">ℹ️ Opsezi krvnog pritiska</div>
+      <button onclick="closeHelpModal()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);width:32px;height:32px;border-radius:8px;font-size:16px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;">✕</button>
+    </div>
     <div style="font-size:11px; color:var(--text-muted); margin-bottom:18px;">Opšte smjernice za odrasle osobe (mmHg)</div>
 
     <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:18px;">
@@ -463,10 +505,10 @@
     <button class="btn-primary" onclick="saveEntry()">💾 Sačuvaj mjerenje</button>
     <div class="success-flash" id="success-flash">✅ Mjerenje sačuvano!</div>
   </div>
-  <div style="padding:0 4px 8px; display:flex; gap:12px; flex-wrap:wrap;">
-    <div class="legend-item"><div class="legend-dot" style="background:var(--tag-morning)"></div> Jut. · 06–10h</div>
-    <div class="legend-item"><div class="legend-dot" style="background:var(--tag-evening)"></div> Več. · 20–24h</div>
-    <div class="legend-item"><div class="legend-dot" style="background:var(--tag-other)"></div> Ostalo</div>
+  <div style="padding:4px 4px 8px; display:flex; flex-direction:column; gap:8px;">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--tag-morning)"></div> 🌅 Jutarnje · 06–10h</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--tag-evening)"></div> 🌙 Večernje · 20–24h</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--tag-other)"></div> 🕐 Ostalo</div>
   </div>
 </div>
 
@@ -736,8 +778,12 @@ function renderHistory() {
               <div>${fmtTime(e.dt)} · <span class="tag-preview tag-${e.tag}" style="font-size:9px;padding:1px 6px;">${tagLabel(e.tag)}</span></div>
             </div>
             <div style="display:flex;gap:6px;">
-              <button class="del-btn" onclick="openEditModal(${e.id})" style="color:var(--accent);">✏️</button>
-              <button class="del-btn" onclick="delEntry(${e.id})">🗑️</button>
+              <button class="del-btn" onclick="openEditModal(${e.id})" style="color:var(--accent);" title="Uredi">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              </button>
+              <button class="del-btn" onclick="delEntry(${e.id})" title="Obriši">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+              </button>
             </div>
           </div>
           <div class="entry-bp">
@@ -1360,7 +1406,7 @@ ${morningEveningChart}
   </div>
 </div>
 
-<div class="footer">Generisano: ${genDate} &nbsp;·&nbsp; Mjerač Pritiska v5.9.1</div>
+<div class="footer">Generisano: ${genDate} &nbsp;·&nbsp; Mjerač Pritiska v5.9.5</div>
 </div>
 
 <script>
@@ -1475,9 +1521,62 @@ function downloadReport() {
 }
 
 // ── IMPORT CSV ────────────────────────────────────────────
-function triggerImport() {
+function previewImport(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  window._pendingImportEvent = event;
+
+  // Show filename
+  const fnEl = document.getElementById('import-filename');
+  fnEl.textContent = '📄 ' + file.name;
+  fnEl.style.display = 'block';
+
+  // Drop zone visual feedback
+  document.getElementById('import-drop-zone').style.borderColor = 'var(--accent)';
+
+  // Quick count lines
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const text = e.target.result.replace(/^﻿/, '');
+    const lines = text.split('\n').filter(l => l.trim()).length - 1;
+    const prev = document.getElementById('import-preview');
+    prev.textContent = '✅ Pronađeno ' + Math.max(0, lines) + ' mjerenja u fajlu. Tapni "Uvezi" da nastaviš.';
+    prev.style.display = 'block';
+    // Enable confirm button
+    const btn = document.getElementById('import-confirm-btn');
+    btn.style.opacity = '1';
+    btn.style.pointerEvents = 'auto';
+  };
+  reader.readAsText(file, 'UTF-8');
+}
+
+
+function openImportModal() {
+  // Reset state
   document.getElementById('csv-import-input').value = '';
-  document.getElementById('csv-import-input').click();
+  document.getElementById('import-filename').style.display = 'none';
+  document.getElementById('import-filename').textContent = '';
+  document.getElementById('import-preview').style.display = 'none';
+  document.getElementById('import-preview').textContent = '';
+  document.getElementById('import-confirm-btn').style.opacity = '0.4';
+  document.getElementById('import-confirm-btn').style.pointerEvents = 'none';
+  window._pendingImportEvent = null;
+  document.getElementById('import-modal').style.display = 'flex';
+}
+
+function closeImportModal() {
+  document.getElementById('import-modal').style.display = 'none';
+}
+
+function triggerImport() {
+  openImportModal();
+}
+
+function confirmImport() {
+  if (window._pendingImportEvent) {
+    importCSV(window._pendingImportEvent);
+    closeImportModal();
+  }
 }
 
 function importCSV(event) {
