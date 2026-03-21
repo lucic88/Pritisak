@@ -219,7 +219,7 @@
 <body>
 
 <header>
-  <div class="header-title" style="flex-direction:column;align-items:flex-start;gap:2px;"><div style="display:flex;align-items:center;gap:8px;"><span>🫀</span> Pritisak</div><span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);">v4.3</span></div>
+  <div class="header-title" style="flex-direction:column;align-items:flex-start;gap:2px;"><div style="display:flex;align-items:center;gap:8px;"><span>🫀</span> Pritisak</div><span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);">v4.5</span></div>
   <div style="display:flex;gap:8px;">
     <button class="icon-btn" onclick="triggerImport()" title="Import CSV">⬆️</button>
     <button class="icon-btn" onclick="openExportModal()" title="Export CSV">⬇️</button>
@@ -325,6 +325,32 @@
 
     <div style="background:rgba(88,166,255,0.06); border:1px solid rgba(88,166,255,0.15); border-radius:10px; padding:12px; font-size:12px; color:var(--text-muted); line-height:1.6; margin-bottom:16px;">
       💡 <strong style="color:var(--text);">Napomena:</strong> Jedno mjerenje ne znači dijagnozu. Pritisak varira u zavisnosti od stresa, fizičke aktivnosti i doba dana. Ako su vrijednosti često van normalnog opsega — konsultuj se s ljekarom.
+    </div>
+
+    <div style="font-family:var(--serif); font-size:16px; margin-bottom:4px; margin-top:6px;">Puls (srčana frekvencija)</div>
+    <div style="font-size:11px; color:var(--text-muted); margin-bottom:12px;">Opšte smjernice za odrasle osobe u mirovanju (bpm)</div>
+
+    <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:18px;">
+      <div style="display:grid; grid-template-columns:28px 1fr auto; align-items:center; gap:10px; background:rgba(88,166,255,0.08); border:1px solid rgba(88,166,255,0.2); border-radius:10px; padding:10px 12px;">
+        <div style="width:12px;height:12px;border-radius:50%;background:#58a6ff;margin:auto;"></div>
+        <div><div style="font-size:13px;color:var(--text);">Nizak puls (bradikardija)</div><div style="font-size:11px;color:var(--text-muted);">Problem samo uz simptome (vrtoglavica, umor)</div></div>
+        <div style="font-size:12px;color:#58a6ff;text-align:right;white-space:nowrap;">&lt; 60</div>
+      </div>
+      <div style="display:grid; grid-template-columns:28px 1fr auto; align-items:center; gap:10px; background:rgba(63,185,80,0.10); border:1px solid rgba(63,185,80,0.25); border-radius:10px; padding:10px 12px;">
+        <div style="width:12px;height:12px;border-radius:50%;background:#3fb950;margin:auto;"></div>
+        <div><div style="font-size:13px;color:var(--text);">Normalan</div><div style="font-size:11px;color:var(--text-muted);">Zdrava srčana frekvencija u mirovanju</div></div>
+        <div style="font-size:12px;color:#3fb950;text-align:right;white-space:nowrap;">60 – 99</div>
+      </div>
+      <div style="display:grid; grid-template-columns:28px 1fr auto; align-items:center; gap:10px; background:rgba(210,153,34,0.10); border:1px solid rgba(210,153,34,0.25); border-radius:10px; padding:10px 12px;">
+        <div style="width:12px;height:12px;border-radius:50%;background:#d29922;margin:auto;"></div>
+        <div><div style="font-size:13px;color:var(--text);">Umjereno visok (tahikardija)</div><div style="font-size:11px;color:var(--text-muted);">Može biti od stresa, kafe, napora — prati trend</div></div>
+        <div style="font-size:12px;color:#d29922;text-align:right;white-space:nowrap;">100 – 119</div>
+      </div>
+      <div style="display:grid; grid-template-columns:28px 1fr auto; align-items:center; gap:10px; background:rgba(248,81,73,0.10); border:1px solid rgba(248,81,73,0.25); border-radius:10px; padding:10px 12px;">
+        <div style="width:12px;height:12px;border-radius:50%;background:#f85149;margin:auto;"></div>
+        <div><div style="font-size:13px;color:var(--text);">Visok puls</div><div style="font-size:11px;color:var(--text-muted);">Konzultacija s ljekarom preporučena</div></div>
+        <div style="font-size:12px;color:#f85149;text-align:right;white-space:nowrap;">120+</div>
+      </div>
     </div>
 
     <button class="btn-primary" onclick="closeHelpModal()">Razumijem</button>
@@ -1071,7 +1097,7 @@ function generateReport() {
     const tagLbl={jutarnje:'🌅 Jut.',vecernje:'🌙 Več.',ostalo:'🕐 Ost.'}[e.tag]||e.tag;
     const time = String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0');
     const date = dt.getDate()+'. '+MNS[dt.getMonth()]+' '+dt.getFullYear()+'.';
-    return `<tr><td>${date}</td><td>${time}</td><td>${tagLbl}</td><td style="font-weight:600;">${e.sys}/${e.dia}</td><td>${e.pulse||'—'}</td><td>${statusBadge(e.sys,e.dia)}</td><td style="color:#94a3b8;font-style:italic;max-width:140px;">${e.comment||''}</td></tr>`;
+    return `<tr><td>${date}</td><td>${time}</td><td>${tagLbl}</td><td style="font-weight:600;">${e.sys}/${e.dia}</td><td>${e.pulse||'&mdash;'}</td><td>${statusBadge(e.sys,e.dia)}</td><td style="color:#94a3b8;font-style:italic;">${e.comment||''}</td></tr>`;
   }).join('');
 
   // Chart data
@@ -1185,10 +1211,11 @@ h1{font-size:24px;font-weight:700;color:#0f172a;margin-bottom:2px;}
 .zlegend{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;}
 .zitem{display:flex;align-items:center;gap:4px;font-size:11px;color:#64748b;}
 .zdot{width:10px;height:10px;border-radius:2px;flex-shrink:0;}
-table{width:100%;border-collapse:collapse;font-size:12px;}
-th{background:#f8fafc;padding:8px 10px;text-align:left;font-size:10px;letter-spacing:0.5px;text-transform:uppercase;color:#94a3b8;font-weight:600;border-bottom:1px solid #e2e8f0;}
-td{padding:8px 10px;border-bottom:1px solid #f8fafc;}
+table{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed;}
+th{background:#f8fafc;padding:8px 10px;text-align:left;font-size:10px;letter-spacing:0.5px;text-transform:uppercase;color:#94a3b8;font-weight:600;border-bottom:1px solid #e2e8f0;overflow:hidden;}
+td{padding:8px 10px;border-bottom:1px solid #f8fafc;overflow:hidden;word-wrap:break-word;overflow-wrap:break-word;}
 tr:last-child td{border-bottom:none;}
+.col-date{width:20%} .col-time{width:9%} .col-tag{width:10%} .col-bp{width:13%} .col-pulse{width:8%} .col-status{width:13%} .col-comment{width:27%}
 .badge{display:inline-block;padding:2px 6px;border-radius:20px;font-size:10px;font-weight:600;}
 .b-low{background:#dbeafe;color:#2563eb;} .b-ideal{background:#dcfce7;color:#16a34a;}
 .b-normal{background:#d1fae5;color:#059669;} .b-elevated{background:#fef3c7;color:#d97706;}
@@ -1252,6 +1279,12 @@ ${cmpMonths}
 <div class="card">
   <div class="stitle">Kretanje pulsa</div>
   <div class="chart-sm"><canvas id="pulse-chart"></canvas></div>
+  <div class="zlegend">
+    <div class="zitem"><div class="zdot" style="background:rgba(219,234,254,0.8);border:1px solid #93c5fd;"></div> Nizak (&lt;60)</div>
+    <div class="zitem"><div class="zdot" style="background:rgba(220,252,231,0.8);border:1px solid #86efac;"></div> Normalan (60&ndash;99)</div>
+    <div class="zitem"><div class="zdot" style="background:rgba(254,243,199,0.8);border:1px solid #fcd34d;"></div> Umjereno visok (100&ndash;119)</div>
+    <div class="zitem"><div class="zdot" style="background:rgba(254,226,226,0.8);border:1px solid #fca5a5;"></div> Visok (120+)</div>
+  </div>
 </div>
 
 ${morningEveningChart}
@@ -1259,7 +1292,8 @@ ${morningEveningChart}
 <!-- TABELA -->
 <div class="card">
   <div class="stitle">Sva mjerenja</div>
-  <table><thead><tr><th>Datum</th><th>Vrij.</th><th>Tag</th><th>Pritisak</th><th>Puls</th><th>Status</th><th>Komentar</th></tr></thead>
+  <table><colgroup><col class="col-date"><col class="col-time"><col class="col-tag"><col class="col-bp"><col class="col-pulse"><col class="col-status"><col class="col-comment"></colgroup>
+  <thead><tr><th>Datum</th><th>Vrij.</th><th>Tag</th><th>Pritisak</th><th>Puls</th><th>Status</th><th>Komentar</th></tr></thead>
   <tbody>${rows}</tbody></table>
 </div>
 
@@ -1281,7 +1315,7 @@ ${morningEveningChart}
   <div class="note">💡 Jedno mjerenje ne znači dijagnozu. Pritisak varira u zavisnosti od stresa, fizičke aktivnosti i doba dana. Ako su vrijednosti često van normalnog opsega &mdash; konsultuj se s ljekarom.</div>
 </div>
 
-<div class="footer">Generisano: ${genDate} &nbsp;·&nbsp; Mjerač Pritiska v4.3</div>
+<div class="footer">Generisano: ${genDate} &nbsp;·&nbsp; Mjerač Pritiska v4.5</div>
 </div>
 
 <script>
@@ -1339,13 +1373,22 @@ new Chart(document.getElementById('dia-chart'),{type:'line',data:{labels,dataset
   {label:'Dijastolni',data:diaVals,borderColor:'#22c55e',borderWidth:2.5,pointRadius:4,pointBackgroundColor:'#22c55e',tension:0.3,fill:false}
 ]},options:mkBase(diaMin2,diaMax2,{annotation:{annotations:diaAnnot}})});
 
-// PULS chart
+// PULS chart with zones
 const pv = pulseVals.filter(v=>v!=null);
 const pMin = pv.length?Math.max(30,Math.min(...pv)-10):30;
 const pMax = pv.length?Math.min(200,Math.max(...pv)+10):200;
+const pulseAnnot = {
+  zLow:  {type:'box',yMin:0,  yMax:60, backgroundColor:'rgba(219,234,254,0.20)',borderWidth:0},
+  zNorm: {type:'box',yMin:60, yMax:100,backgroundColor:'rgba(220,252,231,0.20)',borderWidth:0},
+  zMed:  {type:'box',yMin:100,yMax:120,backgroundColor:'rgba(254,243,199,0.25)',borderWidth:0},
+  zHigh: {type:'box',yMin:120,yMax:300,backgroundColor:'rgba(254,226,226,0.25)',borderWidth:0},
+  l60:  {type:'line',yMin:60, yMax:60, borderColor:'rgba(59,130,246,0.4)', borderWidth:1,borderDash:[5,4],label:{content:'60', display:true,position:'end',color:'#2563eb',font:{size:9}}},
+  l100: {type:'line',yMin:100,yMax:100,borderColor:'rgba(234,179,8,0.5)',  borderWidth:1,borderDash:[5,4],label:{content:'100',display:true,position:'end',color:'#d97706',font:{size:9}}},
+  l120: {type:'line',yMin:120,yMax:120,borderColor:'rgba(239,68,68,0.5)',  borderWidth:1,borderDash:[5,4],label:{content:'120',display:true,position:'end',color:'#dc2626',font:{size:9}}},
+};
 new Chart(document.getElementById('pulse-chart'),{type:'line',data:{labels,datasets:[
   {label:'Puls',data:pulseVals,borderColor:'#ef4444',borderWidth:2.5,pointRadius:4,pointBackgroundColor:'#ef4444',tension:0.3,fill:false,spanGaps:true}
-]},options:{...mkBase(pMin,pMax),plugins:{...mkBase(pMin,pMax).plugins,legend:{display:false}}}});
+]},options:{...mkBase(pMin,pMax,{annotation:{annotations:pulseAnnot}}),plugins:{...mkBase(pMin,pMax).plugins,legend:{display:false},annotation:{annotations:pulseAnnot}}}});
 
 // JUTARNJE vs VEČERNJE chart
 const meEl = document.getElementById('me-chart');
