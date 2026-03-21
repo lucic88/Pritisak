@@ -207,7 +207,7 @@
 <body>
 
 <header>
-  <div class="header-title"><span>🫀</span> Pritisak</div>
+  <div class="header-title"><span>🫀</span> Pritisak <span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);font-style:normal;margin-left:4px;">v3</span></div>
   <div style="display:flex;gap:8px;">
     <button class="icon-btn" onclick="triggerImport()" title="Import CSV">⬆️</button>
     <button class="icon-btn" onclick="exportCSV()" title="Export CSV">⬇️</button>
@@ -372,266 +372,6 @@ function setNow() {
   updateTag();
 }
 
-function updateTag      width: 100%; padding: 14px; background: var(--accent); color: #0d1117;
-      border: none; border-radius: 10px; font-family: var(--mono);
-      font-size: 14px; font-weight: 500; letter-spacing: 0.5px; cursor: pointer; transition: all 0.15s;
-    }
-    .btn-primary:active { transform: scale(0.98); opacity: 0.9; }
-
-    .success-flash {
-      display: none; align-items: center; gap: 8px;
-      background: rgba(63,185,80,0.1); border: 1px solid rgba(63,185,80,0.3);
-      border-radius: 8px; padding: 10px 14px; font-size: 13px; color: var(--accent2); margin-top: 10px;
-    }
-    .success-flash.show { display: flex; }
-
-    .filter-row { display: flex; gap: 6px; margin-bottom: 14px; overflow-x: auto; padding-bottom: 2px; }
-    .filter-row::-webkit-scrollbar { display: none; }
-    .filter-chip {
-      flex-shrink: 0; padding: 6px 12px; border-radius: 20px; font-size: 11px;
-      letter-spacing: 0.5px; cursor: pointer; border: 1px solid var(--border);
-      background: var(--surface); color: var(--text-muted); transition: all 0.15s;
-    }
-    .filter-chip.active { background: var(--accent); border-color: var(--accent); color: #0d1117; }
-
-    .entry-card {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 14px 16px; margin-bottom: 10px;
-      position: relative; overflow: hidden;
-    }
-    .entry-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; }
-    .entry-card.jutarnje::before { background: var(--tag-morning); }
-    .entry-card.vecernje::before { background: var(--tag-evening); }
-    .entry-card.ostalo::before { background: var(--tag-other); }
-
-    .entry-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
-    .entry-datetime { font-size: 11px; color: var(--text-muted); line-height: 1.5; }
-    .del-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 14px; padding: 2px 4px; border-radius: 4px; }
-    .del-btn:active { color: var(--warn); }
-
-    .entry-bp { display: flex; align-items: baseline; gap: 4px; margin-bottom: 4px; flex-wrap: wrap; }
-    .bp-value { font-size: 28px; letter-spacing: -1px; color: var(--text); line-height: 1; }
-    .bp-sep { color: var(--text-muted); font-size: 20px; }
-    .bp-unit { font-size: 11px; color: var(--text-muted); margin-left: 2px; }
-    .entry-pulse { font-size: 13px; color: var(--text-muted); margin-bottom: 4px; }
-    .entry-pulse span { color: var(--warn); }
-    .entry-comment { font-size: 12px; color: var(--text-muted); font-style: italic; border-top: 1px solid var(--border); margin-top: 6px; padding-top: 6px; }
-
-    .bp-status { font-size: 10px; letter-spacing: 0.5px; padding: 2px 7px; border-radius: 20px; display: inline-block; }
-    .bp-normal { background: rgba(63,185,80,0.12); color: var(--accent2); }
-    .bp-elevated { background: rgba(210,153,34,0.12); color: var(--tag-morning); }
-    .bp-high { background: rgba(248,81,73,0.12); color: var(--warn); }
-
-    .empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); }
-    .empty-state .emoji { font-size: 48px; display: block; margin-bottom: 12px; }
-    .empty-state p { font-size: 13px; }
-
-    .chart-controls { display: flex; gap: 6px; margin-bottom: 16px; overflow-x: auto; }
-    .chart-controls::-webkit-scrollbar { display: none; }
-    .range-chip {
-      flex-shrink: 0; padding: 6px 12px; border-radius: 20px; font-size: 11px;
-      cursor: pointer; border: 1px solid var(--border); background: var(--surface); color: var(--text-muted); transition: all 0.15s;
-    }
-    .range-chip.active { background: var(--surface2); border-color: var(--accent); color: var(--accent); }
-
-    .chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 16px; }
-    .chart-card h3 { font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 14px; }
-    .chart-wrap { position: relative; height: 200px; }
-
-    .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 16px; }
-    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px; text-align: center; }
-    .stat-label { font-size: 9px; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
-    .stat-value { font-size: 22px; color: var(--text); letter-spacing: -0.5px; line-height: 1; }
-    .stat-unit { font-size: 9px; color: var(--text-muted); }
-
-    .legend { display: flex; gap: 12px; margin-top: 10px; flex-wrap: wrap; }
-    .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-muted); }
-    .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
-
-    .toast {
-      position: fixed; bottom: 80px; left: 50%;
-      transform: translateX(-50%) translateY(20px);
-      background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 8px; padding: 10px 16px; font-size: 13px;
-      opacity: 0; transition: all 0.3s; z-index: 999; white-space: nowrap;
-    }
-    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-    .install-banner {
-      display: none; position: fixed; bottom: 0; left: 0; right: 0;
-      background: var(--surface2); border-top: 1px solid var(--border);
-      padding: 12px 16px; z-index: 200; align-items: center; gap: 10px;
-    }
-    .install-banner.show { display: flex; }
-    .install-banner p { flex: 1; font-size: 13px; color: var(--text-muted); }
-    .install-btn { background: var(--accent); color: #0d1117; border: none; border-radius: 8px; padding: 8px 14px; font-family: var(--mono); font-size: 12px; cursor: pointer; font-weight: 500; }
-    .close-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 16px; }
-    .btn-secondary { width:100%; padding:11px; background:var(--surface2); color:var(--text); border:1px solid var(--border); border-radius:10px; font-family:var(--mono); font-size:12px; cursor:pointer; transition:all 0.15s; margin-bottom:0; text-align:center; display:block; }
-    .btn-secondary:active { background:var(--border); }
-  </style>
-</head>
-<body>
-
-<header>
-  <div class="header-title"><span>🫀</span> Pritisak</div>
-  <div style="display:flex;gap:8px;">
-    <button class="icon-btn" onclick="triggerImport()" title="Import CSV">⬆️</button>
-    <button class="icon-btn" onclick="exportCSV()" title="Export CSV">⬇️</button>
-    <button class="icon-btn" onclick="openDeleteModal()" title="Brisanje podataka">🗑️</button>
-  </div>
-</header>
-
-<!-- Hidden file input for import -->
-<input type="file" id="csv-import-input" accept=".csv" style="display:none" onchange="importCSV(event)" />
-
-<!-- DELETE MODAL -->
-<div id="delete-modal" style="display:none; position:fixed; inset:0; z-index:500; background:rgba(0,0,0,0.7); padding:20px; align-items:flex-end;">
-  <div style="background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:20px; width:100%; max-width:480px; margin:0 auto;">
-    <div style="font-family:var(--serif); font-size:18px; margin-bottom:6px;">Brisanje podataka</div>
-    <div style="font-size:12px; color:var(--text-muted); margin-bottom:20px;">Odaberi šta želiš obrisati. Ova akcija je nepovratna!</div>
-
-    <div style="margin-bottom:10px;">
-      <div style="font-size:11px; letter-spacing:0.5px; text-transform:uppercase; color:var(--text-muted); margin-bottom:8px;">Obriši po periodu</div>
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
-        <button class="btn-secondary" onclick="deleteByDays(7)">Zadnjih 7 dana</button>
-        <button class="btn-secondary" onclick="deleteByDays(30)">Zadnjih 30 dana</button>
-        <button class="btn-secondary" onclick="deleteByDays(90)">Zadnja 3 mj.</button>
-        <button class="btn-secondary" onclick="deleteByDays(365)">Zadnjih god.</button>
-      </div>
-    </div>
-
-    <div style="margin-bottom:16px;">
-      <div style="font-size:11px; letter-spacing:0.5px; text-transform:uppercase; color:var(--text-muted); margin-bottom:8px;">Obriši sve</div>
-      <button style="width:100%; padding:12px; background:rgba(248,81,73,0.12); color:var(--warn); border:1px solid rgba(248,81,73,0.3); border-radius:10px; font-family:var(--mono); font-size:13px; cursor:pointer;" onclick="deleteAll()">⚠️ Obriši cjelokupnu istoriju</button>
-    </div>
-
-    <button class="btn-secondary" onclick="closeDeleteModal()">Odustani</button>
-  </div>
-</div>
-
-<nav>
-  <div class="tab active" onclick="switchTab('unos', this)"><span class="tab-icon">➕</span>Unos</div>
-  <div class="tab" onclick="switchTab('istorija', this)"><span class="tab-icon">📋</span>Istorija</div>
-  <div class="tab" onclick="switchTab('grafik', this)"><span class="tab-icon">📈</span>Grafik</div>
-</nav>
-
-<!-- UNOS -->
-<div id="page-unos" class="page active">
-  <div class="form-card">
-    <h2>Novo mjerenje</h2>
-    <div class="datetime-row">
-      <div>
-        <input type="date" id="inp-date" />
-        <input type="time" id="inp-time" />
-      </div>
-      <span class="tag-preview" id="tag-display">—</span>
-    </div>
-    <div class="bp-grid">
-      <div class="input-group">
-        <label>Sistolni</label>
-        <input type="number" id="inp-sys" placeholder="120" min="60" max="250" inputmode="numeric" />
-        <div class="unit">mmHg</div>
-      </div>
-      <div class="input-group">
-        <label>Dijastolni</label>
-        <input type="number" id="inp-dia" placeholder="80" min="40" max="150" inputmode="numeric" />
-        <div class="unit">mmHg</div>
-      </div>
-      <div class="input-group">
-        <label>Puls</label>
-        <input type="number" id="inp-pulse" placeholder="72" min="30" max="250" inputmode="numeric" />
-        <div class="unit">bpm</div>
-      </div>
-    </div>
-    <textarea class="comment-input" id="inp-comment" placeholder="Komentar (opcionalno)..."></textarea>
-    <button class="btn-primary" onclick="saveEntry()">💾 Sačuvaj mjerenje</button>
-    <div class="success-flash" id="success-flash">✅ Mjerenje sačuvano!</div>
-  </div>
-  <div class="form-card" style="background:transparent; padding:14px 16px;">
-    <div style="font-size:10px;letter-spacing:0.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px;">Tagovi po vremenu</div>
-    <div class="legend">
-      <div class="legend-item"><div class="legend-dot" style="background:var(--tag-morning)"></div> Jutarnje · 06–10h</div>
-      <div class="legend-item"><div class="legend-dot" style="background:var(--tag-evening)"></div> Večernje · 20–24h</div>
-      <div class="legend-item"><div class="legend-dot" style="background:var(--tag-other)"></div> Ostalo</div>
-    </div>
-  </div>
-</div>
-
-<!-- ISTORIJA -->
-<div id="page-istorija" class="page">
-  <div class="filter-row">
-    <div class="filter-chip active" onclick="setFilter('sve', this)">Sve</div>
-    <div class="filter-chip" onclick="setFilter('jutarnje', this)">🌅 Jutarnje</div>
-    <div class="filter-chip" onclick="setFilter('vecernje', this)">🌙 Večernje</div>
-    <div class="filter-chip" onclick="setFilter('ostalo', this)">🕐 Ostalo</div>
-  </div>
-  <div id="entries-list"></div>
-</div>
-
-<!-- GRAFIK -->
-<div id="page-grafik" class="page">
-  <div class="chart-controls">
-    <div class="range-chip active" onclick="setRange(7, this)">7 dana</div>
-    <div class="range-chip" onclick="setRange(14, this)">14 dana</div>
-    <div class="range-chip" onclick="setRange(30, this)">30 dana</div>
-    <div class="range-chip" onclick="setRange(90, this)">3 mj.</div>
-    <div class="range-chip" onclick="setRange(0, this)">Sve</div>
-  </div>
-  <div class="stats-grid">
-    <div class="stat-card"><div class="stat-label">Prosjek SIS</div><div class="stat-value" id="avg-sys">—</div><div class="stat-unit">mmHg</div></div>
-    <div class="stat-card"><div class="stat-label">Prosjek DIA</div><div class="stat-value" id="avg-dia">—</div><div class="stat-unit">mmHg</div></div>
-    <div class="stat-card"><div class="stat-label">Prosjek Puls</div><div class="stat-value" id="avg-pulse">—</div><div class="stat-unit">bpm</div></div>
-  </div>
-  <div class="chart-card">
-    <h3>Pritisak (mmHg)</h3>
-    <div class="chart-wrap"><canvas id="bp-chart"></canvas></div>
-    <div class="legend" style="margin-top:12px;">
-      <div class="legend-item"><div class="legend-dot" style="background:#58a6ff"></div> Sistolni</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#3fb950"></div> Dijastolni</div>
-    </div>
-  </div>
-  <div class="chart-card">
-    <h3>Puls (bpm)</h3>
-    <div class="chart-wrap"><canvas id="pulse-chart"></canvas></div>
-  </div>
-</div>
-
-<div class="toast" id="toast"></div>
-
-<div class="install-banner" id="install-banner">
-  <p>📲 Instaliraj app na početni ekran</p>
-  <button class="install-btn" onclick="installPWA()">Instaliraj</button>
-  <button class="close-btn" onclick="document.getElementById('install-banner').classList.remove('show')">✕</button>
-</div>
-
-<script>
-// ── DATA ──────────────────────────────────────────────────
-const STORE_KEY = 'pritisak_v1';
-const load = () => { try { return JSON.parse(localStorage.getItem(STORE_KEY)||'[]'); } catch { return []; } };
-const save = d => localStorage.setItem(STORE_KEY, JSON.stringify(d));
-
-function getTag(h) {
-  if (h >= 6 && h < 10) return 'jutarnje';
-  if (h >= 20 && h < 24) return 'vecernje';
-  return 'ostalo';
-}
-function tagLabel(t) { return {jutarnje:'🌅 Jutarnje', vecernje:'🌙 Večernje', ostalo:'🕐 Ostalo'}[t]||t; }
-function bpStatus(s,d) {
-  if (s<120&&d<80) return {label:'Normalan',cls:'bp-normal'};
-  if (s<130&&d<80) return {label:'Povišen',cls:'bp-elevated'};
-  return {label:'Visok',cls:'bp-high'};
-}
-function fmtDate(dt) { return new Date(dt).toLocaleDateString('bs',{day:'2-digit',month:'short',year:'numeric'}); }
-function fmtTime(dt) { return new Date(dt).toLocaleTimeString('bs',{hour:'2-digit',minute:'2-digit'}); }
-
-// ── FORM ──────────────────────────────────────────────────
-function setNow() {
-  const n = new Date();
-  document.getElementById('inp-date').value = n.toISOString().slice(0,10);
-  document.getElementById('inp-time').value = n.toTimeString().slice(0,5);
-  updateTag();
-}
-
 function updateTag() {
   const t = document.getElementById('inp-time').value;
   if (!t) return;
@@ -724,11 +464,19 @@ function delEntry(id) {
 }
 
 // ── CHARTS ────────────────────────────────────────────────
-let bpChart=null, pulseChart=null, currentRange=7;
+let bpChart=null, pulseChart=null, currentRange=7, currentChartTag='sve';
 
 function setRange(d, el) {
   currentRange = d;
   document.querySelectorAll('.range-chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  renderCharts();
+}
+
+function setChartTag(tag, el) {
+  currentChartTag = tag;
+  // only update filter-chips inside grafik page
+  document.querySelectorAll('#page-grafik .filter-chip').forEach(c=>c.classList.remove('active'));
   el.classList.add('active');
   renderCharts();
 }
@@ -741,6 +489,10 @@ function renderCharts() {
   } else {
     const cut = new Date(); cut.setDate(cut.getDate()-currentRange);
     data = all.filter(e=>new Date(e.dt)>=cut).reverse();
+  }
+  // Apply tag filter
+  if (currentChartTag !== 'sve') {
+    data = data.filter(e => e.tag === currentChartTag);
   }
 
   const avg = arr => arr.length ? Math.round(arr.reduce((a,b)=>a+b,0)/arr.length) : null;
