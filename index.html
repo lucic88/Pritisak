@@ -219,7 +219,7 @@
 <body>
 
 <header>
-  <div class="header-title" style="flex-direction:column;align-items:flex-start;gap:2px;"><div style="display:flex;align-items:center;gap:8px;"><span>🫀</span> Pritisak</div><span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);">v5.1</span></div>
+  <div class="header-title" style="flex-direction:column;align-items:flex-start;gap:2px;"><div style="display:flex;align-items:center;gap:8px;"><span>🫀</span> Pritisak</div><span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);">v5.2</span></div>
   <div style="display:flex;gap:8px;">
     <button class="icon-btn" onclick="triggerImport()" title="Import CSV">⬆️</button>
     <button class="icon-btn" onclick="openExportModal()" title="Export CSV">⬇️</button>
@@ -1052,6 +1052,10 @@ function generateReport() {
   const eAvgSys = avg(evening.map(e=>e.sys));
   const eAvgDia = avg(evening.map(e=>e.dia));
 
+  // Use all stored entries for week/month comparisons (not just filtered period)
+  const allEntries = load();
+  const latestDate = new Date(Math.max(...data.map(e=>new Date(e.dt))));
+
   // This week vs last week
   const now = new Date(Math.max(...data.map(e=>new Date(e.dt))));
   const startOfThisWeek = new Date(now); startOfThisWeek.setDate(now.getDate()-7); startOfThisWeek.setHours(0,0,0,0);
@@ -1061,9 +1065,7 @@ function generateReport() {
   const twSys = avg(thisWeek.map(e=>e.sys));
   const lwSys = avg(lastWeek.map(e=>e.sys));
 
-  // This month vs last month - use ALL stored entries, not just filtered data
-  const allEntries = load();
-  const latestDate = new Date(Math.max(...data.map(e=>new Date(e.dt))));
+  // This month vs last month
   const thisMonthStart = new Date(latestDate.getFullYear(), latestDate.getMonth(), 1);
   const lastMonthStart = new Date(latestDate.getFullYear(), latestDate.getMonth()-1, 1);
   const thisMonth = allEntries.filter(e=>new Date(e.dt)>=thisMonthStart);
@@ -1352,7 +1354,7 @@ ${morningEveningChart}
   </div>
 </div>
 
-<div class="footer">Generisano: ${genDate} &nbsp;·&nbsp; Mjerač Pritiska v5.1</div>
+<div class="footer">Generisano: ${genDate} &nbsp;·&nbsp; Mjerač Pritiska v5.2</div>
 </div>
 
 <script>
