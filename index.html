@@ -49,12 +49,14 @@
     .icon-btn:active { background: var(--surface2); transform: scale(0.95); }
 
     nav {
-      display: flex; background: var(--surface);
+      display: flex; flex-direction: row; flex-wrap: nowrap;
+      background: var(--surface);
       border-bottom: 1px solid var(--border);
       position: sticky; top: 63px; z-index: 99;
+      width: 100%;
     }
     .tab {
-      flex: 1; padding: 10px 4px; text-align: center;
+      flex: 1 1 0; min-width: 0; padding: 10px 4px; text-align: center;
       font-size: 11px; font-family: var(--mono); letter-spacing: 0.5px;
       color: var(--text-muted); cursor: pointer;
       border-bottom: 2px solid transparent; transition: all 0.2s;
@@ -207,7 +209,7 @@
 <body>
 
 <header>
-  <div class="header-title"><span>🫀</span> Pritisak <span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);font-style:normal;margin-left:4px;">v3</span></div>
+  <div class="header-title"><span>🫀</span> Pritisak <span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);font-style:normal;margin-left:4px;">v3.2</span></div>
   <div style="display:flex;gap:8px;">
     <button class="icon-btn" onclick="triggerImport()" title="Import CSV">⬆️</button>
     <button class="icon-btn" onclick="exportCSV()" title="Export CSV">⬇️</button>
@@ -243,7 +245,47 @@
   </div>
 </div>
 
-<nav>
+<!-- EDIT MODAL -->
+<div id="edit-modal" style="display:none; position:fixed; inset:0; z-index:500; background:rgba(0,0,0,0.7); padding:20px; align-items:flex-end; overflow-y:auto;">
+  <div style="background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:20px; width:100%; max-width:480px; margin:0 auto;">
+    <div style="font-family:var(--serif); font-size:18px; margin-bottom:16px;">✏️ Uredi mjerenje</div>
+
+    <div class="datetime-row" style="margin-bottom:14px;">
+      <div>
+        <input type="date" id="edit-date" />
+        <input type="time" id="edit-time" />
+      </div>
+      <span class="tag-preview" id="edit-tag-display">—</span>
+    </div>
+
+    <div class="bp-grid" style="margin-bottom:14px;">
+      <div class="input-group">
+        <label>Sistolni</label>
+        <input type="number" id="edit-sys" min="60" max="250" inputmode="numeric" />
+        <div class="unit">mmHg</div>
+      </div>
+      <div class="input-group">
+        <label>Dijastolni</label>
+        <input type="number" id="edit-dia" min="40" max="150" inputmode="numeric" />
+        <div class="unit">mmHg</div>
+      </div>
+      <div class="input-group">
+        <label>Puls</label>
+        <input type="number" id="edit-pulse" min="30" max="250" inputmode="numeric" />
+        <div class="unit">bpm</div>
+      </div>
+    </div>
+
+    <textarea class="comment-input" id="edit-comment" placeholder="Komentar (opcionalno)..."></textarea>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:4px;">
+      <button class="btn-secondary" onclick="closeEditModal()">Odustani</button>
+      <button class="btn-primary" style="margin:0;" onclick="saveEdit()">💾 Sačuvaj</button>
+    </div>
+  </div>
+</div>
+
+
   <div class="tab active" onclick="switchTab('unos', this)"><span class="tab-icon">➕</span>Unos</div>
   <div class="tab" onclick="switchTab('istorija', this)"><span class="tab-icon">📋</span>Istorija</div>
   <div class="tab" onclick="switchTab('grafik', this)"><span class="tab-icon">📈</span>Grafik</div>
@@ -441,7 +483,10 @@ function renderHistory() {
           <div>${fmtDate(e.dt)}</div>
           <div>${fmtTime(e.dt)} · <span class="tag-preview tag-${e.tag}" style="font-size:9px;padding:1px 6px;">${tagLabel(e.tag)}</span></div>
         </div>
-        <button class="del-btn" onclick="delEntry(${e.id})">🗑️</button>
+        <div style="display:flex;gap:6px;">
+          <button class="del-btn" onclick="openEditModal(${e.id})" style="color:var(--accent);">✏️</button>
+          <button class="del-btn" onclick="delEntry(${e.id})">🗑️</button>
+        </div>
       </div>
       <div class="entry-bp">
         <span class="bp-value">${e.sys}</span>
@@ -461,6 +506,68 @@ function delEntry(id) {
   save(load().filter(e=>e.id!==id));
   renderHistory(); renderCharts();
   showToast('🗑️ Obrisano');
+}
+
+// ── EDIT ──────────────────────────────────────────────────
+let editingId = null;
+
+function openEditModal(id) {
+  const entry = load().find(e=>e.id===id);
+  if (!entry) return;
+  editingId = id;
+
+  const dt = new Date(entry.dt);
+  document.getElementById('edit-date').value = dt.toISOString().slice(0,10);
+  document.getElementById('edit-time').value = dt.toTimeString().slice(0,5);
+  document.getElementById('edit-sys').value = entry.sys;
+  document.getElementById('edit-dia').value = entry.dia;
+  document.getElementById('edit-pulse').value = entry.pulse || '';
+  document.getElementById('edit-comment').value = entry.comment || '';
+  updateEditTag();
+
+  const m = document.getElementById('edit-modal');
+  m.style.display = 'flex';
+}
+
+function updateEditTag() {
+  const t = document.getElementById('edit-time').value;
+  if (!t) return;
+  const tag = getTag(parseInt(t.split(':')[0]));
+  const el = document.getElementById('edit-tag-display');
+  el.textContent = tagLabel(tag);
+  el.className = 'tag-preview tag-' + tag;
+}
+
+document.getElementById('edit-time').addEventListener('change', updateEditTag);
+document.getElementById('edit-date').addEventListener('change', updateEditTag);
+
+function closeEditModal() {
+  document.getElementById('edit-modal').style.display = 'none';
+  editingId = null;
+}
+
+function saveEdit() {
+  const date = document.getElementById('edit-date').value;
+  const time = document.getElementById('edit-time').value;
+  const sys  = parseInt(document.getElementById('edit-sys').value);
+  const dia  = parseInt(document.getElementById('edit-dia').value);
+  const pulse= parseInt(document.getElementById('edit-pulse').value);
+  const comment = document.getElementById('edit-comment').value.trim();
+
+  if (!date||!time) { showToast('⚠️ Unesite datum i vrijeme'); return; }
+  if (!sys||!dia||sys<60||dia<40) { showToast('⚠️ Unesite ispravne vrijednosti'); return; }
+
+  const dt = new Date(date+'T'+time);
+  const entries = load().map(e => {
+    if (e.id !== editingId) return e;
+    return { ...e, dt: dt.toISOString(), sys, dia, pulse: isNaN(pulse)?null:pulse, comment, tag: getTag(dt.getHours()) };
+  });
+  // Re-sort descending
+  entries.sort((a,b) => new Date(b.dt) - new Date(a.dt));
+  save(entries);
+  closeEditModal();
+  renderHistory(); renderCharts();
+  showToast('✅ Mjerenje ažurirano');
 }
 
 // ── CHARTS ────────────────────────────────────────────────
