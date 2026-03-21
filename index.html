@@ -221,7 +221,7 @@
 <body>
 
 <header>
-  <div class="header-title" style="flex-direction:column;align-items:flex-start;gap:2px;"><div style="display:flex;align-items:center;gap:8px;"><span>🫀</span> Pritisak</div><span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);">v5.9</span></div>
+  <div class="header-title" style="flex-direction:column;align-items:flex-start;gap:2px;"><div style="display:flex;align-items:center;gap:8px;"><span>🫀</span> Pritisak</div><span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);">v5.9.1</span></div>
   <div style="display:flex;gap:8px;">
     <button class="icon-btn" onclick="triggerImport()" title="Import CSV">⬆️</button>
     <button class="icon-btn" onclick="openExportModal()" title="Export CSV">⬇️</button>
@@ -387,14 +387,14 @@
 <!-- EDIT MODAL -->
 <div id="edit-modal" style="display:none; position:fixed; inset:0; z-index:500; background:rgba(0,0,0,0.7); padding:20px; align-items:flex-end; overflow-y:auto;">
   <div style="background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:20px; width:100%; max-width:480px; margin:0 auto;">
-    <div style="font-family:var(--serif); font-size:18px; margin-bottom:16px;">✏️ Uredi mjerenje</div>
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+      <div style="font-family:var(--serif); font-size:18px;">✏️ Uredi mjerenje</div>
+      <span class="tag-preview" id="edit-tag-display">—</span>
+    </div>
 
-    <div class="datetime-row" style="margin-bottom:14px;">
-      <div style="display:flex; align-items:center; gap:10px; flex-wrap:nowrap;">
-        <input type="date" id="edit-date" />
-        <input type="time" id="edit-time" />
-      </div>
-      <span class="tag-preview" id="edit-tag-display" style="flex-shrink:0;">—</span>
+    <div class="datetime-row" style="margin-bottom:14px; flex-direction:column; align-items:stretch; gap:0; padding:14px 16px;">
+      <input type="date" id="edit-date" style="width:100%; font-size:22px; padding-bottom:8px; border-bottom:1px solid var(--border);" />
+      <input type="time" id="edit-time" style="width:100%; font-size:28px; font-weight:500; letter-spacing:2px; padding-top:8px;" />
     </div>
 
     <div class="bp-grid" style="margin-bottom:14px;">
@@ -1360,7 +1360,7 @@ ${morningEveningChart}
   </div>
 </div>
 
-<div class="footer">Generisano: ${genDate} &nbsp;·&nbsp; Mjerač Pritiska v5.9</div>
+<div class="footer">Generisano: ${genDate} &nbsp;·&nbsp; Mjerač Pritiska v5.9.1</div>
 </div>
 
 <script>
