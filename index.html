@@ -72,14 +72,18 @@
     .form-card h2 { font-family: var(--serif); font-size: 18px; margin-bottom: 16px; }
 
     .datetime-row {
-      background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+      background: var(--bg); border: 1px solid var(--border); border-radius: 10px;
       padding: 10px 14px; margin-bottom: 14px;
       display: flex; align-items: center; justify-content: space-between; gap: 8px;
     }
-    .datetime-row input {
+    .datetime-row input[type=date],
+    .datetime-row input[type=time] {
       background: none; border: none; color: var(--accent);
-      font-family: var(--mono); font-size: 13px; outline: none; cursor: pointer;
+      font-family: var(--mono); font-size: 14px; outline: none; cursor: pointer;
+      -webkit-appearance: none; appearance: none;
+      color-scheme: dark;
     }
+    .dt-sep { color: var(--border); font-size: 18px; margin: 0 4px; }
 
     .tag-preview { font-size: 11px; padding: 3px 8px; border-radius: 20px; font-weight: 500; letter-spacing: 0.5px; white-space: nowrap; }
     .tag-jutarnje { background: rgba(210,153,34,0.15); color: var(--tag-morning); }
@@ -214,7 +218,7 @@
 <body>
 
 <header>
-  <div class="header-title" style="flex-direction:column;align-items:flex-start;gap:2px;"><div style="display:flex;align-items:center;gap:8px;"><span>🫀</span> Pritisak</div><span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);">v3.7</span></div>
+  <div class="header-title" style="flex-direction:column;align-items:flex-start;gap:2px;"><div style="display:flex;align-items:center;gap:8px;"><span>🫀</span> Pritisak</div><span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);">v4.0</span></div>
   <div style="display:flex;gap:8px;">
     <button class="icon-btn" onclick="triggerImport()" title="Import CSV">⬆️</button>
     <button class="icon-btn" onclick="openExportModal()" title="Export CSV">⬇️</button>
@@ -357,8 +361,11 @@
     <div style="font-family:var(--serif); font-size:18px; margin-bottom:16px;">✏️ Uredi mjerenje</div>
 
     <div class="datetime-row" style="margin-bottom:14px;">
-      <div>
+      <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+        <span style="font-size:11px;color:var(--text-muted);">📅</span>
         <input type="date" id="edit-date" />
+        <span class="dt-sep">·</span>
+        <span style="font-size:11px;color:var(--text-muted);">🕐</span>
         <input type="time" id="edit-time" />
       </div>
       <span class="tag-preview" id="edit-tag-display">—</span>
@@ -403,11 +410,14 @@
   <div class="form-card">
     <h2>Novo mjerenje</h2>
     <div class="datetime-row">
-      <div>
+      <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+        <span style="font-size:11px;color:var(--text-muted);letter-spacing:0.5px;">📅</span>
         <input type="date" id="inp-date" />
+        <span class="dt-sep">·</span>
+        <span style="font-size:11px;color:var(--text-muted);">🕐</span>
         <input type="time" id="inp-time" />
       </div>
-      <span class="tag-preview" id="tag-display">—</span>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;"><button onclick="setNow()" style="background:none;border:none;font-size:10px;color:var(--text-muted);cursor:pointer;padding:2px 4px;font-family:var(--mono);letter-spacing:0.3px;">🔄 sad</button><span class="tag-preview" id="tag-display">—</span></div>
     </div>
     <div class="bp-grid">
       <div class="input-group">
@@ -430,26 +440,23 @@
     <button class="btn-primary" onclick="saveEntry()">💾 Sačuvaj mjerenje</button>
     <div class="success-flash" id="success-flash">✅ Mjerenje sačuvano!</div>
   </div>
-  <div class="form-card" style="background:transparent; padding:14px 16px;">
-    <div style="font-size:10px;letter-spacing:0.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px;">Tagovi po vremenu</div>
-    <div class="legend">
-      <div class="legend-item"><div class="legend-dot" style="background:var(--tag-morning)"></div> Jutarnje · 06–10h</div>
-      <div class="legend-item"><div class="legend-dot" style="background:var(--tag-evening)"></div> Večernje · 20–24h</div>
-      <div class="legend-item"><div class="legend-dot" style="background:var(--tag-other)"></div> Ostalo</div>
-    </div>
+  <div style="padding:0 4px 8px; display:flex; gap:12px; flex-wrap:wrap;">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--tag-morning)"></div> Jut. · 06–10h</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--tag-evening)"></div> Več. · 20–24h</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--tag-other)"></div> Ostalo</div>
   </div>
 </div>
 
 <!-- ISTORIJA -->
 <div id="page-istorija" class="page">
-  <div style="display:flex; align-items:center; gap:6px; margin-bottom:14px; flex-wrap:nowrap;">
-    <div class="filter-row" style="margin-bottom:0; flex:1; overflow-x:auto;">
+  <div style="display:flex; align-items:center; justify-content:space-between; gap:6px; margin-bottom:8px; flex-wrap:wrap;">
+    <div style="display:flex; gap:6px; flex-wrap:wrap;">
       <div class="filter-chip active" onclick="setFilter('sve', this)">Sve</div>
-      <div class="filter-chip" onclick="setFilter('jutarnje', this)">🌅 Jutarnje</div>
-      <div class="filter-chip" onclick="setFilter('vecernje', this)">🌙 Večernje</div>
-      <div class="filter-chip" onclick="setFilter('ostalo', this)">🕐 Ostalo</div>
+      <div class="filter-chip" onclick="setFilter('jutarnje', this)">🌅 Jut.</div>
+      <div class="filter-chip" onclick="setFilter('vecernje', this)">🌙 Več.</div>
+      <div class="filter-chip" onclick="setFilter('ostalo', this)">🕐 Ost.</div>
     </div>
-    <button id="sort-btn" onclick="toggleSort()" style="flex-shrink:0; padding:6px 10px; border-radius:20px; font-size:11px; letter-spacing:0.5px; cursor:pointer; border:1px solid var(--border); background:var(--surface); color:var(--text-muted); white-space:nowrap; font-family:var(--mono);">↓ Noviji</button>
+    <button id="sort-btn" onclick="toggleSort()" style="flex-shrink:0; padding:6px 12px; border-radius:20px; font-size:11px; letter-spacing:0.5px; cursor:pointer; border:1px solid var(--border); background:var(--surface); color:var(--text-muted); white-space:nowrap; font-family:var(--mono);">↓ Noviji</button>
   </div>
   <div id="entries-list"></div>
 </div>
@@ -517,8 +524,15 @@ function bpStatus(s,d) {
   if (s<=179&&d<=109)        return {label:'Visok II',   cls:'bp-high2'};
   return                            {label:'⚠️ Kriza',   cls:'bp-crisis'};
 }
-function fmtDate(dt) { return new Date(dt).toLocaleDateString('bs',{day:'2-digit',month:'short',year:'numeric'}); }
-function fmtTime(dt) { return new Date(dt).toLocaleTimeString('bs',{hour:'2-digit',minute:'2-digit'}); }
+function fmtDate(dt) {
+  const d = new Date(dt);
+  const months = ['jan','feb','mar','apr','maj','jun','jul','aug','sep','okt','nov','dec'];
+  return d.getDate() + '. ' + months[d.getMonth()] + ' ' + d.getFullYear() + '.';
+}
+function fmtTime(dt) {
+  const d = new Date(dt);
+  return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+}
 
 // ── FORM ──────────────────────────────────────────────────
 function setNow() {
@@ -836,9 +850,11 @@ function renderCharts() {
   const pulses = data.filter(e=>e.pulse).map(e=>e.pulse);
   document.getElementById('avg-pulse').textContent = avg(pulses) || '—';
 
+  const MONS = ['jan','feb','mar','apr','maj','jun','jul','aug','sep','okt','nov','dec'];
   const labels = data.map(e => {
     const d = new Date(e.dt);
-    return d.toLocaleDateString('bs',{day:'2-digit',month:'short'}) + ' ' + d.toLocaleTimeString('bs',{hour:'2-digit',minute:'2-digit'});
+    const time = String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+    return d.getDate() + '. ' + MONS[d.getMonth()] + ' ' + time;
   });
 
   const base = {
@@ -859,27 +875,41 @@ function renderCharts() {
     }
   };
 
+  const bpMin = data.length ? Math.max(40, Math.min(...data.map(e=>e.dia)) - 10) : 40;
+  const bpMax = data.length ? Math.min(220, Math.max(...data.map(e=>e.sys)) + 10) : 220;
+  const bpBase = JSON.parse(JSON.stringify(base));
+  bpBase.scales.y.min = bpMin;
+  bpBase.scales.y.max = bpMax;
+
   if (bpChart) bpChart.destroy();
   bpChart = new Chart(document.getElementById('bp-chart').getContext('2d'), {
     type:'line',
     data:{
       labels,
       datasets:[
-        {label:'Sistolni',data:data.map(e=>e.sys),borderColor:'#58a6ff',backgroundColor:'rgba(88,166,255,0.08)',borderWidth:2,pointRadius:4,pointBackgroundColor:'#58a6ff',tension:0.3,fill:true},
-        {label:'Dijastolni',data:data.map(e=>e.dia),borderColor:'#3fb950',backgroundColor:'rgba(63,185,80,0.06)',borderWidth:2,pointRadius:4,pointBackgroundColor:'#3fb950',tension:0.3,fill:true}
+        {label:'Sistolni',data:data.map(e=>e.sys),borderColor:'#58a6ff',backgroundColor:'rgba(88,166,255,0.08)',borderWidth:2,pointRadius:4,pointBackgroundColor:'#58a6ff',tension:0.3,fill:false},
+        {label:'Dijastolni',data:data.map(e=>e.dia),borderColor:'#3fb950',backgroundColor:'rgba(63,185,80,0.06)',borderWidth:2,pointRadius:4,pointBackgroundColor:'#3fb950',tension:0.3,fill:false}
       ]
     },
-    options:base
+    options:bpBase
   });
+
+  const pulseData = data.map(e=>e.pulse);
+  const validPulse = pulseData.filter(v=>v!=null);
+  const pulseMin = validPulse.length ? Math.max(30, Math.min(...validPulse) - 10) : 30;
+  const pulseMax = validPulse.length ? Math.min(220, Math.max(...validPulse) + 10) : 220;
+  const pulseBase = JSON.parse(JSON.stringify(base));
+  pulseBase.scales.y.min = pulseMin;
+  pulseBase.scales.y.max = pulseMax;
 
   if (pulseChart) pulseChart.destroy();
   pulseChart = new Chart(document.getElementById('pulse-chart').getContext('2d'), {
     type:'line',
     data:{
       labels,
-      datasets:[{label:'Puls',data:data.map(e=>e.pulse),borderColor:'#f85149',backgroundColor:'rgba(248,81,73,0.08)',borderWidth:2,pointRadius:4,pointBackgroundColor:'#f85149',tension:0.3,fill:true,spanGaps:true}]
+      datasets:[{label:'Puls',data:pulseData,borderColor:'#f85149',backgroundColor:'rgba(248,81,73,0.08)',borderWidth:2,pointRadius:4,pointBackgroundColor:'#f85149',tension:0.3,fill:false,spanGaps:true}]
     },
-    options:base
+    options:pulseBase
   });
 }
 
@@ -1080,7 +1110,7 @@ function generateReport() {
     <p style="font-size:11px;color:#94a3b8;margin-top:10px;line-height:1.6;">💡 Napomena: Jedno mjerenje ne znači dijagnozu. Pritisak varira u zavisnosti od stresa, fizičke aktivnosti i doba dana. Ako su vrijednosti često van normalnog opsega — konsultuj se s ljekarom.</p>
   </div>
 
-  <div class="footer">Generisano: ${new Date().toLocaleDateString('bs',{day:'2-digit',month:'long',year:'numeric'})} · Mjerač Pritiska v3.7</div>
+  <div class="footer">Generisano: ${new Date().toLocaleDateString('bs',{day:'2-digit',month:'long',year:'numeric'})} · Mjerač Pritiska v4.0</div>
 </div>
 <script>
 const labels=${JSON.stringify(labels)};
