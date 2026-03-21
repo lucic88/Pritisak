@@ -219,7 +219,7 @@
 <body>
 
 <header>
-  <div class="header-title" style="flex-direction:column;align-items:flex-start;gap:2px;"><div style="display:flex;align-items:center;gap:8px;"><span>🫀</span> Pritisak</div><span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);">v5.4</span></div>
+  <div class="header-title" style="flex-direction:column;align-items:flex-start;gap:2px;"><div style="display:flex;align-items:center;gap:8px;"><span>🫀</span> Pritisak</div><span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);">v5.5</span></div>
   <div style="display:flex;gap:8px;">
     <button class="icon-btn" onclick="triggerImport()" title="Import CSV">⬆️</button>
     <button class="icon-btn" onclick="openExportModal()" title="Export CSV">⬇️</button>
@@ -1262,9 +1262,12 @@ tr:last-child td{border-bottom:none;}
 <body>
 <div class="wrap">
 
-<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:2px;">
+<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:2px;flex-wrap:wrap;">
   <h1>🫀 Izvještaj krvnog pritiska</h1>
-  <button onclick="window.print()" style="flex-shrink:0;padding:8px 14px;background:#0f172a;color:#fff;border:none;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit;white-space:nowrap;margin-top:4px;">🖨️ Štampaj / PDF</button>
+  <div style="display:flex;gap:8px;flex-shrink:0;margin-top:4px;">
+    <button id="dl-btn" onclick="downloadReport()" style="padding:8px 14px;background:#1e293b;color:#fff;border:none;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit;white-space:nowrap;">⬇️ Preuzmi HTML</button>
+    <button onclick="window.print()" style="padding:8px 14px;background:#0f172a;color:#fff;border:none;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit;white-space:nowrap;">🖨️ Štampaj / PDF</button>
+  </div>
 </div>
 <div class="subtitle">${tagName} mjerenja &nbsp;·&nbsp; ${fromFmt} &ndash; ${toFmt} &nbsp;·&nbsp; Ukupno: <strong>${data.length}</strong> mjerenja</div>
 
@@ -1361,7 +1364,7 @@ ${morningEveningChart}
   </div>
 </div>
 
-<div class="footer">Generisano: ${genDate} &nbsp;·&nbsp; Mjerač Pritiska v5.4</div>
+<div class="footer">Generisano: ${genDate} &nbsp;·&nbsp; Mjerač Pritiska v5.5</div>
 </div>
 
 <script>
@@ -1450,19 +1453,29 @@ if (meEl && morningSys.length && eveningSys.length) {
     {label:'🌙 Več. Dijastolni',data:eveningDia, borderColor:'#a78bfa',borderWidth:2,pointRadius:3,tension:0.3,fill:false,borderDash:[4,3]},
   ]},options:mkBase(meMin,meMax)});
 }
+function downloadReport() {
+  const html = document.documentElement.outerHTML;
+  const blob = new Blob([html], {type:'text/html;charset=utf-8;'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = document.title.replace(/\s+/g,'_') + '.html';
+  a.click();
+}
 <\/script>
 </body></html>`;
 
 
+  // Store for download button
+  window._reportHtml = html;
+  window._reportFilename = `izvjestaj_pritisak_${from}_${to}.html`;
+
+  // Open in new tab
   const blob2 = new Blob([html], {type:'text/html;charset=utf-8;'});
   const url = URL.createObjectURL(blob2);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `izvjestaj_pritisak_${from}_${to}.html`;
-  a.click();
+  window.open(url, '_blank');
 
   closeShareModal();
-  showToast('✅ Izvještaj generisan!');
+  showToast('✅ Izvještaj otvoren!');
 }
 
 // ── IMPORT CSV ────────────────────────────────────────────
