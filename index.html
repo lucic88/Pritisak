@@ -219,7 +219,7 @@
 <body>
 
 <header>
-  <div class="header-title" style="flex-direction:column;align-items:flex-start;gap:2px;"><div style="display:flex;align-items:center;gap:8px;"><span>🫀</span> Pritisak</div><span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);">v4.8</span></div>
+  <div class="header-title" style="flex-direction:column;align-items:flex-start;gap:2px;"><div style="display:flex;align-items:center;gap:8px;"><span>🫀</span> Pritisak</div><span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);">v4.9</span></div>
   <div style="display:flex;gap:8px;">
     <button class="icon-btn" onclick="triggerImport()" title="Import CSV">⬆️</button>
     <button class="icon-btn" onclick="openExportModal()" title="Export CSV">⬇️</button>
@@ -1053,7 +1053,7 @@ function generateReport() {
   const eAvgDia = avg(evening.map(e=>e.dia));
 
   // This week vs last week
-  const now = new Date();
+  const now = new Date(Math.max(...data.map(e=>new Date(e.dt))));
   const startOfThisWeek = new Date(now); startOfThisWeek.setDate(now.getDate()-7); startOfThisWeek.setHours(0,0,0,0);
   const startOfLastWeek = new Date(now); startOfLastWeek.setDate(now.getDate()-14); startOfLastWeek.setHours(0,0,0,0);
   const thisWeek = data.filter(e=>new Date(e.dt)>=startOfThisWeek);
@@ -1061,9 +1061,10 @@ function generateReport() {
   const twSys = avg(thisWeek.map(e=>e.sys));
   const lwSys = avg(lastWeek.map(e=>e.sys));
 
-  // This month vs last month
-  const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  const lastMonthStart = new Date(now.getFullYear(), now.getMonth()-1, 1);
+  // This month vs last month - based on latest date in dataset
+  const latestDate = new Date(Math.max(...data.map(e=>new Date(e.dt))));
+  const thisMonthStart = new Date(latestDate.getFullYear(), latestDate.getMonth(), 1);
+  const lastMonthStart = new Date(latestDate.getFullYear(), latestDate.getMonth()-1, 1);
   const thisMonth = data.filter(e=>new Date(e.dt)>=thisMonthStart);
   const lastMonth = data.filter(e=>{ const d=new Date(e.dt); return d>=lastMonthStart&&d<thisMonthStart; });
   const tmSys = avg(thisMonth.map(e=>e.sys));
@@ -1095,7 +1096,7 @@ function generateReport() {
   const MNS = ['jan','feb','mar','apr','maj','jun','jul','aug','sep','okt','nov','dec'];
   const rows = data.map(e=>{
     const dt=new Date(e.dt);
-    const tagLbl={jutarnje:'🌅 Jut.',vecernje:'🌙 Več.',ostalo:'🕐 Ost.'}[e.tag]||e.tag;
+    const tagLbl={jutarnje:'🌅<br>Jut.',vecernje:'🌙<br>Več.',ostalo:'🕐<br>Ost.'}[e.tag]||e.tag;
     const time = String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0');
     const date = dt.getDate()+'. '+MNS[dt.getMonth()]+' '+dt.getFullYear()+'.';
     const commentRow = e.comment ? `<tr><td colspan="5" style="padding:2px 10px 8px;color:#94a3b8;font-style:italic;font-size:11px;border-bottom:1px solid #f1f5f9;">💬 ${e.comment}</td></tr>` : '';
@@ -1132,7 +1133,7 @@ function generateReport() {
   </div>` : '';
 
   // Week comparison
-  const cmpWeeks = (twSys||lwSys) ? `
+  const cmpWeeks = (thisWeek.length>0 || lastWeek.length>0) ? `
   <div class="stitle">Ova vs Prošla sedmica</div>
   <div class="cgrid">
     <div class="cc thisweek">
@@ -1148,16 +1149,16 @@ function generateReport() {
   </div>` : '';
 
   // Month comparison
-  const cmpMonths = (tmSys||lmSys) ? `
+  const cmpMonths = (thisMonth.length>0 || lastMonth.length>0) ? `
   <div class="stitle">Ovaj vs Prošli mjesec</div>
   <div class="cgrid">
     <div class="cc thismonth">
-      <div class="clabel">🗓️ Ovaj mjesec (${thisMonth.length} mj.)</div>
-      <div class="cval">${trendIcon(tmSys, lmSys)}</div>
+      <div class="clabel">🗓️ Ovaj mj. (${thisMonth.length} mj.)</div>
+      <div class="cval">${tmSys ? trendIcon(tmSys, lmSys) : '&mdash;'}</div>
       <div class="csub">Prosjek Sistolni mmHg</div>
     </div>
     <div class="cc lastmonth">
-      <div class="clabel">🗓️ Prošli mjesec (${lastMonth.length} mj.)</div>
+      <div class="clabel">🗓️ Prošli mj. (${lastMonth.length} mj.)</div>
       <div class="cval">${lmSys||'&mdash;'}</div>
       <div class="csub">Prosjek Sistolni mmHg</div>
     </div>
@@ -1213,11 +1214,11 @@ h1{font-size:24px;font-weight:700;color:#0f172a;margin-bottom:2px;}
 .zlegend{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;}
 .zitem{display:flex;align-items:center;gap:4px;font-size:11px;color:#64748b;}
 .zdot{width:10px;height:10px;border-radius:2px;flex-shrink:0;}
-table{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed;border-radius:8px;overflow:hidden;}
-th{background:#f8fafc;padding:8px 10px;text-align:left;font-size:10px;letter-spacing:0.5px;text-transform:uppercase;color:#94a3b8;font-weight:600;border-bottom:1px solid #e2e8f0;overflow:hidden;}
-td{padding:8px 10px;border-bottom:1px solid #f8fafc;overflow:hidden;word-wrap:break-word;overflow-wrap:break-word;}
+table{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed;}
+th{background:#f8fafc;padding:8px 10px;text-align:left;font-size:10px;letter-spacing:0.5px;text-transform:uppercase;color:#94a3b8;font-weight:600;border-bottom:1px solid #e2e8f0;}
+td{padding:8px 10px;border-bottom:1px solid #f8fafc;word-wrap:break-word;overflow-wrap:break-word;vertical-align:top;}
 tr:last-child td{border-bottom:none;}
-.col-dt{width:22%} .col-tag{width:13%} .col-bp{width:17%} .col-pulse{width:10%} .col-status{width:38%}
+.col-dt{width:23%} .col-tag{width:11%} .col-bp{width:16%} .col-pulse{width:10%} .col-status{width:40%}
 .badge{display:inline-block;padding:2px 6px;border-radius:20px;font-size:10px;font-weight:600;}
 .b-low{background:#dbeafe;color:#2563eb;} .b-ideal{background:#dcfce7;color:#16a34a;}
 .b-normal{background:#d1fae5;color:#059669;} .b-elevated{background:#fef3c7;color:#d97706;}
@@ -1348,7 +1349,7 @@ ${morningEveningChart}
   </div>
 </div>
 
-<div class="footer">Generisano: ${genDate} &nbsp;·&nbsp; Mjerač Pritiska v4.8</div>
+<div class="footer">Generisano: ${genDate} &nbsp;·&nbsp; Mjerač Pritiska v4.9</div>
 </div>
 
 <script>
