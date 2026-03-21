@@ -214,7 +214,7 @@
 <body>
 
 <header>
-  <div class="header-title" style="flex-direction:column;align-items:flex-start;gap:2px;"><div style="display:flex;align-items:center;gap:8px;"><span>🫀</span> Pritisak</div><span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);">v3.5</span></div>
+  <div class="header-title" style="flex-direction:column;align-items:flex-start;gap:2px;"><div style="display:flex;align-items:center;gap:8px;"><span>🫀</span> Pritisak</div><span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);">v3.7</span></div>
   <div style="display:flex;gap:8px;">
     <button class="icon-btn" onclick="triggerImport()" title="Import CSV">⬆️</button>
     <button class="icon-btn" onclick="openExportModal()" title="Export CSV">⬇️</button>
@@ -442,11 +442,14 @@
 
 <!-- ISTORIJA -->
 <div id="page-istorija" class="page">
-  <div class="filter-row">
-    <div class="filter-chip active" onclick="setFilter('sve', this)">Sve</div>
-    <div class="filter-chip" onclick="setFilter('jutarnje', this)">🌅 Jutarnje</div>
-    <div class="filter-chip" onclick="setFilter('vecernje', this)">🌙 Večernje</div>
-    <div class="filter-chip" onclick="setFilter('ostalo', this)">🕐 Ostalo</div>
+  <div style="display:flex; align-items:center; gap:6px; margin-bottom:14px; flex-wrap:nowrap;">
+    <div class="filter-row" style="margin-bottom:0; flex:1; overflow-x:auto;">
+      <div class="filter-chip active" onclick="setFilter('sve', this)">Sve</div>
+      <div class="filter-chip" onclick="setFilter('jutarnje', this)">🌅 Jutarnje</div>
+      <div class="filter-chip" onclick="setFilter('vecernje', this)">🌙 Večernje</div>
+      <div class="filter-chip" onclick="setFilter('ostalo', this)">🕐 Ostalo</div>
+    </div>
+    <button id="sort-btn" onclick="toggleSort()" style="flex-shrink:0; padding:6px 10px; border-radius:20px; font-size:11px; letter-spacing:0.5px; cursor:pointer; border:1px solid var(--border); background:var(--surface); color:var(--text-muted); white-space:nowrap; font-family:var(--mono);">↓ Noviji</button>
   </div>
   <div id="entries-list"></div>
 </div>
@@ -578,38 +581,152 @@ function setFilter(f, el) {
   renderHistory();
 }
 
+// Track which year/month groups are expanded: key = "YYYY" or "YYYY-MM"
+const expandedGroups = new Set();
+let historyInitialized = false;
+
+function getLatestMonthKey(entries) {
+  if (!entries.length) return null;
+  const d = new Date(entries[0].dt);
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+}
+
+function toggleGroup(key, el) {
+  if (expandedGroups.has(key)) {
+    expandedGroups.delete(key);
+    el.setAttribute('data-open', 'false');
+  } else {
+    expandedGroups.add(key);
+    el.setAttribute('data-open', 'true');
+  }
+  const content = document.getElementById('grp-' + key);
+  if (content) content.style.display = expandedGroups.has(key) ? 'block' : 'none';
+  const arrow = el.querySelector('.grp-arrow');
+  if (arrow) arrow.style.transform = expandedGroups.has(key) ? 'rotate(90deg)' : 'rotate(0deg)';
+}
+
+function toggleYear(year) {
+  const key = String(year);
+  const el = document.getElementById('yhdr-' + key);
+  toggleGroup(key, el);
+}
+
+function toggleMonth(year, month) {
+  const key = year + '-' + String(month).padStart(2,'0');
+  const el = document.getElementById('mhdr-' + key);
+  toggleGroup(key, el);
+}
+
+const MONTHS_BS = ['Januar','Februar','Mart','April','Maj','Juni','Juli','August','Septembar','Oktobar','Novembar','Decembar'];
+
 function renderHistory() {
   const entries = load();
-  const filtered = currentFilter==='sve' ? entries : entries.filter(e=>e.tag===currentFilter);
+  let filtered = currentFilter==='sve' ? [...entries] : entries.filter(e=>e.tag===currentFilter);
+  filtered.sort((a,b) => sortAsc ? new Date(a.dt)-new Date(b.dt) : new Date(b.dt)-new Date(a.dt));
   const c = document.getElementById('entries-list');
+
   if (!filtered.length) {
     c.innerHTML = `<div class="empty-state"><span class="emoji">📭</span><p>Nema mjerenja.<br>Dodaj prvo mjerenje!</p></div>`;
     return;
   }
-  c.innerHTML = filtered.map(e => {
-    const st = bpStatus(e.sys, e.dia);
-    return `<div class="entry-card ${e.tag}">
-      <div class="entry-top">
-        <div class="entry-datetime">
-          <div>${fmtDate(e.dt)}</div>
-          <div>${fmtTime(e.dt)} · <span class="tag-preview tag-${e.tag}" style="font-size:9px;padding:1px 6px;">${tagLabel(e.tag)}</span></div>
+
+  // On first render, auto-expand only the latest month
+  if (!historyInitialized) {
+    const latestKey = getLatestMonthKey(filtered);
+    if (latestKey) {
+      const yr = latestKey.split('-')[0];
+      expandedGroups.add(yr);
+      expandedGroups.add(latestKey);
+    }
+    historyInitialized = true;
+  }
+
+  // Group by year then month
+  const byYear = {};
+  filtered.forEach(e => {
+    const d = new Date(e.dt);
+    const yr = d.getFullYear();
+    const mo = d.getMonth() + 1;
+    const moKey = yr + '-' + String(mo).padStart(2,'0');
+    if (!byYear[yr]) byYear[yr] = {};
+    if (!byYear[yr][moKey]) byYear[yr][moKey] = [];
+    byYear[yr][moKey].push(e);
+  });
+
+  const years = Object.keys(byYear).sort((a,b) => sortAsc ? a-b : b-a);
+
+  let html = '';
+  years.forEach(yr => {
+    const yrOpen = expandedGroups.has(yr);
+    const months = Object.keys(byYear[yr]).sort((a,b) => sortAsc ? a.localeCompare(b) : b.localeCompare(a));
+    const yrCount = months.reduce((sum, mk) => sum + byYear[yr][mk].length, 0);
+
+    html += `
+    <div style="margin-bottom:6px;">
+      <div id="yhdr-${yr}" data-open="${yrOpen}" onclick="toggleYear(${yr})"
+        style="display:flex;align-items:center;justify-content:space-between;
+               padding:10px 14px;background:var(--surface2);border:1px solid var(--border);
+               border-radius:10px;cursor:pointer;user-select:none;margin-bottom:${yrOpen?'6px':'0'};">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="grp-arrow" style="color:var(--accent);font-size:12px;transition:transform 0.2s;transform:${yrOpen?'rotate(90deg)':'rotate(0deg)'};">▶</span>
+          <span style="font-size:14px;font-weight:600;color:var(--text);">${yr}</span>
         </div>
-        <div style="display:flex;gap:6px;">
-          <button class="del-btn" onclick="openEditModal(${e.id})" style="color:var(--accent);">✏️</button>
-          <button class="del-btn" onclick="delEntry(${e.id})">🗑️</button>
-        </div>
+        <span style="font-size:11px;color:var(--text-muted);">${yrCount} mjerenja</span>
       </div>
-      <div class="entry-bp">
-        <span class="bp-value">${e.sys}</span>
-        <span class="bp-sep">/</span>
-        <span class="bp-value">${e.dia}</span>
-        <span class="bp-unit">mmHg</span>
-        <span class="bp-status ${st.cls}" style="margin-left:8px;">${st.label}</span>
-      </div>
-      ${e.pulse ? `<div class="entry-pulse">❤️ Puls: <span>${e.pulse}</span> bpm</div>` : ''}
-      ${e.comment ? `<div class="entry-comment">💬 ${e.comment}</div>` : ''}
-    </div>`;
-  }).join('');
+      <div id="grp-${yr}" style="display:${yrOpen?'block':'none'}; padding-left:10px;">`;
+
+    months.forEach(moKey => {
+      const moNum = parseInt(moKey.split('-')[1]);
+      const moName = MONTHS_BS[moNum-1];
+      const moEntries = byYear[yr][moKey];
+      const moOpen = expandedGroups.has(moKey);
+
+      html += `
+        <div style="margin-bottom:6px;">
+          <div id="mhdr-${moKey}" data-open="${moOpen}" onclick="toggleMonth(${yr},${moNum})"
+            style="display:flex;align-items:center;justify-content:space-between;
+                   padding:8px 12px;background:var(--surface);border:1px solid var(--border);
+                   border-radius:8px;cursor:pointer;user-select:none;margin-bottom:${moOpen?'6px':'0'};">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span class="grp-arrow" style="color:var(--text-muted);font-size:11px;transition:transform 0.2s;transform:${moOpen?'rotate(90deg)':'rotate(0deg)'};">▶</span>
+              <span style="font-size:13px;color:var(--text);">${moName} ${yr}</span>
+            </div>
+            <span style="font-size:11px;color:var(--text-muted);">${moEntries.length} mjerenja</span>
+          </div>
+          <div id="grp-${moKey}" style="display:${moOpen?'block':'none'};">`;
+
+      moEntries.forEach(e => {
+        const st = bpStatus(e.sys, e.dia);
+        html += `<div class="entry-card ${e.tag}">
+          <div class="entry-top">
+            <div class="entry-datetime">
+              <div>${fmtDate(e.dt)}</div>
+              <div>${fmtTime(e.dt)} · <span class="tag-preview tag-${e.tag}" style="font-size:9px;padding:1px 6px;">${tagLabel(e.tag)}</span></div>
+            </div>
+            <div style="display:flex;gap:6px;">
+              <button class="del-btn" onclick="openEditModal(${e.id})" style="color:var(--accent);">✏️</button>
+              <button class="del-btn" onclick="delEntry(${e.id})">🗑️</button>
+            </div>
+          </div>
+          <div class="entry-bp">
+            <span class="bp-value">${e.sys}</span>
+            <span class="bp-sep">/</span>
+            <span class="bp-value">${e.dia}</span>
+            <span class="bp-unit">mmHg</span>
+            <span class="bp-status ${st.cls}" style="margin-left:8px;">${st.label}</span>
+          </div>
+          ${e.pulse ? `<div class="entry-pulse">❤️ Puls: <span>${e.pulse}</span> bpm</div>` : ''}
+          ${e.comment ? `<div class="entry-comment">💬 ${e.comment}</div>` : ''}
+        </div>`;
+      });
+
+      html += `</div></div>`;  // close month content + month div
+    });
+
+    html += `</div></div>`;  // close year content + year div
+  });
+
+  c.innerHTML = html;
 }
 
 function delEntry(id) {
@@ -963,7 +1080,7 @@ function generateReport() {
     <p style="font-size:11px;color:#94a3b8;margin-top:10px;line-height:1.6;">💡 Napomena: Jedno mjerenje ne znači dijagnozu. Pritisak varira u zavisnosti od stresa, fizičke aktivnosti i doba dana. Ako su vrijednosti često van normalnog opsega — konsultuj se s ljekarom.</p>
   </div>
 
-  <div class="footer">Generisano: ${new Date().toLocaleDateString('bs',{day:'2-digit',month:'long',year:'numeric'})} · Mjerač Pritiska v3.5</div>
+  <div class="footer">Generisano: ${new Date().toLocaleDateString('bs',{day:'2-digit',month:'long',year:'numeric'})} · Mjerač Pritiska v3.7</div>
 </div>
 <script>
 const labels=${JSON.stringify(labels)};
@@ -1116,6 +1233,22 @@ function deleteAll() {
   closeDeleteModal();
   showToast('🗑️ Cjelokupna istorija obrisana');
 }
+// ── HELP MODAL ────────────────────────────────────────────
+function openHelpModal() {
+  document.getElementById('help-modal').style.display = 'flex';
+}
+function closeHelpModal() {
+  document.getElementById('help-modal').style.display = 'none';
+}
+
+// ── SORT ──────────────────────────────────────────────────
+let sortAsc = false;
+function toggleSort() {
+  sortAsc = !sortAsc;
+  document.getElementById('sort-btn').textContent = sortAsc ? '↑ Stariji' : '↓ Noviji';
+  renderHistory();
+}
+
 let toastT;
 function showToast(m) {
   const t=document.getElementById('toast');
