@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0d1117" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Pritisak" />
+  <title>Mjerač Pritiska</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface2: #1f2937;
+      --border: #30363d;
+      --text: #e6edf3;
+      --text-muted: #7d8590;
+      --accent: #58a6ff;
+      --accent2: #3fb950;
+      --warn: #f85149;
+      --tag-morning: #d29922;
+      --tag-evening: #8b5cf6;
+      --tag-other: #6b7280;
+      --radius: 12px;
+      --mono: 'DM Mono', monospace;
+      --serif: 'Instrument Serif', serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body { background: var(--bg); color: var(--text); font-family: var(--mono); min-height: 100dvh; overscroll-behavior: none; }
+
+    header {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(13,17,23,0.92); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 20px 12px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .header-title { font-family: var(--serif); font-size: 22px; letter-spacing: -0.3px; display: flex; align-items: center; gap: 8px; }
+    .icon-btn {
+      background: var(--surface); border: 1px solid var(--border); color: var(--text-muted);
+      width: 36px; height: 36px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 16px; transition: all 0.15s;
+    }
+    .icon-btn:active { background: var(--surface2); transform: scale(0.95); }
+
+    nav {
+      display: flex; background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 63px; z-index: 99;
+    }
+    .tab {
+      flex: 1; padding: 10px 4px; text-align: center;
+      font-size: 11px; font-family: var(--mono); letter-spacing: 0.5px;
+      color: var(--text-muted); cursor: pointer;
+      border-bottom: 2px solid transparent; transition: all 0.2s;
+      text-transform: uppercase;
+    }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .tab-icon { display: block; font-size: 18px; margin-bottom: 2px; }
+
+    .page { display: none; padding: 20px 16px 100px; }
+    .page.active { display: block; }
+
+    .form-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; }
+    .form-card h2 { font-family: var(--serif); font-size: 18px; margin-bottom: 16px; }
+
+    .datetime-row {
+      background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+      padding: 10px 14px; margin-bottom: 14px;
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    }
+    .datetime-row input {
+      background: none; border: none; color: var(--accent);
+      font-family: var(--mono); font-size: 13px; outline: none; cursor: pointer;
+    }
+
+    .tag-preview { font-size: 11px; padding: 3px 8px; border-radius: 20px; font-weight: 500; letter-spacing: 0.5px; white-space: nowrap; }
+    .tag-jutarnje { background: rgba(210,153,34,0.15); color: var(--tag-morning); }
+    .tag-vecernje { background: rgba(139,92,246,0.15); color: var(--tag-evening); }
+    .tag-ostalo { background: rgba(107,114,128,0.15); color: var(--tag-other); }
+
+    .bp-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+    .input-group label { display: block; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
+    .input-group input {
+      width: 100%; background: var(--bg); border: 1px solid var(--border);
+      border-radius: 8px; padding: 10px 12px;
+      font-family: var(--mono); font-size: 20px; color: var(--text);
+      text-align: center; outline: none; transition: border-color 0.2s; -webkit-appearance: none;
+    }
+    .input-group input:focus { border-color: var(--accent); }
+    .input-group input::placeholder { color: var(--border); font-size: 16px; }
+    .input-group .unit { font-size: 9px; color: var(--text-muted); text-align: center; margin-top: 4px; letter-spacing: 0.5px; }
+
+    .comment-input {
+      width: 100%; background: var(--bg); border: 1px solid var(--border);
+      border-radius: 8px; padding: 10px 12px;
+      font-family: var(--mono); font-size: 13px; color: var(--text);
+      outline: none; resize: none; height: 64px; margin-bottom: 14px; transition: border-color 0.2s;
+    }
+    .comment-input:focus { border-color: var(--accent); }
+    .comment-input::placeholder { color: var(--border); }
+
+    .btn-primary {
+      width: 100%; padding: 14px; background: var(--accent); color: #0d1117;
+      border: none; border-radius: 10px; font-family: var(--mono);
+      font-size: 14px; font-weight: 500; letter-spacing: 0.5px; cursor: pointer; transition: all 0.15s;
+    }
+    .btn-primary:active { transform: scale(0.98); opacity: 0.9; }
+
+    .success-flash {
+      display: none; align-items: center; gap: 8px;
+      background: rgba(63,185,80,0.1); border: 1px solid rgba(63,185,80,0.3);
+      border-radius: 8px; padding: 10px 14px; font-size: 13px; color: var(--accent2); margin-top: 10px;
+    }
+    .success-flash.show { display: flex; }
+
+    .filter-row { display: flex; gap: 6px; margin-bottom: 14px; overflow-x: auto; padding-bottom: 2px; }
+    .filter-row::-webkit-scrollbar { display: none; }
+    .filter-chip {
+      flex-shrink: 0; padding: 6px 12px; border-radius: 20px; font-size: 11px;
+      letter-spacing: 0.5px; cursor: pointer; border: 1px solid var(--border);
+      background: var(--surface); color: var(--text-muted); transition: all 0.15s;
+    }
+    .filter-chip.active { background: var(--accent); border-color: var(--accent); color: #0d1117; }
+
+    .entry-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 14px 16px; margin-bottom: 10px;
+      position: relative; overflow: hidden;
+    }
+    .entry-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; }
+    .entry-card.jutarnje::before { background: var(--tag-morning); }
+    .entry-card.vecernje::before { background: var(--tag-evening); }
+    .entry-card.ostalo::before { background: var(--tag-other); }
+
+    .entry-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+    .entry-datetime { font-size: 11px; color: var(--text-muted); line-height: 1.5; }
+    .del-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 14px; padding: 2px 4px; border-radius: 4px; }
+    .del-btn:active { color: var(--warn); }
+
+    .entry-bp { display: flex; align-items: baseline; gap: 4px; margin-bottom: 4px; flex-wrap: wrap; }
+    .bp-value { font-size: 28px; letter-spacing: -1px; color: var(--text); line-height: 1; }
+    .bp-sep { color: var(--text-muted); font-size: 20px; }
+    .bp-unit { font-size: 11px; color: var(--text-muted); margin-left: 2px; }
+    .entry-pulse { font-size: 13px; color: var(--text-muted); margin-bottom: 4px; }
+    .entry-pulse span { color: var(--warn); }
+    .entry-comment { font-size: 12px; color: var(--text-muted); font-style: italic; border-top: 1px solid var(--border); margin-top: 6px; padding-top: 6px; }
+
+    .bp-status { font-size: 10px; letter-spacing: 0.5px; padding: 2px 7px; border-radius: 20px; display: inline-block; }
+    .bp-normal { background: rgba(63,185,80,0.12); color: var(--accent2); }
+    .bp-elevated { background: rgba(210,153,34,0.12); color: var(--tag-morning); }
+    .bp-high { background: rgba(248,81,73,0.12); color: var(--warn); }
+
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+    .empty-state .emoji { font-size: 48px; display: block; margin-bottom: 12px; }
+    .empty-state p { font-size: 13px; }
+
+    .chart-controls { display: flex; gap: 6px; margin-bottom: 16px; overflow-x: auto; }
+    .chart-controls::-webkit-scrollbar { display: none; }
+    .range-chip {
+      flex-shrink: 0; padding: 6px 12px; border-radius: 20px; font-size: 11px;
+      cursor: pointer; border: 1px solid var(--border); background: var(--surface); color: var(--text-muted); transition: all 0.15s;
+    }
+    .range-chip.active { background: var(--surface2); border-color: var(--accent); color: var(--accent); }
+
+    .chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 16px; }
+    .chart-card h3 { font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 14px; }
+    .chart-wrap { position: relative; height: 200px; }
+
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px; text-align: center; }
+    .stat-label { font-size: 9px; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
+    .stat-value { font-size: 22px; color: var(--text); letter-spacing: -0.5px; line-height: 1; }
+    .stat-unit { font-size: 9px; color: var(--text-muted); }
+
+    .legend { display: flex; gap: 12px; margin-top: 10px; flex-wrap: wrap; }
+    .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-muted); }
+    .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+    .toast {
+      position: fixed; bottom: 80px; left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; padding: 10px 16px; font-size: 13px;
+      opacity: 0; transition: all 0.3s; z-index: 999; white-space: nowrap;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    .install-banner {
+      display: none; position: fixed; bottom: 0; left: 0; right: 0;
+      background: var(--surface2); border-top: 1px solid var(--border);
+      padding: 12px 16px; z-index: 200; align-items: center; gap: 10px;
+    }
+    .install-banner.show { display: flex; }
+    .install-banner p { flex: 1; font-size: 13px; color: var(--text-muted); }
+    .install-btn { background: var(--accent); color: #0d1117; border: none; border-radius: 8px; padding: 8px 14px; font-family: var(--mono); font-size: 12px; cursor: pointer; font-weight: 500; }
+    .close-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 16px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-title"><span>🫀</span> Pritisak</div>
+  <div style="display:flex;gap:8px;">
+    <button class="icon-btn" onclick="exportCSV()" title="Export">⬇️</button>
+  </div>
+</header>
+
+<nav>
+  <div class="tab active" onclick="switchTab('unos', this)"><span class="tab-icon">➕</span>Unos</div>
+  <div class="tab" onclick="switchTab('historija', this)"><span class="tab-icon">📋</span>Historija</div>
+  <div class="tab" onclick="switchTab('grafik', this)"><span class="tab-icon">📈</span>Grafik</div>
+</nav>
+
+<!-- UNOS -->
+<div id="page-unos" class="page active">
+  <div class="form-card">
+    <h2>Novo mjerenje</h2>
+    <div class="datetime-row">
+      <div>
+        <input type="date" id="inp-date" />
+        <input type="time" id="inp-time" />
+      </div>
+      <span class="tag-preview" id="tag-display">—</span>
+    </div>
+    <div class="bp-grid">
+      <div class="input-group">
+        <label>Sistolni</label>
+        <input type="number" id="inp-sys" placeholder="120" min="60" max="250" inputmode="numeric" />
+        <div class="unit">mmHg</div>
+      </div>
+      <div class="input-group">
+        <label>Dijastolni</label>
+        <input type="number" id="inp-dia" placeholder="80" min="40" max="150" inputmode="numeric" />
+        <div class="unit">mmHg</div>
+      </div>
+      <div class="input-group">
+        <label>Puls</label>
+        <input type="number" id="inp-pulse" placeholder="72" min="30" max="250" inputmode="numeric" />
+        <div class="unit">bpm</div>
+      </div>
+    </div>
+    <textarea class="comment-input" id="inp-comment" placeholder="Komentar (opcionalno)..."></textarea>
+    <button class="btn-primary" onclick="saveEntry()">💾 Sačuvaj mjerenje</button>
+    <div class="success-flash" id="success-flash">✅ Mjerenje sačuvano!</div>
+  </div>
+  <div class="form-card" style="background:transparent; padding:14px 16px;">
+    <div style="font-size:10px;letter-spacing:0.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px;">Tagovi po vremenu</div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:var(--tag-morning)"></div> Jutarnje · 06–10h</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--tag-evening)"></div> Večernje · 20–24h</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--tag-other)"></div> Ostalo</div>
+    </div>
+  </div>
+</div>
+
+<!-- HISTORIJA -->
+<div id="page-historija" class="page">
+  <div class="filter-row">
+    <div class="filter-chip active" onclick="setFilter('sve', this)">Sve</div>
+    <div class="filter-chip" onclick="setFilter('jutarnje', this)">🌅 Jutarnje</div>
+    <div class="filter-chip" onclick="setFilter('vecernje', this)">🌙 Večernje</div>
+    <div class="filter-chip" onclick="setFilter('ostalo', this)">🕐 Ostalo</div>
+  </div>
+  <div id="entries-list"></div>
+</div>
+
+<!-- GRAFIK -->
+<div id="page-grafik" class="page">
+  <div class="chart-controls">
+    <div class="range-chip active" onclick="setRange(7, this)">7 dana</div>
+    <div class="range-chip" onclick="setRange(14, this)">14 dana</div>
+    <div class="range-chip" onclick="setRange(30, this)">30 dana</div>
+    <div class="range-chip" onclick="setRange(90, this)">3 mj.</div>
+    <div class="range-chip" onclick="setRange(0, this)">Sve</div>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-label">Prosjek SIS</div><div class="stat-value" id="avg-sys">—</div><div class="stat-unit">mmHg</div></div>
+    <div class="stat-card"><div class="stat-label">Prosjek DIA</div><div class="stat-value" id="avg-dia">—</div><div class="stat-unit">mmHg</div></div>
+    <div class="stat-card"><div class="stat-label">Prosjek Puls</div><div class="stat-value" id="avg-pulse">—</div><div class="stat-unit">bpm</div></div>
+  </div>
+  <div class="chart-card">
+    <h3>Pritisak (mmHg)</h3>
+    <div class="chart-wrap"><canvas id="bp-chart"></canvas></div>
+    <div class="legend" style="margin-top:12px;">
+      <div class="legend-item"><div class="legend-dot" style="background:#58a6ff"></div> Sistolni</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#3fb950"></div> Dijastolni</div>
+    </div>
+  </div>
+  <div class="chart-card">
+    <h3>Puls (bpm)</h3>
+    <div class="chart-wrap"><canvas id="pulse-chart"></canvas></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="install-banner" id="install-banner">
+  <p>📲 Instaliraj app na početni ekran</p>
+  <button class="install-btn" onclick="installPWA()">Instaliraj</button>
+  <button class="close-btn" onclick="document.getElementById('install-banner').classList.remove('show')">✕</button>
+</div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────
+const STORE_KEY = 'pritisak_v1';
+const load = () => { try { return JSON.parse(localStorage.getItem(STORE_KEY)||'[]'); } catch { return []; } };
+const save = d => localStorage.setItem(STORE_KEY, JSON.stringify(d));
+
+function getTag(h) {
+  if (h >= 6 && h < 10) return 'jutarnje';
+  if (h >= 20 && h < 24) return 'vecernje';
+  return 'ostalo';
+}
+function tagLabel(t) { return {jutarnje:'🌅 Jutarnje', vecernje:'🌙 Večernje', ostalo:'🕐 Ostalo'}[t]||t; }
+function bpStatus(s,d) {
+  if (s<120&&d<80) return {label:'Normalan',cls:'bp-normal'};
+  if (s<130&&d<80) return {label:'Povišen',cls:'bp-elevated'};
+  return {label:'Visok',cls:'bp-high'};
+}
+function fmtDate(dt) { return new Date(dt).toLocaleDateString('bs',{day:'2-digit',month:'short',year:'numeric'}); }
+function fmtTime(dt) { return new Date(dt).toLocaleTimeString('bs',{hour:'2-digit',minute:'2-digit'}); }
+
+// ── FORM ──────────────────────────────────────────────────
+function setNow() {
+  const n = new Date();
+  document.getElementById('inp-date').value = n.toISOString().slice(0,10);
+  document.getElementById('inp-time').value = n.toTimeString().slice(0,5);
+  updateTag();
+}
+
+function updateTag() {
+  const t = document.getElementById('inp-time').value;
+  if (!t) return;
+  const tag = getTag(parseInt(t.split(':')[0]));
+  const el = document.getElementById('tag-display');
+  el.textContent = tagLabel(tag);
+  el.className = 'tag-preview tag-' + tag;
+}
+
+document.getElementById('inp-time').addEventListener('change', updateTag);
+document.getElementById('inp-date').addEventListener('change', updateTag);
+
+function saveEntry() {
+  const date = document.getElementById('inp-date').value;
+  const time = document.getElementById('inp-time').value;
+  const sys  = parseInt(document.getElementById('inp-sys').value);
+  const dia  = parseInt(document.getElementById('inp-dia').value);
+  const pulse= parseInt(document.getElementById('inp-pulse').value);
+  const comment = document.getElementById('inp-comment').value.trim();
+
+  if (!date||!time) { showToast('⚠️ Unesite datum i vrijeme'); return; }
+  if (!sys||!dia||sys<60||dia<40) { showToast('⚠️ Unesite ispravne vrijednosti'); return; }
+
+  const dt = new Date(date+'T'+time);
+  const entry = { id: Date.now(), dt: dt.toISOString(), sys, dia, pulse: isNaN(pulse)?null:pulse, comment, tag: getTag(dt.getHours()) };
+
+  const entries = load();
+  entries.unshift(entry);
+  save(entries);
+
+  document.getElementById('inp-sys').value = '';
+  document.getElementById('inp-dia').value = '';
+  document.getElementById('inp-pulse').value = '';
+  document.getElementById('inp-comment').value = '';
+  setNow();
+
+  const f = document.getElementById('success-flash');
+  f.classList.add('show');
+  setTimeout(()=>f.classList.remove('show'), 2500);
+
+  renderHistory(); renderCharts();
+}
+
+// ── HISTORY ───────────────────────────────────────────────
+let currentFilter = 'sve';
+
+function setFilter(f, el) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  renderHistory();
+}
+
+function renderHistory() {
+  const entries = load();
+  const filtered = currentFilter==='sve' ? entries : entries.filter(e=>e.tag===currentFilter);
+  const c = document.getElementById('entries-list');
+  if (!filtered.length) {
+    c.innerHTML = `<div class="empty-state"><span class="emoji">📭</span><p>Nema mjerenja.<br>Dodaj prvo mjerenje!</p></div>`;
+    return;
+  }
+  c.innerHTML = filtered.map(e => {
+    const st = bpStatus(e.sys, e.dia);
+    return `<div class="entry-card ${e.tag}">
+      <div class="entry-top">
+        <div class="entry-datetime">
+          <div>${fmtDate(e.dt)}</div>
+          <div>${fmtTime(e.dt)} · <span class="tag-preview tag-${e.tag}" style="font-size:9px;padding:1px 6px;">${tagLabel(e.tag)}</span></div>
+        </div>
+        <button class="del-btn" onclick="delEntry(${e.id})">🗑️</button>
+      </div>
+      <div class="entry-bp">
+        <span class="bp-value">${e.sys}</span>
+        <span class="bp-sep">/</span>
+        <span class="bp-value">${e.dia}</span>
+        <span class="bp-unit">mmHg</span>
+        <span class="bp-status ${st.cls}" style="margin-left:8px;">${st.label}</span>
+      </div>
+      ${e.pulse ? `<div class="entry-pulse">❤️ Puls: <span>${e.pulse}</span> bpm</div>` : ''}
+      ${e.comment ? `<div class="entry-comment">💬 ${e.comment}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function delEntry(id) {
+  if (!confirm('Obrisati ovo mjerenje?')) return;
+  save(load().filter(e=>e.id!==id));
+  renderHistory(); renderCharts();
+  showToast('🗑️ Obrisano');
+}
+
+// ── CHARTS ────────────────────────────────────────────────
+let bpChart=null, pulseChart=null, currentRange=7;
+
+function setRange(d, el) {
+  currentRange = d;
+  document.querySelectorAll('.range-chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  renderCharts();
+}
+
+function renderCharts() {
+  const all = load();
+  let data;
+  if (!currentRange) {
+    data = [...all].reverse();
+  } else {
+    const cut = new Date(); cut.setDate(cut.getDate()-currentRange);
+    data = all.filter(e=>new Date(e.dt)>=cut).reverse();
+  }
+
+  const avg = arr => arr.length ? Math.round(arr.reduce((a,b)=>a+b,0)/arr.length) : null;
+  document.getElementById('avg-sys').textContent   = avg(data.map(e=>e.sys)) || '—';
+  document.getElementById('avg-dia').textContent   = avg(data.map(e=>e.dia)) || '—';
+  const pulses = data.filter(e=>e.pulse).map(e=>e.pulse);
+  document.getElementById('avg-pulse').textContent = avg(pulses) || '—';
+
+  const labels = data.map(e => {
+    const d = new Date(e.dt);
+    return d.toLocaleDateString('bs',{day:'2-digit',month:'short'}) + ' ' + d.toLocaleTimeString('bs',{hour:'2-digit',minute:'2-digit'});
+  });
+
+  const base = {
+    responsive:true, maintainAspectRatio:false,
+    interaction:{mode:'index',intersect:false},
+    plugins:{
+      legend:{display:false},
+      tooltip:{
+        backgroundColor:'#1f2937', borderColor:'#30363d', borderWidth:1,
+        titleColor:'#7d8590', bodyColor:'#e6edf3',
+        titleFont:{family:'DM Mono',size:10}, bodyFont:{family:'DM Mono',size:12},
+        padding:10, cornerRadius:8
+      }
+    },
+    scales:{
+      x:{ticks:{color:'#7d8590',font:{family:'DM Mono',size:9},maxRotation:45,maxTicksLimit:8},grid:{color:'#21262d'}},
+      y:{ticks:{color:'#7d8590',font:{family:'DM Mono',size:10}},grid:{color:'#21262d'}}
+    }
+  };
+
+  if (bpChart) bpChart.destroy();
+  bpChart = new Chart(document.getElementById('bp-chart').getContext('2d'), {
+    type:'line',
+    data:{
+      labels,
+      datasets:[
+        {label:'Sistolni',data:data.map(e=>e.sys),borderColor:'#58a6ff',backgroundColor:'rgba(88,166,255,0.08)',borderWidth:2,pointRadius:4,pointBackgroundColor:'#58a6ff',tension:0.3,fill:true},
+        {label:'Dijastolni',data:data.map(e=>e.dia),borderColor:'#3fb950',backgroundColor:'rgba(63,185,80,0.06)',borderWidth:2,pointRadius:4,pointBackgroundColor:'#3fb950',tension:0.3,fill:true}
+      ]
+    },
+    options:base
+  });
+
+  if (pulseChart) pulseChart.destroy();
+  pulseChart = new Chart(document.getElementById('pulse-chart').getContext('2d'), {
+    type:'line',
+    data:{
+      labels,
+      datasets:[{label:'Puls',data:data.map(e=>e.pulse),borderColor:'#f85149',backgroundColor:'rgba(248,81,73,0.08)',borderWidth:2,pointRadius:4,pointBackgroundColor:'#f85149',tension:0.3,fill:true,spanGaps:true}]
+    },
+    options:base
+  });
+}
+
+// ── TABS ──────────────────────────────────────────────────
+function switchTab(tab, el) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+tab).classList.add('active');
+  el.classList.add('active');
+  if (tab==='historija') renderHistory();
+  if (tab==='grafik') renderCharts();
+}
+
+// ── EXPORT ────────────────────────────────────────────────
+function exportCSV() {
+  const entries = load();
+  if (!entries.length) { showToast('⚠️ Nema podataka'); return; }
+  const hdr = 'Datum,Vrijeme,Tag,Sistolni,Dijastolni,Puls,Komentar\n';
+  const rows = entries.map(e => {
+    const d = new Date(e.dt);
+    return [d.toLocaleDateString('bs'), d.toLocaleTimeString('bs',{hour:'2-digit',minute:'2-digit'}), e.tag, e.sys, e.dia, e.pulse||'', '"'+(e.comment||'').replace(/"/g,'""')+'"'].join(',');
+  }).join('\n');
+  const blob = new Blob(['\uFEFF'+hdr+rows], {type:'text/csv;charset=utf-8;'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `pritisak_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  showToast('✅ CSV exportovan');
+}
+
+// ── TOAST ─────────────────────────────────────────────────
+let toastT;
+function showToast(m) {
+  const t=document.getElementById('toast');
+  t.textContent=m; t.classList.add('show');
+  clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// ── PWA INSTALL ───────────────────────────────────────────
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault(); deferredPrompt=e;
+  document.getElementById('install-banner').classList.add('show');
+});
+function installPWA() {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then(()=>{ deferredPrompt=null; document.getElementById('install-banner').classList.remove('show'); });
+}
+
+// ── SERVICE WORKER (inline) ───────────────────────────────
+if ('serviceWorker' in navigator) {
+  const swCode = `
+    const CACHE='pritisak-v2';
+    self.addEventListener('install', e => {
+      e.waitUntil(caches.open(CACHE).then(c => c.addAll(['./'])).then(()=>self.skipWaiting()));
+    });
+    self.addEventListener('activate', e => {
+      e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));
+    });
+    self.addEventListener('fetch', e => {
+      e.respondWith(caches.match(e.request).then(cached => cached || fetch(e.request).then(res => {
+        if(res&&res.status===200){ const cl=res.clone(); caches.open(CACHE).then(c=>c.put(e.request,cl)); }
+        return res;
+      }).catch(()=>cached)));
+    });
+  `;
+  const blob = new Blob([swCode], {type:'application/javascript'});
+  navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{});
+}
+
+// ── INIT ──────────────────────────────────────────────────
+setNow();
+setInterval(updateTag, 60000);
+</script>
+</body>
+</html>
