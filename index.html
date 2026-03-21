@@ -127,6 +127,7 @@
 
     .filter-row { display: flex; gap: 6px; margin-bottom: 14px; overflow-x: auto; padding-bottom: 2px; }
     .filter-row::-webkit-scrollbar { display: none; }
+    div[style*='overflow-x:auto']::-webkit-scrollbar { display: none; }
     .filter-chip {
       flex-shrink: 0; padding: 6px 12px; border-radius: 20px; font-size: 11px;
       letter-spacing: 0.5px; cursor: pointer; border: 1px solid var(--border);
@@ -218,7 +219,7 @@
 <body>
 
 <header>
-  <div class="header-title" style="flex-direction:column;align-items:flex-start;gap:2px;"><div style="display:flex;align-items:center;gap:8px;"><span>🫀</span> Pritisak</div><span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);">v4.0</span></div>
+  <div class="header-title" style="flex-direction:column;align-items:flex-start;gap:2px;"><div style="display:flex;align-items:center;gap:8px;"><span>🫀</span> Pritisak</div><span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);">v4.2</span></div>
   <div style="display:flex;gap:8px;">
     <button class="icon-btn" onclick="triggerImport()" title="Import CSV">⬆️</button>
     <button class="icon-btn" onclick="openExportModal()" title="Export CSV">⬇️</button>
@@ -449,13 +450,11 @@
 
 <!-- ISTORIJA -->
 <div id="page-istorija" class="page">
-  <div style="display:flex; align-items:center; justify-content:space-between; gap:6px; margin-bottom:8px; flex-wrap:wrap;">
-    <div style="display:flex; gap:6px; flex-wrap:wrap;">
-      <div class="filter-chip active" onclick="setFilter('sve', this)">Sve</div>
-      <div class="filter-chip" onclick="setFilter('jutarnje', this)">🌅 Jut.</div>
-      <div class="filter-chip" onclick="setFilter('vecernje', this)">🌙 Več.</div>
-      <div class="filter-chip" onclick="setFilter('ostalo', this)">🕐 Ost.</div>
-    </div>
+  <div style="display:flex; gap:6px; margin-bottom:12px; overflow-x:auto; padding-bottom:2px; -webkit-overflow-scrolling:touch; scrollbar-width:none;">
+    <div class="filter-chip active" style="flex-shrink:0;" onclick="setFilter('sve', this)">Sve</div>
+    <div class="filter-chip" style="flex-shrink:0;" onclick="setFilter('jutarnje', this)">🌅 Jutarnje</div>
+    <div class="filter-chip" style="flex-shrink:0;" onclick="setFilter('vecernje', this)">🌙 Večernje</div>
+    <div class="filter-chip" style="flex-shrink:0;" onclick="setFilter('ostalo', this)">🕐 Ostalo</div>
     <button id="sort-btn" onclick="toggleSort()" style="flex-shrink:0; padding:6px 12px; border-radius:20px; font-size:11px; letter-spacing:0.5px; cursor:pointer; border:1px solid var(--border); background:var(--surface); color:var(--text-muted); white-space:nowrap; font-family:var(--mono);">↓ Noviji</button>
   </div>
   <div id="entries-list"></div>
@@ -470,11 +469,11 @@
     <div class="range-chip" onclick="setRange(90, this)">3 mj.</div>
     <div class="range-chip" onclick="setRange(0, this)">Sve</div>
   </div>
-  <div class="filter-row" style="margin-bottom:14px;">
-    <div class="filter-chip active" onclick="setChartTag('sve', this)">Sve</div>
-    <div class="filter-chip" onclick="setChartTag('jutarnje', this)">🌅 Jutarnje</div>
-    <div class="filter-chip" onclick="setChartTag('vecernje', this)">🌙 Večernje</div>
-    <div class="filter-chip" onclick="setChartTag('ostalo', this)">🕐 Ostalo</div>
+  <div style="display:flex; gap:6px; margin-bottom:14px; overflow-x:auto; padding-bottom:2px; -webkit-overflow-scrolling:touch; scrollbar-width:none;">
+    <div class="filter-chip active" style="flex-shrink:0;" onclick="setChartTag('sve', this)">Sve</div>
+    <div class="filter-chip" style="flex-shrink:0;" onclick="setChartTag('jutarnje', this)">🌅 Jutarnje</div>
+    <div class="filter-chip" style="flex-shrink:0;" onclick="setChartTag('vecernje', this)">🌙 Večernje</div>
+    <div class="filter-chip" style="flex-shrink:0;" onclick="setChartTag('ostalo', this)">🕐 Ostalo</div>
   </div>
   <div class="stats-grid">
     <div class="stat-card"><div class="stat-label">Prosjek SIS</div><div class="stat-value" id="avg-sys">—</div><div class="stat-unit">mmHg</div></div>
@@ -1000,133 +999,151 @@ function getShareData(from, to, tag) {
 
 function generateReport() {
   const from = document.getElementById('share-from').value;
-  const to = document.getElementById('share-to').value;
+  const to   = document.getElementById('share-to').value;
   if (!from||!to) { showToast('⚠️ Odaberite period'); return; }
   const data = getShareData(from, to, shareTag);
   if (!data.length) { showToast('⚠️ Nema mjerenja za ovaj period'); return; }
 
   const avg = arr => arr.length ? Math.round(arr.reduce((a,b)=>a+b,0)/arr.length) : null;
-  const avgSys = avg(data.map(e=>e.sys));
-  const avgDia = avg(data.map(e=>e.dia));
-  const pulses = data.filter(e=>e.pulse).map(e=>e.pulse);
+  const avf = arr => arr.length ? (arr.reduce((a,b)=>a+b,0)/arr.length).toFixed(1) : null;
+
+  // Overall stats
+  const avgSys   = avg(data.map(e=>e.sys));
+  const avgDia   = avg(data.map(e=>e.dia));
+  const pulses   = data.filter(e=>e.pulse).map(e=>e.pulse);
   const avgPulse = avg(pulses);
+  const minSys   = Math.min(...data.map(e=>e.sys));
+  const maxSys   = Math.max(...data.map(e=>e.sys));
+
+  // Morning vs Evening split
+  const morning = data.filter(e=>e.tag==='jutarnje');
+  const evening = data.filter(e=>e.tag==='vecernje');
+  const mAvgSys = avg(morning.map(e=>e.sys));
+  const mAvgDia = avg(morning.map(e=>e.dia));
+  const eAvgSys = avg(evening.map(e=>e.sys));
+  const eAvgDia = avg(evening.map(e=>e.dia));
+
+  // This week vs last week
+  const now = new Date();
+  const startOfThisWeek = new Date(now); startOfThisWeek.setDate(now.getDate()-7); startOfThisWeek.setHours(0,0,0,0);
+  const startOfLastWeek = new Date(now); startOfLastWeek.setDate(now.getDate()-14); startOfLastWeek.setHours(0,0,0,0);
+  const thisWeek = data.filter(e=>new Date(e.dt)>=startOfThisWeek);
+  const lastWeek = data.filter(e=>{ const d=new Date(e.dt); return d>=startOfLastWeek&&d<startOfThisWeek; });
+  const twSys = avg(thisWeek.map(e=>e.sys));
+  const lwSys = avg(lastWeek.map(e=>e.sys));
+
+  // This month vs last month
+  const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const lastMonthStart = new Date(now.getFullYear(), now.getMonth()-1, 1);
+  const thisMonth = data.filter(e=>new Date(e.dt)>=thisMonthStart);
+  const lastMonth = data.filter(e=>{ const d=new Date(e.dt); return d>=lastMonthStart&&d<thisMonthStart; });
+  const tmSys = avg(thisMonth.map(e=>e.sys));
+  const lmSys = avg(lastMonth.map(e=>e.sys));
+
+  const trendIcon = (curr, prev) => {
+    if (!curr||!prev) return '<span class="trend-neutral">—</span>';
+    const diff = curr - prev;
+    if (Math.abs(diff)<2) return `<span class="trend-neutral">→ ${curr}</span>`;
+    return diff>0
+      ? `<span class="trend-up">↑ ${curr} (+${diff})</span>`
+      : `<span class="trend-down">↓ ${curr} (${diff})</span>`;
+  };
 
   const tagName = {sve:'Sva',jutarnje:'Jutarnja',vecernje:'Večernja',ostalo:'Ostala'}[shareTag];
-  const fromFmt = new Date(from).toLocaleDateString('bs',{day:'2-digit',month:'long',year:'numeric'});
-  const toFmt   = new Date(to).toLocaleDateString('bs',{day:'2-digit',month:'long',year:'numeric'});
+  const MONS2   = ['januara','februara','marta','aprila','maja','juna','jula','augusta','septembra','oktobra','novembra','decembra'];
+  const fromFmt = new Date(from).getDate()+'. '+MONS2[new Date(from).getMonth()]+' '+new Date(from).getFullYear()+'.';
+  const toFmt   = new Date(to).getDate()+'. '+MONS2[new Date(to).getMonth()]+' '+new Date(to).getFullYear()+'.';
 
+  // Table rows
+  const statusBadge = (s,d) => {
+    const st = bpStatus(s,d);
+    const cls = {
+      'bp-low':'badge-low','bp-ideal':'badge-ideal','bp-normal':'badge-normal',
+      'bp-elevated':'badge-elevated','bp-high1':'badge-high1','bp-high2':'badge-high2','bp-crisis':'badge-crisis'
+    }[st.cls]||'badge-normal';
+    return `<span class="badge ${cls}">${st.label}</span>`;
+  };
+  const MNS = ['jan','feb','mar','apr','maj','jun','jul','aug','sep','okt','nov','dec'];
   const rows = data.map(e=>{
     const dt=new Date(e.dt);
-    const tagLbl={jutarnje:'Jutarnje',vecernje:'Večernje',ostalo:'Ostalo'}[e.tag]||e.tag;
-    const st=bpStatus(e.sys,e.dia);
-    const stColors={'bp-normal':'#3fb950','bp-elevated':'#d29922','bp-high':'#f85149'};
-    return `<tr>
-      <td>${dt.toLocaleDateString('bs',{day:'2-digit',month:'short',year:'numeric'})}</td>
-      <td>${dt.toLocaleTimeString('bs',{hour:'2-digit',minute:'2-digit'})}</td>
-      <td>${tagLbl}</td>
-      <td style="font-weight:600;">${e.sys}/${e.dia}</td>
-      <td>${e.pulse||'—'}</td>
-      <td style="color:${stColors[st.cls]}">${st.label}</td>
-      <td style="color:#7d8590;font-style:italic;">${e.comment||''}</td>
-    </tr>`;
+    const tagLbl={jutarnje:'🌅 Jut.',vecernje:'🌙 Več.',ostalo:'🕐 Ost.'}[e.tag]||e.tag;
+    const time = String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0');
+    const date = dt.getDate()+'. '+MNS[dt.getMonth()]+' '+dt.getFullYear()+'.';
+    return `<tr><td>${date}</td><td>${time}</td><td>${tagLbl}</td><td style="font-weight:600;">${e.sys}/${e.dia}</td><td>${e.pulse||'—'}</td><td>${statusBadge(e.sys,e.dia)}</td><td style="color:#94a3b8;font-style:italic;max-width:140px;">${e.comment||''}</td></tr>`;
   }).join('');
 
-  // Build chart data
-  const labels = data.map(e=>{const d=new Date(e.dt);return d.toLocaleDateString('bs',{day:'2-digit',month:'short'})+' '+d.toLocaleTimeString('bs',{hour:'2-digit',minute:'2-digit'});});
-  const sysVals = data.map(e=>e.sys);
-  const diaVals = data.map(e=>e.dia);
-  const pulseVals = data.map(e=>e.pulse);
+  // Chart data
+  const labels     = data.map(e=>{ const d=new Date(e.dt); return d.getDate()+'. '+MNS[d.getMonth()]+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); });
+  const sysVals    = data.map(e=>e.sys);
+  const diaVals    = data.map(e=>e.dia);
+  const pulseVals  = data.map(e=>e.pulse);
+  const morningLabels = morning.map((_,i)=>'Jut. '+(i+1));
+  const morningSys    = morning.map(e=>e.sys);
+  const morningDia    = morning.map(e=>e.dia);
+  const eveningLabels = evening.map((_,i)=>'Več. '+(i+1));
+  const eveningSys    = evening.map(e=>e.sys);
+  const eveningDia    = evening.map(e=>e.dia);
+  const chartPayload  = {labels,sysVals,diaVals,pulseVals,morningLabels,morningSys,morningDia,eveningLabels,eveningSys,eveningDia};
 
-  const html = `<!DOCTYPE html>
-<html lang="bs">
-<head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Izvještaj pritiska — ${fromFmt} do ${toFmt}</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"><\/script>
-<style>
-  body{font-family:'Segoe UI',system-ui,sans-serif;background:#f8fafc;color:#1e293b;margin:0;padding:0;}
-  .wrap{max-width:900px;margin:0 auto;padding:24px 16px 60px;}
-  h1{font-size:24px;margin-bottom:4px;color:#0f172a;}
-  .subtitle{color:#64748b;font-size:14px;margin-bottom:24px;}
-  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px;}
-  .stat{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;text-align:center;}
-  .stat-label{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#94a3b8;margin-bottom:6px;}
-  .stat-val{font-size:28px;font-weight:700;color:#0f172a;letter-spacing:-1px;}
-  .stat-unit{font-size:11px;color:#94a3b8;}
-  .chart-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin-bottom:16px;}
-  .chart-card h3{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#94a3b8;margin-bottom:14px;}
-  .chart-wrap{position:relative;height:220px;}
-  table{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;font-size:13px;}
-  th{background:#f1f5f9;padding:10px 12px;text-align:left;font-size:11px;letter-spacing:0.5px;text-transform:uppercase;color:#64748b;font-weight:600;}
-  td{padding:10px 12px;border-top:1px solid #f1f5f9;}
-  tr:hover td{background:#f8fafc;}
-  .footer{text-align:center;color:#94a3b8;font-size:12px;margin-top:24px;}
-  @media print{body{background:#fff;} .no-print{display:none;}}
-</style>
-</head>
-<body>
-<div class="wrap">
-  <h1>🫀 Izvještaj krvnog pritiska</h1>
-  <div class="subtitle">${tagName} mjerenja · ${fromFmt} – ${toFmt} · Ukupno: ${data.length} mjerenja</div>
+  // Morning vs Evening card
+  const cmpMorningEvening = (mAvgSys||eAvgSys) ? `
+  <div class="section-title">Jutarnje vs Večernje</div>
+  <div class="compare-grid" style="margin-bottom:16px;">
+    <div class="compare-card morning">
+      <div class="compare-label">🌅 Jutarnje (${morning.length} mj.)</div>
+      <div class="compare-val">${mAvgSys||'—'}/${mAvgDia||'—'}</div>
+      <div class="compare-sub">Prosjek mmHg</div>
+    </div>
+    <div class="compare-card evening">
+      <div class="compare-label">🌙 Večernje (${evening.length} mj.)</div>
+      <div class="compare-val">${eAvgSys||'—'}/${eAvgDia||'—'}</div>
+      <div class="compare-sub">Prosjek mmHg</div>
+    </div>
+  </div>` : '';
 
-  <div class="stats">
-    <div class="stat"><div class="stat-label">Prosjek Sistolni</div><div class="stat-val">${avgSys}</div><div class="stat-unit">mmHg</div></div>
-    <div class="stat"><div class="stat-label">Prosjek Dijastolni</div><div class="stat-val">${avgDia}</div><div class="stat-unit">mmHg</div></div>
-    <div class="stat"><div class="stat-label">Prosjek Puls</div><div class="stat-val">${avgPulse||'—'}</div><div class="stat-unit">bpm</div></div>
-  </div>
+  // Week comparison
+  const cmpWeeks = (twSys||lwSys) ? `
+  <div class="section-title">Ova vs Prošla sedmica</div>
+  <div class="compare-grid" style="margin-bottom:16px;">
+    <div class="compare-card thisweek">
+      <div class="compare-label">📅 Ova sedmica (${thisWeek.length} mj.)</div>
+      <div class="compare-val">${trendIcon(twSys, lwSys)}</div>
+      <div class="compare-sub">Prosjek Sistolni mmHg</div>
+    </div>
+    <div class="compare-card lastweek">
+      <div class="compare-label">📅 Prošla sedmica (${lastWeek.length} mj.)</div>
+      <div class="compare-val">${lwSys||'—'}</div>
+      <div class="compare-sub">Prosjek Sistolni mmHg</div>
+    </div>
+  </div>` : '';
 
-  <div class="chart-card">
-    <h3>Pritisak (mmHg)</h3>
-    <div class="chart-wrap"><canvas id="bp-chart"></canvas></div>
-  </div>
-  <div class="chart-card">
-    <h3>Puls (bpm)</h3>
-    <div class="chart-wrap"><canvas id="pulse-chart"></canvas></div>
-  </div>
+  // Month comparison
+  const cmpMonths = (tmSys||lmSys) ? `
+  <div class="section-title">Ovaj vs Prošli mjesec</div>
+  <div class="compare-grid" style="margin-bottom:16px;">
+    <div class="compare-card thismonth">
+      <div class="compare-label">🗓️ Ovaj mjesec (${thisMonth.length} mj.)</div>
+      <div class="compare-val">${trendIcon(tmSys, lmSys)}</div>
+      <div class="compare-sub">Prosjek Sistolni mmHg</div>
+    </div>
+    <div class="compare-card lastmonth">
+      <div class="compare-label">🗓️ Prošli mjesec (${lastMonth.length} mj.)</div>
+      <div class="compare-val">${lmSys||'—'}</div>
+      <div class="compare-sub">Prosjek Sistolni mmHg</div>
+    </div>
+  </div>` : '';
 
-  <div style="margin-bottom:16px;">
-    <table>
-      <thead><tr><th>Datum</th><th>Vrijeme</th><th>Tag</th><th>Pritisak</th><th>Puls</th><th>Status</th><th>Komentar</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table>
-  </div>
+  // Morning vs Evening chart (only if both have data)
+  const morningEveningChart = (morning.length>0 && evening.length>0) ? `
+  <div class="card">
+    <div class="section-title">Poređenje jutarnjeg i večernjeg mjerenja</div>
+    <div class="chart-wrap-sm"><canvas id="me-chart"></canvas></div>
+    <p style="font-size:11px;color:#94a3b8;margin-top:8px;">X osa prikazuje redni broj mjerenja, ne kalendarski datum.</p>
+  </div>` : '';
 
-  <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:16px;">
-    <h3 style="font-size:14px;color:#0f172a;margin-bottom:4px;">Referentne vrijednosti krvnog pritiska</h3>
-    <p style="font-size:12px;color:#64748b;margin-bottom:14px;">Opšte smjernice za odrasle osobe</p>
-    <table style="width:100%;border-collapse:collapse;font-size:13px;">
-      <thead><tr style="background:#f1f5f9;"><th style="padding:8px 12px;text-align:left;font-size:11px;letter-spacing:0.5px;text-transform:uppercase;color:#64748b;">Kategorija</th><th style="padding:8px 12px;text-align:left;font-size:11px;color:#64748b;">Sistolni</th><th style="padding:8px 12px;text-align:left;font-size:11px;color:#64748b;">Dijastolni</th><th style="padding:8px 12px;text-align:left;font-size:11px;color:#64748b;">Napomena</th></tr></thead>
-      <tbody>
-        <tr><td style="padding:8px 12px;border-top:1px solid #f1f5f9;color:#3b82f6;">Nizak</td><td style="padding:8px 12px;border-top:1px solid #f1f5f9;">&lt; 90</td><td style="padding:8px 12px;border-top:1px solid #f1f5f9;">&lt; 60</td><td style="padding:8px 12px;border-top:1px solid #f1f5f9;color:#64748b;">Problem samo uz simptome</td></tr>
-        <tr><td style="padding:8px 12px;border-top:1px solid #f1f5f9;color:#22c55e;">Idealan</td><td style="padding:8px 12px;border-top:1px solid #f1f5f9;">&lt; 120</td><td style="padding:8px 12px;border-top:1px solid #f1f5f9;">&lt; 80</td><td style="padding:8px 12px;border-top:1px solid #f1f5f9;color:#64748b;">Optimalne vrijednosti</td></tr>
-        <tr><td style="padding:8px 12px;border-top:1px solid #f1f5f9;color:#16a34a;">Normalan</td><td style="padding:8px 12px;border-top:1px solid #f1f5f9;">120 – 129</td><td style="padding:8px 12px;border-top:1px solid #f1f5f9;">80 – 84</td><td style="padding:8px 12px;border-top:1px solid #f1f5f9;color:#64748b;">Prihvatljive vrijednosti</td></tr>
-        <tr><td style="padding:8px 12px;border-top:1px solid #f1f5f9;color:#d97706;">Visoko normalan</td><td style="padding:8px 12px;border-top:1px solid #f1f5f9;">130 – 139</td><td style="padding:8px 12px;border-top:1px solid #f1f5f9;">85 – 89</td><td style="padding:8px 12px;border-top:1px solid #f1f5f9;color:#64748b;">Pred-hipertenzija</td></tr>
-        <tr><td style="padding:8px 12px;border-top:1px solid #f1f5f9;color:#ef4444;">Visok I</td><td style="padding:8px 12px;border-top:1px solid #f1f5f9;">140 – 159</td><td style="padding:8px 12px;border-top:1px solid #f1f5f9;">90 – 99</td><td style="padding:8px 12px;border-top:1px solid #f1f5f9;color:#64748b;">Blaga hipertenzija</td></tr>
-        <tr><td style="padding:8px 12px;border-top:1px solid #f1f5f9;color:#dc2626;">Visok II</td><td style="padding:8px 12px;border-top:1px solid #f1f5f9;">160 – 179</td><td style="padding:8px 12px;border-top:1px solid #f1f5f9;">100 – 109</td><td style="padding:8px 12px;border-top:1px solid #f1f5f9;color:#64748b;">Umjerena hipertenzija</td></tr>
-        <tr style="background:#fef2f2;"><td style="padding:8px 12px;border-top:1px solid #fecaca;color:#dc2626;font-weight:700;">⚠️ Kriza</td><td style="padding:8px 12px;border-top:1px solid #fecaca;font-weight:700;">&gt; 180</td><td style="padding:8px 12px;border-top:1px solid #fecaca;font-weight:700;">&gt; 110</td><td style="padding:8px 12px;border-top:1px solid #fecaca;color:#dc2626;font-weight:600;">Hitna medicinska pomoć!</td></tr>
-      </tbody>
-    </table>
-    <p style="font-size:11px;color:#94a3b8;margin-top:10px;line-height:1.6;">💡 Napomena: Jedno mjerenje ne znači dijagnozu. Pritisak varira u zavisnosti od stresa, fizičke aktivnosti i doba dana. Ako su vrijednosti često van normalnog opsega — konsultuj se s ljekarom.</p>
-  </div>
 
-  <div class="footer">Generisano: ${new Date().toLocaleDateString('bs',{day:'2-digit',month:'long',year:'numeric'})} · Mjerač Pritiska v4.0</div>
-</div>
-<script>
-const labels=${JSON.stringify(labels)};
-const sysVals=${JSON.stringify(sysVals)};
-const diaVals=${JSON.stringify(diaVals)};
-const pulseVals=${JSON.stringify(pulseVals)};
-const base={responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{position:'top',labels:{font:{size:12},usePointStyle:true}},tooltip:{backgroundColor:'#1e293b',titleFont:{size:11},bodyFont:{size:12},padding:10,cornerRadius:8}},scales:{x:{ticks:{font:{size:10},maxRotation:45,maxTicksLimit:10},grid:{color:'#f1f5f9'}},y:{ticks:{font:{size:11}},grid:{color:'#f1f5f9'}}}};
-new Chart(document.getElementById('bp-chart'),{type:'line',data:{labels,datasets:[{label:'Sistolni',data:sysVals,borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,0.08)',borderWidth:2,pointRadius:3,tension:0.3,fill:true},{label:'Dijastolni',data:diaVals,borderColor:'#22c55e',backgroundColor:'rgba(34,197,94,0.06)',borderWidth:2,pointRadius:3,tension:0.3,fill:true}]},options:base});
-new Chart(document.getElementById('pulse-chart'),{type:'line',data:{labels,datasets:[{label:'Puls',data:pulseVals,borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,0.08)',borderWidth:2,pointRadius:3,tension:0.3,fill:true,spanGaps:true}]},options:{...base,plugins:{...base.plugins,legend:{display:false}}}});
-<\/script>
-</body>
-</html>`;
-
-  // Open in new tab / trigger download
-  const blob = new Blob([html], {type:'text/html;charset=utf-8;'});
-  const url = URL.createObjectURL(blob);
+  const blob2 = new Blob([html], {type:'text/html;charset=utf-8;'});
+  const url = URL.createObjectURL(blob2);
   const a = document.createElement('a');
   a.href = url;
   a.download = `izvjestaj_pritisak_${from}_${to}.html`;
