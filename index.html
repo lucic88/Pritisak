@@ -1142,6 +1142,187 @@ function generateReport() {
   </div>` : '';
 
 
+  const MONS3 = ['jan','feb','mar','apr','maj','jun','jul','aug','sep','okt','nov','dec'];
+  const genDate = new Date().getDate()+'. '+MONS3[new Date().getMonth()]+' '+new Date().getFullYear()+'.';
+
+  const html = `<!DOCTYPE html>
+<html lang="bs">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Izvjestaj pritiska</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"><\/script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"><\/script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#f1f5f9;color:#1e293b;}
+.wrap{max-width:920px;margin:0 auto;padding:24px 16px 60px;}
+h1{font-size:24px;font-weight:700;color:#0f172a;margin-bottom:2px;}
+.subtitle{color:#64748b;font-size:13px;margin-bottom:24px;}
+.section-title{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#94a3b8;margin-bottom:10px;font-weight:600;}
+.card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:20px;margin-bottom:16px;}
+.stats3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;}
+.stat{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px;text-align:center;}
+.stat-label{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#94a3b8;margin-bottom:4px;}
+.stat-val{font-size:24px;font-weight:700;color:#0f172a;letter-spacing:-1px;line-height:1;}
+.stat-unit{font-size:10px;color:#94a3b8;margin-top:2px;}
+.compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+.ccard{border-radius:12px;padding:14px;}
+.ccard.morning{background:#fffbeb;border:1px solid #fde68a;}
+.ccard.evening{background:#f5f3ff;border:1px solid #ddd6fe;}
+.ccard.thisweek{background:#f0fdf4;border:1px solid #bbf7d0;}
+.ccard.lastweek{background:#f8fafc;border:1px solid #e2e8f0;}
+.ccard.thismonth{background:#eff6ff;border:1px solid #bfdbfe;}
+.ccard.lastmonth{background:#f8fafc;border:1px solid #e2e8f0;}
+.clabel{font-size:10px;font-weight:600;color:#64748b;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;}
+.cval{font-size:20px;font-weight:700;color:#0f172a;letter-spacing:-0.5px;}
+.csub{font-size:11px;color:#94a3b8;margin-top:2px;}
+.tup{color:#ef4444;} .tdown{color:#22c55e;} .tneut{color:#94a3b8;}
+.chart-wrap{position:relative;height:240px;margin-bottom:4px;}
+.chart-sm{position:relative;height:180px;margin-bottom:4px;}
+.zone-legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;}
+.zitem{display:flex;align-items:center;gap:4px;font-size:11px;color:#64748b;}
+.zdot{width:10px;height:10px;border-radius:2px;flex-shrink:0;}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+th{background:#f8fafc;padding:8px 10px;text-align:left;font-size:10px;letter-spacing:0.5px;text-transform:uppercase;color:#94a3b8;font-weight:600;border-bottom:1px solid #e2e8f0;}
+td{padding:8px 10px;border-bottom:1px solid #f8fafc;}
+tr:last-child td{border-bottom:none;}
+.badge{display:inline-block;padding:2px 6px;border-radius:20px;font-size:10px;font-weight:600;}
+.b-low{background:#dbeafe;color:#2563eb;} .b-ideal{background:#dcfce7;color:#16a34a;}
+.b-normal{background:#d1fae5;color:#059669;} .b-elevated{background:#fef3c7;color:#d97706;}
+.b-high1{background:#fee2e2;color:#dc2626;} .b-high2{background:#fecaca;color:#b91c1c;}
+.b-crisis{background:#dc2626;color:#fff;}
+.footer{text-align:center;color:#94a3b8;font-size:11px;margin-top:24px;}
+@media print{body{background:#fff;}.card{break-inside:avoid;}}
+@media(max-width:600px){.stats3,.compare-grid{grid-template-columns:1fr 1fr;}}
+<\/style>
+</head>
+<body>
+<div class="wrap">
+<h1>Izvjestaj krvnog pritiska</h1>
+<div class="subtitle">${tagName} mjerenja &nbsp;·&nbsp; ${fromFmt} - ${toFmt} &nbsp;·&nbsp; Ukupno: <strong>${data.length}</strong> mjerenja</div>
+
+<div class="section-title">Ukupni prosjek</div>
+<div class="stats3">
+  <div class="stat"><div class="stat-label">Prosjek Sistolni</div><div class="stat-val">${avgSys}</div><div class="stat-unit">mmHg</div></div>
+  <div class="stat"><div class="stat-label">Prosjek Dijastolni</div><div class="stat-val">${avgDia}</div><div class="stat-unit">mmHg</div></div>
+  <div class="stat"><div class="stat-label">Prosjek Puls</div><div class="stat-val">${avgPulse||'&mdash;'}</div><div class="stat-unit">bpm</div></div>
+</div>
+<div class="stats3" style="margin-bottom:24px;">
+  <div class="stat"><div class="stat-label">Min Sistolni</div><div class="stat-val" style="color:#22c55e;">${minSys}</div><div class="stat-unit">mmHg</div></div>
+  <div class="stat"><div class="stat-label">Max Sistolni</div><div class="stat-val" style="color:#ef4444;">${maxSys}</div><div class="stat-unit">mmHg</div></div>
+  <div class="stat"><div class="stat-label">Broj mjerenja</div><div class="stat-val">${data.length}</div><div class="stat-unit">ukupno</div></div>
+</div>
+
+${cmpMorningEvening}
+${cmpWeeks}
+${cmpMonths}
+
+<div class="card">
+  <div class="section-title">Kretanje pritiska sa zonama</div>
+  <div class="chart-wrap"><canvas id="bp-chart"></canvas></div>
+  <div class="zone-legend">
+    <div class="zitem"><div class="zdot" style="background:#dcfce7;border:1px solid #86efac;"></div> Idealan (&lt;120)</div>
+    <div class="zitem"><div class="zdot" style="background:#fef9c3;border:1px solid #fde047;"></div> Vis. norm. (130-139)</div>
+    <div class="zitem"><div class="zdot" style="background:#fee2e2;border:1px solid #fca5a5;"></div> Visok I (140-159)</div>
+    <div class="zitem"><div class="zdot" style="background:#fecaca;border:1px solid #f87171;"></div> Visok II (160+)</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="section-title">Kretanje pulsa</div>
+  <div class="chart-sm"><canvas id="pulse-chart"></canvas></div>
+</div>
+
+${morningEveningChart}
+
+<div class="card">
+  <div class="section-title">Sva mjerenja</div>
+  <table><thead><tr><th>Datum</th><th>Vrij.</th><th>Tag</th><th>Pritisak</th><th>Puls</th><th>Status</th><th>Komentar</th></tr></thead>
+  <tbody>${rows}</tbody></table>
+</div>
+
+<div class="card">
+  <div class="section-title">Referentne vrijednosti</div>
+  <table><thead><tr><th>Kategorija</th><th>Sistolni</th><th>Dijastolni</th><th>Napomena</th></tr></thead>
+  <tbody>
+    <tr><td><span class="badge b-low">Nizak</span></td><td>&lt;90</td><td>&lt;60</td><td style="color:#64748b;">Hipotenzija</td></tr>
+    <tr><td><span class="badge b-ideal">Idealan</span></td><td>&lt;120</td><td>&lt;80</td><td style="color:#64748b;">Optimalne vrijednosti</td></tr>
+    <tr><td><span class="badge b-normal">Normalan</span></td><td>120-129</td><td>80-84</td><td style="color:#64748b;">Prihvatljivo</td></tr>
+    <tr><td><span class="badge b-elevated">Vis. norm.</span></td><td>130-139</td><td>85-89</td><td style="color:#64748b;">Pred-hipertenzija</td></tr>
+    <tr><td><span class="badge b-high1">Visok I</span></td><td>140-159</td><td>90-99</td><td style="color:#64748b;">Blaga hipertenzija</td></tr>
+    <tr><td><span class="badge b-high2">Visok II</span></td><td>160-179</td><td>100-109</td><td style="color:#64748b;">Umjerena hipertenzija</td></tr>
+    <tr><td><span class="badge b-crisis">Kriza</span></td><td>&gt;180</td><td>&gt;110</td><td style="color:#dc2626;font-weight:600;">Hitna pomoc!</td></tr>
+  </tbody></table>
+  <p style="font-size:11px;color:#94a3b8;margin-top:10px;line-height:1.6;">Napomena: Jedno mjerenje ne znaci dijagnozu. Konsultuj se s ljekarom ako su vrijednosti cesto van opsega.</p>
+</div>
+
+<div class="footer">Generisano: ${genDate} &nbsp;·&nbsp; Mjerac Pritiska v4.2</div>
+</div>
+
+<script>
+try { Chart.register(window['chartjs-plugin-annotation']); } catch(e) {}
+const PL = ${JSON.stringify(chartPayload)};
+const { labels, sysVals, diaVals, pulseVals, morningSys, morningDia, eveningSys, eveningDia } = PL;
+
+const base = (yMin,yMax,extra) => ({
+  responsive:true,maintainAspectRatio:false,
+  interaction:{mode:'index',intersect:false},
+  plugins:{
+    legend:{position:'top',labels:{font:{size:11},usePointStyle:true,padding:10}},
+    tooltip:{backgroundColor:'#1e293b',titleFont:{size:10},bodyFont:{size:12},padding:8,cornerRadius:8},
+    ...(extra||{})
+  },
+  scales:{
+    x:{ticks:{font:{size:9},maxRotation:45,maxTicksLimit:10,color:'#94a3b8'},grid:{color:'#f1f5f9'}},
+    y:{min:yMin,max:yMax,ticks:{font:{size:10},color:'#94a3b8'},grid:{color:'#f1f5f9'}}
+  }
+});
+
+const allBP = [...sysVals,...diaVals].filter(v=>v!=null);
+const bpMin = allBP.length?Math.max(50,Math.min(...allBP)-10):50;
+const bpMax = allBP.length?Math.min(210,Math.max(...allBP)+15):210;
+
+const annotations = {
+  zIdeal:   {type:'box',yMin:0,  yMax:120,backgroundColor:'rgba(220,252,231,0.3)',borderWidth:0},
+  zNormal:  {type:'box',yMin:120,yMax:130,backgroundColor:'rgba(254,249,195,0.3)',borderWidth:0},
+  zElevated:{type:'box',yMin:130,yMax:140,backgroundColor:'rgba(254,243,199,0.4)',borderWidth:0},
+  zHigh1:   {type:'box',yMin:140,yMax:160,backgroundColor:'rgba(254,226,226,0.4)',borderWidth:0},
+  zHigh2:   {type:'box',yMin:160,yMax:300,backgroundColor:'rgba(254,202,202,0.45)',borderWidth:0},
+  l120:{type:'line',yMin:120,yMax:120,borderColor:'rgba(34,197,94,0.5)',borderWidth:1,borderDash:[5,4]},
+  l130:{type:'line',yMin:130,yMax:130,borderColor:'rgba(234,179,8,0.5)',borderWidth:1,borderDash:[5,4]},
+  l140:{type:'line',yMin:140,yMax:140,borderColor:'rgba(239,68,68,0.5)',borderWidth:1,borderDash:[5,4]},
+  l160:{type:'line',yMin:160,yMax:160,borderColor:'rgba(185,28,28,0.5)',borderWidth:1,borderDash:[5,4]},
+};
+
+new Chart(document.getElementById('bp-chart'),{type:'line',data:{labels,datasets:[
+  {label:'Sistolni',data:sysVals,borderColor:'#3b82f6',borderWidth:2.5,pointRadius:4,pointBackgroundColor:'#3b82f6',tension:0.3,fill:false},
+  {label:'Dijastolni',data:diaVals,borderColor:'#22c55e',borderWidth:2.5,pointRadius:4,pointBackgroundColor:'#22c55e',tension:0.3,fill:false}
+]},options:base(bpMin,bpMax,{annotation:{annotations}})});
+
+const pv = pulseVals.filter(v=>v!=null);
+const pMin = pv.length?Math.max(30,Math.min(...pv)-10):30;
+const pMax = pv.length?Math.min(200,Math.max(...pv)+10):200;
+new Chart(document.getElementById('pulse-chart'),{type:'line',data:{labels,datasets:[
+  {label:'Puls',data:pulseVals,borderColor:'#ef4444',borderWidth:2.5,pointRadius:4,pointBackgroundColor:'#ef4444',tension:0.3,fill:false,spanGaps:true}
+]},options:{...base(pMin,pMax),plugins:{...base(pMin,pMax).plugins,legend:{display:false}}}});
+
+const meEl = document.getElementById('me-chart');
+if (meEl && morningSys.length && eveningSys.length) {
+  const meAll = [...morningSys,...morningDia,...eveningSys,...eveningDia].filter(v=>v!=null);
+  const meMin = meAll.length?Math.max(50,Math.min(...meAll)-10):50;
+  const meMax = meAll.length?Math.min(210,Math.max(...meAll)+15):210;
+  const meLabels = Array.from({length:Math.max(morningSys.length,eveningSys.length)},(_,i)=>i+1);
+  new Chart(meEl,{type:'line',data:{labels:meLabels,datasets:[
+    {label:'Jut. Sistolni',data:morningSys,borderColor:'#f59e0b',borderWidth:2,pointRadius:3,tension:0.3,fill:false},
+    {label:'Jut. Dijastolni',data:morningDia,borderColor:'#fbbf24',borderWidth:2,pointRadius:3,tension:0.3,fill:false,borderDash:[4,3]},
+    {label:'Vec. Sistolni',data:eveningSys,borderColor:'#8b5cf6',borderWidth:2,pointRadius:3,tension:0.3,fill:false},
+    {label:'Vec. Dijastolni',data:eveningDia,borderColor:'#a78bfa',borderWidth:2,pointRadius:3,tension:0.3,fill:false,borderDash:[4,3]},
+  ]},options:base(meMin,meMax)});
+}
+<\/script>
+</body></html>`;
+
   const blob2 = new Blob([html], {type:'text/html;charset=utf-8;'});
   const url = URL.createObjectURL(blob2);
   const a = document.createElement('a');
