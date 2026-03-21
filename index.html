@@ -219,7 +219,7 @@
 <body>
 
 <header>
-  <div class="header-title" style="flex-direction:column;align-items:flex-start;gap:2px;"><div style="display:flex;align-items:center;gap:8px;"><span>🫀</span> Pritisak</div><span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);">v4.7</span></div>
+  <div class="header-title" style="flex-direction:column;align-items:flex-start;gap:2px;"><div style="display:flex;align-items:center;gap:8px;"><span>🫀</span> Pritisak</div><span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);">v4.8</span></div>
   <div style="display:flex;gap:8px;">
     <button class="icon-btn" onclick="triggerImport()" title="Import CSV">⬆️</button>
     <button class="icon-btn" onclick="openExportModal()" title="Export CSV">⬇️</button>
@@ -1098,8 +1098,8 @@ function generateReport() {
     const tagLbl={jutarnje:'🌅 Jut.',vecernje:'🌙 Več.',ostalo:'🕐 Ost.'}[e.tag]||e.tag;
     const time = String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0');
     const date = dt.getDate()+'. '+MNS[dt.getMonth()]+' '+dt.getFullYear()+'.';
-    const commentRow = e.comment ? `<tr><td colspan="6" style="padding:2px 10px 8px;color:#94a3b8;font-style:italic;font-size:11px;border-bottom:1px solid #f1f5f9;">💬 ${e.comment}</td></tr>` : '';
-    return `<tr><td>${date}</td><td>${time}</td><td>${tagLbl}</td><td style="font-weight:600;white-space:nowrap;">${e.sys}/${e.dia}</td><td>${e.pulse||'&mdash;'}</td><td>${statusBadge(e.sys,e.dia)}</td></tr>${commentRow}`;
+    const commentRow = e.comment ? `<tr><td colspan="5" style="padding:2px 10px 8px;color:#94a3b8;font-style:italic;font-size:11px;border-bottom:1px solid #f1f5f9;">💬 ${e.comment}</td></tr>` : '';
+    return `<tr><td><div style="font-size:12px;">${date}</div><div style="font-size:11px;color:#94a3b8;margin-top:1px;">${time}</div></td><td>${tagLbl}</td><td style="font-weight:600;white-space:nowrap;">${e.sys}/${e.dia}</td><td>${e.pulse||'&mdash;'}</td><td>${statusBadge(e.sys,e.dia)}</td></tr>${commentRow}`;
   }).join('');
 
   // Chart data
@@ -1213,11 +1213,11 @@ h1{font-size:24px;font-weight:700;color:#0f172a;margin-bottom:2px;}
 .zlegend{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;}
 .zitem{display:flex;align-items:center;gap:4px;font-size:11px;color:#64748b;}
 .zdot{width:10px;height:10px;border-radius:2px;flex-shrink:0;}
-table{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed;}
+table{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed;border-radius:8px;overflow:hidden;}
 th{background:#f8fafc;padding:8px 10px;text-align:left;font-size:10px;letter-spacing:0.5px;text-transform:uppercase;color:#94a3b8;font-weight:600;border-bottom:1px solid #e2e8f0;overflow:hidden;}
 td{padding:8px 10px;border-bottom:1px solid #f8fafc;overflow:hidden;word-wrap:break-word;overflow-wrap:break-word;}
 tr:last-child td{border-bottom:none;}
-.col-date{width:21%} .col-time{width:10%} .col-tag{width:12%} .col-bp{width:15%} .col-pulse{width:9%} .col-status{width:33%}
+.col-dt{width:22%} .col-tag{width:13%} .col-bp{width:17%} .col-pulse{width:10%} .col-status{width:38%}
 .badge{display:inline-block;padding:2px 6px;border-radius:20px;font-size:10px;font-weight:600;}
 .b-low{background:#dbeafe;color:#2563eb;} .b-ideal{background:#dcfce7;color:#16a34a;}
 .b-normal{background:#d1fae5;color:#059669;} .b-elevated{background:#fef3c7;color:#d97706;}
@@ -1238,6 +1238,7 @@ tr:last-child td{border-bottom:none;}
   .sval{font-size:18px;}
   table{font-size:11px;}
   th,td{padding:5px 7px;}
+  .col-dt{width:22%;}
   .zlegend{font-size:10px;}
   .footer{margin-top:8px;}
 }
@@ -1311,8 +1312,8 @@ ${morningEveningChart}
 <!-- TABELA -->
 <div class="card">
   <div class="stitle">Sva mjerenja</div>
-  <table><colgroup><col class="col-date"><col class="col-time"><col class="col-tag"><col class="col-bp"><col class="col-pulse"><col class="col-status"></colgroup>
-  <thead><tr><th>Datum</th><th>Vrij.</th><th>Tag</th><th>Pritisak</th><th>Puls</th><th>Status</th></tr></thead>
+  <table style="width:100%;"><colgroup><col class="col-dt"><col class="col-tag"><col class="col-bp"><col class="col-pulse"><col class="col-status"></colgroup>
+  <thead><tr><th>Datum / Vrij.</th><th>Tag</th><th>Pritisak</th><th>Puls</th><th>Status</th></tr></thead>
   <tbody>${rows}</tbody></table>
 </div>
 
@@ -1347,7 +1348,7 @@ ${morningEveningChart}
   </div>
 </div>
 
-<div class="footer">Generisano: ${genDate} &nbsp;·&nbsp; Mjerač Pritiska v4.7</div>
+<div class="footer">Generisano: ${genDate} &nbsp;·&nbsp; Mjerač Pritiska v4.8</div>
 </div>
 
 <script>
