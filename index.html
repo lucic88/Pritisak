@@ -154,9 +154,14 @@
     .entry-comment { font-size: 12px; color: var(--text-muted); font-style: italic; border-top: 1px solid var(--border); margin-top: 6px; padding-top: 6px; }
 
     .bp-status { font-size: 10px; letter-spacing: 0.5px; padding: 2px 7px; border-radius: 20px; display: inline-block; }
-    .bp-normal { background: rgba(63,185,80,0.12); color: var(--accent2); }
-    .bp-elevated { background: rgba(210,153,34,0.12); color: var(--tag-morning); }
-    .bp-high { background: rgba(248,81,73,0.12); color: var(--warn); }
+    .bp-low     { background: rgba(88,166,255,0.12); color: #58a6ff; }
+    .bp-ideal   { background: rgba(63,185,80,0.15);  color: #3fb950; }
+    .bp-normal  { background: rgba(63,185,80,0.10);  color: #56d364; }
+    .bp-elevated{ background: rgba(210,153,34,0.15); color: #d29922; }
+    .bp-high1   { background: rgba(248,81,73,0.12);  color: #f85149; }
+    .bp-high2   { background: rgba(248,81,73,0.20);  color: #ff6b6b; }
+    .bp-crisis  { background: rgba(248,81,73,0.30);  color: #fff; font-weight:600; animation: pulse-warn 1s infinite; }
+    @keyframes pulse-warn { 0%,100%{opacity:1} 50%{opacity:0.6} }
 
     .empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); }
     .empty-state .emoji { font-size: 48px; display: block; margin-bottom: 12px; }
@@ -209,16 +214,117 @@
 <body>
 
 <header>
-  <div class="header-title"><span>🫀</span> Pritisak <span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);font-style:normal;margin-left:4px;">v3.3</span></div>
+  <div class="header-title" style="flex-direction:column;align-items:flex-start;gap:2px;"><div style="display:flex;align-items:center;gap:8px;"><span>🫀</span> Pritisak</div><span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);">v3.5</span></div>
   <div style="display:flex;gap:8px;">
     <button class="icon-btn" onclick="triggerImport()" title="Import CSV">⬆️</button>
-    <button class="icon-btn" onclick="exportCSV()" title="Export CSV">⬇️</button>
+    <button class="icon-btn" onclick="openExportModal()" title="Export CSV">⬇️</button>
+    <button class="icon-btn" onclick="openShareModal()" title="Dijeli izvještaj">📤</button>
+    <button class="icon-btn" onclick="openHelpModal()" title="Opsezi pritiska">ℹ️</button>
     <button class="icon-btn" onclick="openDeleteModal()" title="Brisanje podataka">🗑️</button>
   </div>
 </header>
 
 <!-- Hidden file input for import -->
 <input type="file" id="csv-import-input" accept=".csv" style="display:none" onchange="importCSV(event)" />
+
+<!-- EXPORT MODAL -->
+<div id="export-modal" style="display:none; position:fixed; inset:0; z-index:500; background:rgba(0,0,0,0.7); padding:20px; align-items:flex-end;">
+  <div style="background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:20px; width:100%; max-width:480px; margin:0 auto;">
+    <div style="font-family:var(--serif); font-size:18px; margin-bottom:6px;">⬇️ Export CSV</div>
+    <div style="font-size:12px; color:var(--text-muted); margin-bottom:16px;">Exportovaće se sva mjerenja kao CSV fajl koji možeš otvoriti u Excelu.</div>
+    <div id="export-count" style="font-size:13px; color:var(--accent); margin-bottom:16px;"></div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+      <button class="btn-secondary" onclick="closeExportModal()">Odustani</button>
+      <button class="btn-primary" style="margin:0;" onclick="doExportCSV()">💾 Sačuvaj CSV</button>
+    </div>
+  </div>
+</div>
+
+<!-- SHARE MODAL -->
+<div id="share-modal" style="display:none; position:fixed; inset:0; z-index:500; background:rgba(0,0,0,0.7); padding:16px; align-items:center; overflow-y:auto;">
+  <div style="background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:20px; width:100%; max-width:480px; margin:auto;">
+    <div style="font-family:var(--serif); font-size:18px; margin-bottom:16px;">📤 Dijeli izvještaj</div>
+
+    <div style="font-size:11px; letter-spacing:0.5px; text-transform:uppercase; color:var(--text-muted); margin-bottom:8px;">Period</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px;">
+      <div>
+        <label style="font-size:10px; color:var(--text-muted); display:block; margin-bottom:4px;">Od</label>
+        <input type="date" id="share-from" style="width:100%; background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:8px 10px; font-family:var(--mono); font-size:13px; color:var(--text); outline:none;" />
+      </div>
+      <div>
+        <label style="font-size:10px; color:var(--text-muted); display:block; margin-bottom:4px;">Do</label>
+        <input type="date" id="share-to" style="width:100%; background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:8px 10px; font-family:var(--mono); font-size:13px; color:var(--text); outline:none;" />
+      </div>
+    </div>
+
+    <div style="font-size:11px; letter-spacing:0.5px; text-transform:uppercase; color:var(--text-muted); margin-bottom:8px;">Mjerenja</div>
+    <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:16px;">
+      <div class="filter-chip active" id="stag-sve" onclick="setShareTag('sve')">Sve</div>
+      <div class="filter-chip" id="stag-jutarnje" onclick="setShareTag('jutarnje')">🌅 Jutarnje</div>
+      <div class="filter-chip" id="stag-vecernje" onclick="setShareTag('vecernje')">🌙 Večernje</div>
+      <div class="filter-chip" id="stag-ostalo" onclick="setShareTag('ostalo')">🕐 Ostalo</div>
+    </div>
+
+    <div id="share-preview" style="font-size:12px; color:var(--accent); margin-bottom:16px;"></div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+      <button class="btn-secondary" onclick="closeShareModal()">Odustani</button>
+      <button class="btn-primary" style="margin:0;" onclick="generateReport()">📊 Generiši</button>
+    </div>
+  </div>
+</div>
+
+<!-- HELP MODAL -->
+<div id="help-modal" style="display:none; position:fixed; inset:0; z-index:500; background:rgba(0,0,0,0.7); padding:16px; align-items:center; overflow-y:auto;">
+  <div style="background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:20px; width:100%; max-width:480px; margin:auto;">
+    <div style="font-family:var(--serif); font-size:20px; margin-bottom:4px;">ℹ️ Opsezi krvnog pritiska</div>
+    <div style="font-size:11px; color:var(--text-muted); margin-bottom:18px;">Opšte smjernice za odrasle osobe (mmHg)</div>
+
+    <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:18px;">
+      <div style="display:grid; grid-template-columns:28px 1fr auto; align-items:center; gap:10px; background:rgba(88,166,255,0.08); border:1px solid rgba(88,166,255,0.2); border-radius:10px; padding:10px 12px;">
+        <div style="width:12px;height:12px;border-radius:50%;background:#58a6ff;margin:auto;"></div>
+        <div><div style="font-size:13px;color:var(--text);">Nizak pritisak</div><div style="font-size:11px;color:var(--text-muted);">Hipotenzija — problem samo uz simptome</div></div>
+        <div style="font-size:12px;color:#58a6ff;text-align:right;white-space:nowrap;">&lt;90 / &lt;60</div>
+      </div>
+      <div style="display:grid; grid-template-columns:28px 1fr auto; align-items:center; gap:10px; background:rgba(63,185,80,0.10); border:1px solid rgba(63,185,80,0.25); border-radius:10px; padding:10px 12px;">
+        <div style="width:12px;height:12px;border-radius:50%;background:#3fb950;margin:auto;"></div>
+        <div><div style="font-size:13px;color:var(--text);">Idealan</div><div style="font-size:11px;color:var(--text-muted);">Optimalne vrijednosti za zdravu odraslu osobu</div></div>
+        <div style="font-size:12px;color:#3fb950;text-align:right;white-space:nowrap;">&lt;120 / &lt;80</div>
+      </div>
+      <div style="display:grid; grid-template-columns:28px 1fr auto; align-items:center; gap:10px; background:rgba(63,185,80,0.07); border:1px solid rgba(63,185,80,0.15); border-radius:10px; padding:10px 12px;">
+        <div style="width:12px;height:12px;border-radius:50%;background:#56d364;margin:auto;"></div>
+        <div><div style="font-size:13px;color:var(--text);">Normalan</div><div style="font-size:11px;color:var(--text-muted);">Prihvatljive vrijednosti, bez zabrinutosti</div></div>
+        <div style="font-size:12px;color:#56d364;text-align:right;white-space:nowrap;">120–129 / 80–84</div>
+      </div>
+      <div style="display:grid; grid-template-columns:28px 1fr auto; align-items:center; gap:10px; background:rgba(210,153,34,0.10); border:1px solid rgba(210,153,34,0.25); border-radius:10px; padding:10px 12px;">
+        <div style="width:12px;height:12px;border-radius:50%;background:#d29922;margin:auto;"></div>
+        <div><div style="font-size:13px;color:var(--text);">Visoko normalan</div><div style="font-size:11px;color:var(--text-muted);">Pred-hipertenzija — vrijedi pratiti</div></div>
+        <div style="font-size:12px;color:#d29922;text-align:right;white-space:nowrap;">130–139 / 85–89</div>
+      </div>
+      <div style="display:grid; grid-template-columns:28px 1fr auto; align-items:center; gap:10px; background:rgba(248,81,73,0.08); border:1px solid rgba(248,81,73,0.2); border-radius:10px; padding:10px 12px;">
+        <div style="width:12px;height:12px;border-radius:50%;background:#f85149;margin:auto;"></div>
+        <div><div style="font-size:13px;color:var(--text);">Visok I — blaga hipertenzija</div><div style="font-size:11px;color:var(--text-muted);">Konzultacija s ljekarom preporučena</div></div>
+        <div style="font-size:12px;color:#f85149;text-align:right;white-space:nowrap;">140–159 / 90–99</div>
+      </div>
+      <div style="display:grid; grid-template-columns:28px 1fr auto; align-items:center; gap:10px; background:rgba(248,81,73,0.14); border:1px solid rgba(248,81,73,0.3); border-radius:10px; padding:10px 12px;">
+        <div style="width:12px;height:12px;border-radius:50%;background:#ff6b6b;margin:auto;"></div>
+        <div><div style="font-size:13px;color:var(--text);">Visok II — umjerena hipertenzija</div><div style="font-size:11px;color:var(--text-muted);">Potrebna ljekarska pažnja</div></div>
+        <div style="font-size:12px;color:#ff6b6b;text-align:right;white-space:nowrap;">160–179 / 100–109</div>
+      </div>
+      <div style="display:grid; grid-template-columns:28px 1fr auto; align-items:center; gap:10px; background:rgba(248,81,73,0.25); border:1px solid rgba(248,81,73,0.5); border-radius:10px; padding:10px 12px;">
+        <div style="width:12px;height:12px;border-radius:50%;background:#fff;margin:auto;"></div>
+        <div><div style="font-size:13px;color:#fff;font-weight:600;">⚠️ Hipertenzivna kriza</div><div style="font-size:11px;color:#ffb3b0;">Hitna medicinska pomoć odmah!</div></div>
+        <div style="font-size:12px;color:#fff;text-align:right;white-space:nowrap;">&gt;180 / &gt;110</div>
+      </div>
+    </div>
+
+    <div style="background:rgba(88,166,255,0.06); border:1px solid rgba(88,166,255,0.15); border-radius:10px; padding:12px; font-size:12px; color:var(--text-muted); line-height:1.6; margin-bottom:16px;">
+      💡 <strong style="color:var(--text);">Napomena:</strong> Jedno mjerenje ne znači dijagnozu. Pritisak varira u zavisnosti od stresa, fizičke aktivnosti i doba dana. Ako su vrijednosti često van normalnog opsega — konsultuj se s ljekarom.
+    </div>
+
+    <button class="btn-primary" onclick="closeHelpModal()">Razumijem</button>
+  </div>
+</div>
 
 <!-- DELETE MODAL -->
 <div id="delete-modal" style="display:none; position:fixed; inset:0; z-index:500; background:rgba(0,0,0,0.7); padding:20px; align-items:flex-end;">
@@ -400,9 +506,13 @@ function getTag(h) {
 }
 function tagLabel(t) { return {jutarnje:'🌅 Jutarnje', vecernje:'🌙 Večernje', ostalo:'🕐 Ostalo'}[t]||t; }
 function bpStatus(s,d) {
-  if (s<120&&d<80) return {label:'Normalan',cls:'bp-normal'};
-  if (s<130&&d<80) return {label:'Povišen',cls:'bp-elevated'};
-  return {label:'Visok',cls:'bp-high'};
+  if (s<90||d<60)            return {label:'Nizak',      cls:'bp-low'};
+  if (s<120&&d<80)           return {label:'Idealan',    cls:'bp-ideal'};
+  if (s<=129&&d<=84)         return {label:'Normalan',   cls:'bp-normal'};
+  if (s<=139&&d<=89)         return {label:'Vis. norm.', cls:'bp-elevated'};
+  if (s<=159&&d<=99)         return {label:'Visok I',    cls:'bp-high1'};
+  if (s<=179&&d<=109)        return {label:'Visok II',   cls:'bp-high2'};
+  return                            {label:'⚠️ Kriza',   cls:'bp-crisis'};
 }
 function fmtDate(dt) { return new Date(dt).toLocaleDateString('bs',{day:'2-digit',month:'short',year:'numeric'}); }
 function fmtTime(dt) { return new Date(dt).toLocaleTimeString('bs',{hour:'2-digit',minute:'2-digit'}); }
@@ -667,9 +777,17 @@ function switchTab(tab, el) {
 }
 
 // ── EXPORT ────────────────────────────────────────────────
-function exportCSV() {
+function openExportModal() {
   const entries = load();
   if (!entries.length) { showToast('⚠️ Nema podataka'); return; }
+  document.getElementById('export-count').textContent = `Ukupno mjerenja: ${entries.length}`;
+  document.getElementById('export-modal').style.display = 'flex';
+}
+function closeExportModal() {
+  document.getElementById('export-modal').style.display = 'none';
+}
+function doExportCSV() {
+  const entries = load();
   const hdr = 'Datum,Vrijeme,Tag,Sistolni,Dijastolni,Puls,Komentar\n';
   const rows = entries.map(e => {
     const d = new Date(e.dt);
@@ -680,7 +798,195 @@ function exportCSV() {
   a.href = URL.createObjectURL(blob);
   a.download = `pritisak_${new Date().toISOString().slice(0,10)}.csv`;
   a.click();
+  closeExportModal();
   showToast('✅ CSV exportovan');
+}
+// legacy alias
+function exportCSV() { openExportModal(); }
+
+// ── SHARE ─────────────────────────────────────────────────
+let shareTag = 'sve';
+
+function openShareModal() {
+  const entries = load();
+  if (!entries.length) { showToast('⚠️ Nema podataka'); return; }
+  // default: last 30 days
+  const to = new Date();
+  const from = new Date(); from.setDate(from.getDate()-30);
+  document.getElementById('share-to').value = to.toISOString().slice(0,10);
+  document.getElementById('share-from').value = from.toISOString().slice(0,10);
+  shareTag = 'sve';
+  document.querySelectorAll('[id^="stag-"]').forEach(el=>el.classList.remove('active'));
+  document.getElementById('stag-sve').classList.add('active');
+  updateSharePreview();
+  document.getElementById('share-modal').style.display = 'flex';
+}
+function closeShareModal() {
+  document.getElementById('share-modal').style.display = 'none';
+}
+function setShareTag(tag) {
+  shareTag = tag;
+  document.querySelectorAll('[id^="stag-"]').forEach(el=>el.classList.remove('active'));
+  document.getElementById('stag-'+tag).classList.add('active');
+  updateSharePreview();
+}
+function updateSharePreview() {
+  const from = document.getElementById('share-from').value;
+  const to = document.getElementById('share-to').value;
+  if (!from||!to) return;
+  let data = getShareData(from, to, shareTag);
+  const el = document.getElementById('share-preview');
+  el.textContent = data.length ? `Pronađeno ${data.length} mjerenja za odabrani period.` : '⚠️ Nema mjerenja za odabrani period.';
+  el.style.color = data.length ? 'var(--accent)' : 'var(--warn)';
+}
+document.addEventListener('change', e => {
+  if (e.target.id==='share-from'||e.target.id==='share-to') updateSharePreview();
+});
+
+function getShareData(from, to, tag) {
+  const f = new Date(from+'T00:00:00');
+  const t = new Date(to+'T23:59:59');
+  let data = load().filter(e => { const d=new Date(e.dt); return d>=f&&d<=t; });
+  if (tag!=='sve') data = data.filter(e=>e.tag===tag);
+  return data.sort((a,b)=>new Date(a.dt)-new Date(b.dt));
+}
+
+function generateReport() {
+  const from = document.getElementById('share-from').value;
+  const to = document.getElementById('share-to').value;
+  if (!from||!to) { showToast('⚠️ Odaberite period'); return; }
+  const data = getShareData(from, to, shareTag);
+  if (!data.length) { showToast('⚠️ Nema mjerenja za ovaj period'); return; }
+
+  const avg = arr => arr.length ? Math.round(arr.reduce((a,b)=>a+b,0)/arr.length) : null;
+  const avgSys = avg(data.map(e=>e.sys));
+  const avgDia = avg(data.map(e=>e.dia));
+  const pulses = data.filter(e=>e.pulse).map(e=>e.pulse);
+  const avgPulse = avg(pulses);
+
+  const tagName = {sve:'Sva',jutarnje:'Jutarnja',vecernje:'Večernja',ostalo:'Ostala'}[shareTag];
+  const fromFmt = new Date(from).toLocaleDateString('bs',{day:'2-digit',month:'long',year:'numeric'});
+  const toFmt   = new Date(to).toLocaleDateString('bs',{day:'2-digit',month:'long',year:'numeric'});
+
+  const rows = data.map(e=>{
+    const dt=new Date(e.dt);
+    const tagLbl={jutarnje:'Jutarnje',vecernje:'Večernje',ostalo:'Ostalo'}[e.tag]||e.tag;
+    const st=bpStatus(e.sys,e.dia);
+    const stColors={'bp-normal':'#3fb950','bp-elevated':'#d29922','bp-high':'#f85149'};
+    return `<tr>
+      <td>${dt.toLocaleDateString('bs',{day:'2-digit',month:'short',year:'numeric'})}</td>
+      <td>${dt.toLocaleTimeString('bs',{hour:'2-digit',minute:'2-digit'})}</td>
+      <td>${tagLbl}</td>
+      <td style="font-weight:600;">${e.sys}/${e.dia}</td>
+      <td>${e.pulse||'—'}</td>
+      <td style="color:${stColors[st.cls]}">${st.label}</td>
+      <td style="color:#7d8590;font-style:italic;">${e.comment||''}</td>
+    </tr>`;
+  }).join('');
+
+  // Build chart data
+  const labels = data.map(e=>{const d=new Date(e.dt);return d.toLocaleDateString('bs',{day:'2-digit',month:'short'})+' '+d.toLocaleTimeString('bs',{hour:'2-digit',minute:'2-digit'});});
+  const sysVals = data.map(e=>e.sys);
+  const diaVals = data.map(e=>e.dia);
+  const pulseVals = data.map(e=>e.pulse);
+
+  const html = `<!DOCTYPE html>
+<html lang="bs">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Izvještaj pritiska — ${fromFmt} do ${toFmt}</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"><\/script>
+<style>
+  body{font-family:'Segoe UI',system-ui,sans-serif;background:#f8fafc;color:#1e293b;margin:0;padding:0;}
+  .wrap{max-width:900px;margin:0 auto;padding:24px 16px 60px;}
+  h1{font-size:24px;margin-bottom:4px;color:#0f172a;}
+  .subtitle{color:#64748b;font-size:14px;margin-bottom:24px;}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px;}
+  .stat{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;text-align:center;}
+  .stat-label{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#94a3b8;margin-bottom:6px;}
+  .stat-val{font-size:28px;font-weight:700;color:#0f172a;letter-spacing:-1px;}
+  .stat-unit{font-size:11px;color:#94a3b8;}
+  .chart-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin-bottom:16px;}
+  .chart-card h3{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#94a3b8;margin-bottom:14px;}
+  .chart-wrap{position:relative;height:220px;}
+  table{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;font-size:13px;}
+  th{background:#f1f5f9;padding:10px 12px;text-align:left;font-size:11px;letter-spacing:0.5px;text-transform:uppercase;color:#64748b;font-weight:600;}
+  td{padding:10px 12px;border-top:1px solid #f1f5f9;}
+  tr:hover td{background:#f8fafc;}
+  .footer{text-align:center;color:#94a3b8;font-size:12px;margin-top:24px;}
+  @media print{body{background:#fff;} .no-print{display:none;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🫀 Izvještaj krvnog pritiska</h1>
+  <div class="subtitle">${tagName} mjerenja · ${fromFmt} – ${toFmt} · Ukupno: ${data.length} mjerenja</div>
+
+  <div class="stats">
+    <div class="stat"><div class="stat-label">Prosjek Sistolni</div><div class="stat-val">${avgSys}</div><div class="stat-unit">mmHg</div></div>
+    <div class="stat"><div class="stat-label">Prosjek Dijastolni</div><div class="stat-val">${avgDia}</div><div class="stat-unit">mmHg</div></div>
+    <div class="stat"><div class="stat-label">Prosjek Puls</div><div class="stat-val">${avgPulse||'—'}</div><div class="stat-unit">bpm</div></div>
+  </div>
+
+  <div class="chart-card">
+    <h3>Pritisak (mmHg)</h3>
+    <div class="chart-wrap"><canvas id="bp-chart"></canvas></div>
+  </div>
+  <div class="chart-card">
+    <h3>Puls (bpm)</h3>
+    <div class="chart-wrap"><canvas id="pulse-chart"></canvas></div>
+  </div>
+
+  <div style="margin-bottom:16px;">
+    <table>
+      <thead><tr><th>Datum</th><th>Vrijeme</th><th>Tag</th><th>Pritisak</th><th>Puls</th><th>Status</th><th>Komentar</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  </div>
+
+  <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:16px;">
+    <h3 style="font-size:14px;color:#0f172a;margin-bottom:4px;">Referentne vrijednosti krvnog pritiska</h3>
+    <p style="font-size:12px;color:#64748b;margin-bottom:14px;">Opšte smjernice za odrasle osobe</p>
+    <table style="width:100%;border-collapse:collapse;font-size:13px;">
+      <thead><tr style="background:#f1f5f9;"><th style="padding:8px 12px;text-align:left;font-size:11px;letter-spacing:0.5px;text-transform:uppercase;color:#64748b;">Kategorija</th><th style="padding:8px 12px;text-align:left;font-size:11px;color:#64748b;">Sistolni</th><th style="padding:8px 12px;text-align:left;font-size:11px;color:#64748b;">Dijastolni</th><th style="padding:8px 12px;text-align:left;font-size:11px;color:#64748b;">Napomena</th></tr></thead>
+      <tbody>
+        <tr><td style="padding:8px 12px;border-top:1px solid #f1f5f9;color:#3b82f6;">Nizak</td><td style="padding:8px 12px;border-top:1px solid #f1f5f9;">&lt; 90</td><td style="padding:8px 12px;border-top:1px solid #f1f5f9;">&lt; 60</td><td style="padding:8px 12px;border-top:1px solid #f1f5f9;color:#64748b;">Problem samo uz simptome</td></tr>
+        <tr><td style="padding:8px 12px;border-top:1px solid #f1f5f9;color:#22c55e;">Idealan</td><td style="padding:8px 12px;border-top:1px solid #f1f5f9;">&lt; 120</td><td style="padding:8px 12px;border-top:1px solid #f1f5f9;">&lt; 80</td><td style="padding:8px 12px;border-top:1px solid #f1f5f9;color:#64748b;">Optimalne vrijednosti</td></tr>
+        <tr><td style="padding:8px 12px;border-top:1px solid #f1f5f9;color:#16a34a;">Normalan</td><td style="padding:8px 12px;border-top:1px solid #f1f5f9;">120 – 129</td><td style="padding:8px 12px;border-top:1px solid #f1f5f9;">80 – 84</td><td style="padding:8px 12px;border-top:1px solid #f1f5f9;color:#64748b;">Prihvatljive vrijednosti</td></tr>
+        <tr><td style="padding:8px 12px;border-top:1px solid #f1f5f9;color:#d97706;">Visoko normalan</td><td style="padding:8px 12px;border-top:1px solid #f1f5f9;">130 – 139</td><td style="padding:8px 12px;border-top:1px solid #f1f5f9;">85 – 89</td><td style="padding:8px 12px;border-top:1px solid #f1f5f9;color:#64748b;">Pred-hipertenzija</td></tr>
+        <tr><td style="padding:8px 12px;border-top:1px solid #f1f5f9;color:#ef4444;">Visok I</td><td style="padding:8px 12px;border-top:1px solid #f1f5f9;">140 – 159</td><td style="padding:8px 12px;border-top:1px solid #f1f5f9;">90 – 99</td><td style="padding:8px 12px;border-top:1px solid #f1f5f9;color:#64748b;">Blaga hipertenzija</td></tr>
+        <tr><td style="padding:8px 12px;border-top:1px solid #f1f5f9;color:#dc2626;">Visok II</td><td style="padding:8px 12px;border-top:1px solid #f1f5f9;">160 – 179</td><td style="padding:8px 12px;border-top:1px solid #f1f5f9;">100 – 109</td><td style="padding:8px 12px;border-top:1px solid #f1f5f9;color:#64748b;">Umjerena hipertenzija</td></tr>
+        <tr style="background:#fef2f2;"><td style="padding:8px 12px;border-top:1px solid #fecaca;color:#dc2626;font-weight:700;">⚠️ Kriza</td><td style="padding:8px 12px;border-top:1px solid #fecaca;font-weight:700;">&gt; 180</td><td style="padding:8px 12px;border-top:1px solid #fecaca;font-weight:700;">&gt; 110</td><td style="padding:8px 12px;border-top:1px solid #fecaca;color:#dc2626;font-weight:600;">Hitna medicinska pomoć!</td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:11px;color:#94a3b8;margin-top:10px;line-height:1.6;">💡 Napomena: Jedno mjerenje ne znači dijagnozu. Pritisak varira u zavisnosti od stresa, fizičke aktivnosti i doba dana. Ako su vrijednosti često van normalnog opsega — konsultuj se s ljekarom.</p>
+  </div>
+
+  <div class="footer">Generisano: ${new Date().toLocaleDateString('bs',{day:'2-digit',month:'long',year:'numeric'})} · Mjerač Pritiska v3.5</div>
+</div>
+<script>
+const labels=${JSON.stringify(labels)};
+const sysVals=${JSON.stringify(sysVals)};
+const diaVals=${JSON.stringify(diaVals)};
+const pulseVals=${JSON.stringify(pulseVals)};
+const base={responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{position:'top',labels:{font:{size:12},usePointStyle:true}},tooltip:{backgroundColor:'#1e293b',titleFont:{size:11},bodyFont:{size:12},padding:10,cornerRadius:8}},scales:{x:{ticks:{font:{size:10},maxRotation:45,maxTicksLimit:10},grid:{color:'#f1f5f9'}},y:{ticks:{font:{size:11}},grid:{color:'#f1f5f9'}}}};
+new Chart(document.getElementById('bp-chart'),{type:'line',data:{labels,datasets:[{label:'Sistolni',data:sysVals,borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,0.08)',borderWidth:2,pointRadius:3,tension:0.3,fill:true},{label:'Dijastolni',data:diaVals,borderColor:'#22c55e',backgroundColor:'rgba(34,197,94,0.06)',borderWidth:2,pointRadius:3,tension:0.3,fill:true}]},options:base});
+new Chart(document.getElementById('pulse-chart'),{type:'line',data:{labels,datasets:[{label:'Puls',data:pulseVals,borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,0.08)',borderWidth:2,pointRadius:3,tension:0.3,fill:true,spanGaps:true}]},options:{...base,plugins:{...base.plugins,legend:{display:false}}}});
+<\/script>
+</body>
+</html>`;
+
+  // Open in new tab / trigger download
+  const blob = new Blob([html], {type:'text/html;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `izvjestaj_pritisak_${from}_${to}.html`;
+  a.click();
+
+  closeShareModal();
+  showToast('✅ Izvještaj generisan!');
 }
 
 // ── IMPORT CSV ────────────────────────────────────────────
