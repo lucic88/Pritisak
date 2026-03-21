@@ -225,7 +225,7 @@
 <body>
 
 <header>
-  <div class="header-title" style="flex-direction:column;align-items:flex-start;gap:2px;"><div style="display:flex;align-items:center;gap:8px;"><span>🫀</span> Pritisak</div><span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);">v5.9.5</span></div>
+  <div class="header-title" style="flex-direction:column;align-items:flex-start;gap:2px;"><div style="display:flex;align-items:center;gap:8px;"><span>🫀</span> Pritisak</div><span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);">v5.9.6</span></div>
   <div style="display:flex;gap:8px;">
     <button class="icon-btn" onclick="openImportModal()" title="Import backup">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -249,7 +249,7 @@
 <input type="file" id="csv-import-input" accept=".csv" style="display:none" onchange="previewImport(event)" />
 
 <!-- IMPORT MODAL -->
-<div id="import-modal" style="display:none; position:fixed; inset:0; z-index:500; background:rgba(0,0,0,0.7); padding:20px; align-items:flex-end;">
+<div id="import-modal" onclick="if(event.target===this)closeImportModal()" style="display:none; position:fixed; inset:0; z-index:500; background:rgba(0,0,0,0.7); padding:20px; align-items:flex-end;">
   <div style="background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:20px; width:100%; max-width:480px; margin:0 auto;">
     <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
       <div style="font-family:var(--serif); font-size:18px;">⬆️ Import backup</div>
@@ -274,9 +274,12 @@
 </div>
 
 <!-- EXPORT MODAL -->
-<div id="export-modal" style="display:none; position:fixed; inset:0; z-index:500; background:rgba(0,0,0,0.7); padding:20px; align-items:flex-end;">
+<div id="export-modal" onclick="if(event.target===this)closeExportModal()" style="display:none; position:fixed; inset:0; z-index:500; background:rgba(0,0,0,0.7); padding:20px; align-items:flex-end;">
   <div style="background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:20px; width:100%; max-width:480px; margin:0 auto;">
-    <div style="font-family:var(--serif); font-size:18px; margin-bottom:6px;">⬇️ Export CSV</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+      <div style="font-family:var(--serif); font-size:18px;">⬇️ Export CSV</div>
+      <button onclick="closeExportModal()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);width:32px;height:32px;border-radius:8px;font-size:16px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;">✕</button>
+    </div>
     <div style="font-size:12px; color:var(--text-muted); margin-bottom:16px;">Exportovaće se sva mjerenja kao CSV fajl koji možeš otvoriti u Excelu.</div>
     <div id="export-count" style="font-size:13px; color:var(--accent); margin-bottom:16px;"></div>
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
@@ -287,9 +290,12 @@
 </div>
 
 <!-- SHARE MODAL -->
-<div id="share-modal" style="display:none; position:fixed; inset:0; z-index:500; background:rgba(0,0,0,0.7); padding:16px; align-items:center; overflow-y:auto;">
+<div id="share-modal" onclick="if(event.target===this)closeShareModal()" style="display:none; position:fixed; inset:0; z-index:500; background:rgba(0,0,0,0.7); padding:16px; align-items:center; overflow-y:auto;">
   <div style="background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:20px; width:100%; max-width:480px; margin:auto;">
-    <div style="font-family:var(--serif); font-size:18px; margin-bottom:16px;">📤 Dijeli izvještaj</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <div style="font-family:var(--serif); font-size:18px;">📤 Dijeli izvještaj</div>
+      <button onclick="closeShareModal()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);width:32px;height:32px;border-radius:8px;font-size:16px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;">✕</button>
+    </div>
 
     <div style="font-size:11px; letter-spacing:0.5px; text-transform:uppercase; color:var(--text-muted); margin-bottom:8px;">Period</div>
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px;">
@@ -321,7 +327,7 @@
 </div>
 
 <!-- HELP MODAL -->
-<div id="help-modal" style="display:none; position:fixed; inset:0; z-index:500; background:rgba(0,0,0,0.7); padding:16px; align-items:center; overflow-y:auto;">
+<div id="help-modal" onclick="if(event.target===this)closeHelpModal()" style="display:none; position:fixed; inset:0; z-index:500; background:rgba(0,0,0,0.7); padding:16px; align-items:center; overflow-y:auto;">
   <div style="background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:20px; width:100%; max-width:480px; margin:auto;">
     <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
       <div style="font-family:var(--serif); font-size:20px;">ℹ️ Opsezi krvnog pritiska</div>
@@ -402,9 +408,12 @@
 </div>
 
 <!-- DELETE MODAL -->
-<div id="delete-modal" style="display:none; position:fixed; inset:0; z-index:500; background:rgba(0,0,0,0.7); padding:20px; align-items:flex-end;">
+<div id="delete-modal" onclick="if(event.target===this)closeDeleteModal()" style="display:none; position:fixed; inset:0; z-index:500; background:rgba(0,0,0,0.7); padding:20px; align-items:flex-end;">
   <div style="background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:20px; width:100%; max-width:480px; margin:0 auto;">
-    <div style="font-family:var(--serif); font-size:18px; margin-bottom:6px;">Brisanje podataka</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+      <div style="font-family:var(--serif); font-size:18px;">Brisanje podataka</div>
+      <button onclick="closeDeleteModal()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);width:32px;height:32px;border-radius:8px;font-size:16px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;">✕</button>
+    </div>
     <div style="font-size:12px; color:var(--text-muted); margin-bottom:20px;">Odaberi šta želiš obrisati. Ova akcija je nepovratna!</div>
 
     <div style="margin-bottom:10px;">
@@ -427,11 +436,14 @@
 </div>
 
 <!-- EDIT MODAL -->
-<div id="edit-modal" style="display:none; position:fixed; inset:0; z-index:500; background:rgba(0,0,0,0.7); padding:20px; align-items:flex-end; overflow-y:auto;">
+<div id="edit-modal" onclick="if(event.target===this)closeEditModal()" style="display:none; position:fixed; inset:0; z-index:500; background:rgba(0,0,0,0.7); padding:20px; align-items:flex-end; overflow-y:auto;">
   <div style="background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:20px; width:100%; max-width:480px; margin:0 auto;">
     <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
       <div style="font-family:var(--serif); font-size:18px;">✏️ Uredi mjerenje</div>
-      <span class="tag-preview" id="edit-tag-display">—</span>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span class="tag-preview" id="edit-tag-display">—</span>
+        <button onclick="closeEditModal()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);width:32px;height:32px;border-radius:8px;font-size:16px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;">✕</button>
+      </div>
     </div>
 
     <div class="datetime-row" style="margin-bottom:14px; flex-direction:column; align-items:stretch; gap:0; padding:14px 16px;">
@@ -1406,7 +1418,7 @@ ${morningEveningChart}
   </div>
 </div>
 
-<div class="footer">Generisano: ${genDate} &nbsp;·&nbsp; Mjerač Pritiska v5.9.5</div>
+<div class="footer">Generisano: ${genDate} &nbsp;·&nbsp; Mjerač Pritiska v5.9.6</div>
 </div>
 
 <script>
