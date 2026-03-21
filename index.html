@@ -219,7 +219,7 @@
 <body>
 
 <header>
-  <div class="header-title" style="flex-direction:column;align-items:flex-start;gap:2px;"><div style="display:flex;align-items:center;gap:8px;"><span>🫀</span> Pritisak</div><span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);">v4.5</span></div>
+  <div class="header-title" style="flex-direction:column;align-items:flex-start;gap:2px;"><div style="display:flex;align-items:center;gap:8px;"><span>🫀</span> Pritisak</div><span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);">v4.6</span></div>
   <div style="display:flex;gap:8px;">
     <button class="icon-btn" onclick="triggerImport()" title="Import CSV">⬆️</button>
     <button class="icon-btn" onclick="openExportModal()" title="Export CSV">⬇️</button>
@@ -369,7 +369,7 @@
         <button class="btn-secondary" onclick="deleteByDays(7)">Zadnjih 7 dana</button>
         <button class="btn-secondary" onclick="deleteByDays(30)">Zadnjih 30 dana</button>
         <button class="btn-secondary" onclick="deleteByDays(90)">Zadnja 3 mj.</button>
-        <button class="btn-secondary" onclick="deleteByDays(365)">Zadnjih god.</button>
+        <button class="btn-secondary" onclick="deleteByDays(365)">Zadnja godina</button>
       </div>
     </div>
 
@@ -416,7 +416,7 @@
       </div>
     </div>
 
-    <textarea class="comment-input" id="edit-comment" placeholder="Komentar (opcionalno)..."></textarea>
+    <textarea class="comment-input" id="edit-comment" placeholder="Komentar (opcionalno)..." style="margin-bottom:10px;"></textarea>
 
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:4px;">
       <button class="btn-secondary" onclick="closeEditModal()">Odustani</button>
@@ -615,14 +615,13 @@ let currentFilter = 'sve';
 
 function setFilter(f, el) {
   currentFilter = f;
-  document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));
+  document.querySelectorAll('#page-istorija .filter-chip').forEach(c=>c.classList.remove('active'));
   el.classList.add('active');
   renderHistory();
 }
 
 // Track which year/month groups are expanded: key = "YYYY" or "YYYY-MM"
 const expandedGroups = new Set();
-let historyInitialized = false;
 
 function getLatestMonthKey(entries) {
   if (!entries.length) return null;
@@ -669,15 +668,13 @@ function renderHistory() {
     return;
   }
 
-  // On first render, auto-expand only the latest month
-  if (!historyInitialized) {
+  // On first render (or if expandedGroups is empty), auto-expand only the latest month
+  if (expandedGroups.size === 0) {
     const latestKey = getLatestMonthKey(filtered);
     if (latestKey) {
-      const yr = latestKey.split('-')[0];
-      expandedGroups.add(yr);
+      expandedGroups.add(latestKey.split('-')[0]);
       expandedGroups.add(latestKey);
     }
-    historyInitialized = true;
   }
 
   // Group by year then month
@@ -952,7 +949,11 @@ function switchTab(tab, el) {
 function openExportModal() {
   const entries = load();
   if (!entries.length) { showToast('⚠️ Nema podataka'); return; }
-  document.getElementById('export-count').textContent = `Ukupno mjerenja: ${entries.length}`;
+  const oldest = entries[entries.length-1];
+  const newest = entries[0];
+  const MNS_E = ['jan','feb','mar','apr','maj','jun','jul','aug','sep','okt','nov','dec'];
+  const fmtE = dt => { const d=new Date(dt); return d.getDate()+'. '+MNS_E[d.getMonth()]+' '+d.getFullYear()+'.'; };
+  document.getElementById('export-count').innerHTML = `Ukupno: <strong>${entries.length}</strong> mjerenja &nbsp;·&nbsp; ${fmtE(newest.dt)} &ndash; ${fmtE(oldest.dt)}`;
   document.getElementById('export-modal').style.display = 'flex';
 }
 function closeExportModal() {
@@ -1097,7 +1098,8 @@ function generateReport() {
     const tagLbl={jutarnje:'🌅 Jut.',vecernje:'🌙 Več.',ostalo:'🕐 Ost.'}[e.tag]||e.tag;
     const time = String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0');
     const date = dt.getDate()+'. '+MNS[dt.getMonth()]+' '+dt.getFullYear()+'.';
-    return `<tr><td>${date}</td><td>${time}</td><td>${tagLbl}</td><td style="font-weight:600;">${e.sys}/${e.dia}</td><td>${e.pulse||'&mdash;'}</td><td>${statusBadge(e.sys,e.dia)}</td><td style="color:#94a3b8;font-style:italic;">${e.comment||''}</td></tr>`;
+    const commentRow = e.comment ? `<tr><td colspan="6" style="padding:2px 10px 8px;color:#94a3b8;font-style:italic;font-size:11px;border-bottom:1px solid #f1f5f9;">💬 ${e.comment}</td></tr>` : '';
+    return `<tr><td>${date}</td><td>${time}</td><td>${tagLbl}</td><td style="font-weight:600;">${e.sys}/${e.dia}</td><td>${e.pulse||'&mdash;'}</td><td>${statusBadge(e.sys,e.dia)}</td></tr>${commentRow}`;
   }).join('');
 
   // Chart data
@@ -1215,7 +1217,7 @@ table{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed;}
 th{background:#f8fafc;padding:8px 10px;text-align:left;font-size:10px;letter-spacing:0.5px;text-transform:uppercase;color:#94a3b8;font-weight:600;border-bottom:1px solid #e2e8f0;overflow:hidden;}
 td{padding:8px 10px;border-bottom:1px solid #f8fafc;overflow:hidden;word-wrap:break-word;overflow-wrap:break-word;}
 tr:last-child td{border-bottom:none;}
-.col-date{width:20%} .col-time{width:9%} .col-tag{width:10%} .col-bp{width:13%} .col-pulse{width:8%} .col-status{width:13%} .col-comment{width:27%}
+.col-date{width:24%} .col-time{width:12%} .col-tag{width:14%} .col-bp{width:18%} .col-pulse{width:12%} .col-status{width:20%}
 .badge{display:inline-block;padding:2px 6px;border-radius:20px;font-size:10px;font-weight:600;}
 .b-low{background:#dbeafe;color:#2563eb;} .b-ideal{background:#dcfce7;color:#16a34a;}
 .b-normal{background:#d1fae5;color:#059669;} .b-elevated{background:#fef3c7;color:#d97706;}
@@ -1292,8 +1294,8 @@ ${morningEveningChart}
 <!-- TABELA -->
 <div class="card">
   <div class="stitle">Sva mjerenja</div>
-  <table><colgroup><col class="col-date"><col class="col-time"><col class="col-tag"><col class="col-bp"><col class="col-pulse"><col class="col-status"><col class="col-comment"></colgroup>
-  <thead><tr><th>Datum</th><th>Vrij.</th><th>Tag</th><th>Pritisak</th><th>Puls</th><th>Status</th><th>Komentar</th></tr></thead>
+  <table><colgroup><col class="col-date"><col class="col-time"><col class="col-tag"><col class="col-bp"><col class="col-pulse"><col class="col-status"></colgroup>
+  <thead><tr><th>Datum</th><th>Vrij.</th><th>Tag</th><th>Pritisak</th><th>Puls</th><th>Status</th></tr></thead>
   <tbody>${rows}</tbody></table>
 </div>
 
@@ -1313,9 +1315,22 @@ ${morningEveningChart}
     </tbody>
   </table>
   <div class="note">💡 Jedno mjerenje ne znači dijagnozu. Pritisak varira u zavisnosti od stresa, fizičke aktivnosti i doba dana. Ako su vrijednosti često van normalnog opsega &mdash; konsultuj se s ljekarom.</div>
+
+  <div style="margin-top:20px;">
+    <div class="stitle">Referentne vrijednosti pulsa (u mirovanju)</div>
+    <table style="margin-top:4px;">
+      <thead><tr><th>Kategorija</th><th>Puls (bpm)</th><th>Napomena</th></tr></thead>
+      <tbody>
+        <tr><td><span class="badge" style="background:#dbeafe;color:#2563eb;">Nizak</span></td><td>&lt; 60</td><td style="color:#64748b;">Bradikardija &mdash; problem samo uz simptome</td></tr>
+        <tr><td><span class="badge" style="background:#dcfce7;color:#16a34a;">Normalan</span></td><td>60 &ndash; 99</td><td style="color:#64748b;">Zdrava frekvencija u mirovanju</td></tr>
+        <tr><td><span class="badge" style="background:#fef3c7;color:#d97706;">Vis. normalan</span></td><td>100 &ndash; 119</td><td style="color:#64748b;">Tahikardija &mdash; prati trend, može biti od stresa</td></tr>
+        <tr><td><span class="badge" style="background:#fee2e2;color:#dc2626;">Visok</span></td><td>120+</td><td style="color:#64748b;">Konzultacija s ljekarom preporučena</td></tr>
+      </tbody>
+    </table>
+  </div>
 </div>
 
-<div class="footer">Generisano: ${genDate} &nbsp;·&nbsp; Mjerač Pritiska v4.5</div>
+<div class="footer">Generisano: ${genDate} &nbsp;·&nbsp; Mjerač Pritiska v4.6</div>
 </div>
 
 <script>
