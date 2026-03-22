@@ -227,7 +227,7 @@
 <body>
 
 <header>
-  <div class="header-title" style="flex-direction:column;align-items:flex-start;gap:2px;"><div style="display:flex;align-items:center;gap:8px;"><span>🫀</span> Pritisak</div><span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);">v6.1.1</span></div>
+  <div class="header-title" style="flex-direction:column;align-items:flex-start;gap:2px;"><div style="display:flex;align-items:center;gap:8px;"><span>🫀</span> Pritisak</div><span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);">v6.1.5</span></div>
   <div style="display:flex;gap:8px;">
     <button class="icon-btn" onclick="openImportModal()" title="Import backup">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -257,9 +257,9 @@
       <div style="font-family:var(--serif); font-size:18px;">⬆️ Import backup</div>
       <button onclick="closeImportModal()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);width:32px;height:32px;border-radius:8px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
     </div>
-    <div style="font-size:12px; color:var(--text-muted); margin-bottom:16px; line-height:1.6;">Odaberi JSON fajl koji si prethodno exportovao. Duplikati se automatski preskaču.</div>
+    <div style="font-size:12px; color:var(--text-muted); margin-bottom:16px; line-height:1.6;">Odaberi JSON fajl koji si prethodno exportovao. Odaberi JSON fajl koji si prethodno exportovao.</div>
 
-    <div id="import-drop-zone" style="border:2px dashed var(--border); border-radius:10px; padding:24px 16px; text-align:center; margin-bottom:14px; cursor:pointer; transition:border-color 0.2s;" onclick="document.getElementById('csv-import-input').click()">
+    <div id="import-drop-zone" style="border:2px dashed var(--border); border-radius:10px; padding:24px 16px; text-align:center; margin-bottom:14px; cursor:pointer; transition:border-color 0.2s;" id="import-drop-zone-inner" onclick="document.getElementById('csv-import-input').click()">
       <div style="font-size:28px; margin-bottom:8px;">📂</div>
       <div style="font-size:13px; color:var(--text);">Tapni da odabereš fajl</div>
       <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">Podržani format: .json</div>
@@ -270,7 +270,7 @@
 
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
       <button class="btn-secondary" onclick="closeImportModal()">Odustani</button>
-      <button id="import-confirm-btn" class="btn-primary" style="margin:0; opacity:0.4; pointer-events:none;" onclick="confirmImport()">📥 Uvezi</button>
+      <button id="import-confirm-btn" class="btn-primary" style="margin:0; opacity:0.4; pointer-events:none;" onclick="importJSON()">📥 Uvezi</button>
     </div>
   </div>
 </div>
@@ -1484,7 +1484,7 @@ ${morningEveningChart}
   </div>
 </div>
 
-<div class="footer">Generisano: ${genDate} &nbsp;·&nbsp; Mjerač Pritiska v6.1.1</div>
+<div class="footer">Generisano: ${genDate} &nbsp;·&nbsp; Mjerač Pritiska v6.1.5</div>
 </div>
 
 <script>
@@ -1609,80 +1609,64 @@ function openImportModal() {
   const btn = document.getElementById('import-confirm-btn');
   btn.style.opacity = '0.4';
   btn.style.pointerEvents = 'none';
-  window._pendingImportEvent = null;
+  window._importData = null;
   document.getElementById('import-modal').style.display = 'flex';
 }
 function closeImportModal() {
   document.getElementById('import-modal').style.display = 'none';
 }
-function triggerImport() {
-  document.getElementById('csv-import-input').click();
-}
-function confirmImport() {
-  if (window._pendingImportEvent) {
-    importJSON(window._pendingImportEvent);
-  }
-}
-
 function previewImport(event) {
   const file = event.target.files[0];
   if (!file) return;
-  window._pendingImportEvent = event;
-  const fnEl = document.getElementById('import-filename');
-  fnEl.textContent = '📄 ' + file.name;
-  fnEl.style.display = 'block';
-  document.getElementById('import-drop-zone').style.borderColor = 'var(--accent)';
   const reader = new FileReader();
-  reader.onload = function(e) {
+  reader.onload = function(ev) {
     try {
-      const entries = JSON.parse(e.target.result);
-      if (!Array.isArray(entries)) throw new Error();
+      const parsed = JSON.parse(ev.target.result);
+      if (!Array.isArray(parsed)) throw new Error('Nije niz');
+      window._importData = parsed;
+      const fnEl = document.getElementById('import-filename');
+      fnEl.textContent = '📄 ' + file.name;
+      fnEl.style.display = 'block';
+      document.getElementById('import-drop-zone').style.borderColor = 'var(--accent)';
       const prev = document.getElementById('import-preview');
-      prev.textContent = '✅ Pronađeno ' + entries.length + ' mjerenja u fajlu.';
+      prev.textContent = '✅ Pronađeno ' + parsed.length + ' mjerenja u fajlu.';
       prev.style.display = 'block';
       const btn = document.getElementById('import-confirm-btn');
       btn.style.opacity = '1';
       btn.style.pointerEvents = 'auto';
     } catch(err) {
+      window._importData = null;
       const prev = document.getElementById('import-preview');
-      prev.textContent = '⚠️ Neispravan JSON fajl.';
+      prev.textContent = '⚠️ Neispravan JSON fajl: ' + err.message;
       prev.style.display = 'block';
     }
   };
-  reader.readAsText(file, 'UTF-8');
-}
-
-function importJSON(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    try {
-      const imported = JSON.parse(e.target.result);
-      if (!Array.isArray(imported)) throw new Error();
-      const existing = load();
-      const existingIds = new Set(existing.map(e => e.dt));
-      let added = 0, skipped = 0;
-      imported.forEach(entry => {
-        if (!entry.dt || !entry.sys || !entry.dia) { skipped++; return; }
-        if (existingIds.has(entry.dt)) { skipped++; return; }
-        existing.push(entry);
-        existingIds.add(entry.dt);
-        added++;
-      });
-      existing.sort((a,b) => new Date(b.dt) - new Date(a.dt));
-      save(existing);
-      closeImportModal();
-      showToast('✅ Uvezeno ' + added + ', preskočeno ' + skipped);
-      renderHistory();
-      renderChart();
-    } catch(err) {
-      showToast('⚠️ Greška pri uvozu JSON fajla');
-    }
+  reader.onerror = function() {
+    showToast('⚠️ Ne mogu pročitati fajl');
   };
   reader.readAsText(file, 'UTF-8');
 }
-
+function importJSON() {
+  const imported = window._importData;
+  if (!imported) { showToast('⚠️ Nema odabranog fajla'); return; }
+  const existing = load();
+  const existingIds = new Set(existing.map(function(e){ return e.dt; }));
+  var added = 0, skipped = 0;
+  imported.forEach(function(entry) {
+    if (!entry.dt || !entry.sys || !entry.dia) { skipped++; return; }
+    if (existingIds.has(entry.dt)) { skipped++; return; }
+    existing.push(entry);
+    existingIds.add(entry.dt);
+    added++;
+  });
+  existing.sort(function(a,b){ return new Date(b.dt) - new Date(a.dt); });
+  save(existing);
+  window._importData = null;
+  closeImportModal();
+  showToast('✅ Uvezeno ' + added + ', preskočeno ' + skipped);
+  renderHistory();
+  renderCharts();
+}
 
 // ── DELETE ────────────────────────────────────────────────
 function openDeleteModal() {
@@ -1700,21 +1684,19 @@ function deleteByDays(days) {
   const after = before.filter(e => new Date(e.dt) < cutoff);
   const count = before.length - after.length;
   if (count === 0) { showToast('⚠️ Nema mjerenja u tom periodu'); return; }
-  if (!confirm(`Obrisati ${count} mjerenja iz zadnjih ${days} dana?`)) return;
   save(after);
   renderHistory(); renderCharts();
   closeDeleteModal();
-  showToast(`🗑️ Obrisano ${count} mjerenja`);
+  showToast('🗑️ Obrisano ' + count + ' mjerenja');
 }
 
 function deleteAll() {
   const count = load().length;
   if (count === 0) { showToast('⚠️ Nema podataka'); return; }
-  if (!confirm(`Obrisati SVU istoriju (${count} mjerenja)? Ova akcija je nepovratna!`)) return;
   save([]);
   renderHistory(); renderCharts();
   closeDeleteModal();
-  showToast('🗑️ Cjelokupna istorija obrisana');
+  showToast('🗑️ Sva istorija obrisana');
 }
 // ── HELP MODAL ────────────────────────────────────────────
 function openHelpModal() {
