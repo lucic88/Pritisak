@@ -295,7 +295,7 @@
 <div id="share-modal" onclick="if(event.target===this)closeShareModal()" style="display:none; position:fixed; inset:0; z-index:500; background:rgba(0,0,0,0.7); padding:16px; align-items:center; overflow-y:auto;">
   <div style="background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:20px; width:100%; max-width:480px; margin:auto;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-      <div style="font-family:var(--serif); font-size:18px;">📤 Dijeli izvještaj</div>
+      <div style="font-family:var(--serif); font-size:18px;">📤 Izvještaj</div>
       <button onclick="closeShareModal()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);width:32px;height:32px;border-radius:8px;font-size:16px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;">✕</button>
     </div>
 
@@ -1020,10 +1020,13 @@ function doExportCSV() {
   const entries = load();
   const hdr = 'Datum,Vrijeme,Tag,Sistolni,Dijastolni,Puls,Komentar\n';
   const rows = entries.map(e => {
-    const d = new Date(e.dt);
-    return [d.toLocaleDateString('bs'), d.toLocaleTimeString('bs',{hour:'2-digit',minute:'2-digit'}), e.tag, e.sys, e.dia, e.pulse||'', '"'+(e.comment||'').replace(/"/g,'""')+'"'].join(',');
+    const iso = e.dt ? e.dt : '';
+    const datePart = iso.slice(0, 10);
+    const timePart = iso.slice(11, 16);
+    return [datePart, timePart, e.tag, e.sys, e.dia, e.pulse||'', '"'+(e.comment||'').replace(/"/g,'""')+'"'].join(',');
   }).join('\n');
-  const blob = new Blob(['\uFEFF'+hdr+rows], {type:'text/csv;charset=utf-8;'});
+  const csvContent = hdr + rows;
+  const blob = new Blob(['\uFEFF' + csvContent], {type: 'text/csv;charset=utf-8'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = `pritisak_${new Date().toISOString().slice(0,10)}.csv`;
@@ -1688,18 +1691,26 @@ function importCSV(event) {
 
       // Parse date: try multiple formats
       let dt = null;
-      const cleanDatum = datum.trim().replace(/\./g, '/');
+      const cleanDatum = datum.trim();
       const cleanVrijeme = vrijeme.trim();
-      // Try "DD/MM/YYYY HH:MM" or "M/D/YYYY HH:MM"
-      const parts = cleanDatum.split('/');
-      if (parts.length === 3) {
-        let [d, m, y] = parts;
-        if (y && y.length === 4) {
-          dt = new Date(`${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}T${cleanVrijeme}`);
+      // 1. ISO format: YYYY-MM-DD (our export format)
+      if (/^\d{4}-\d{2}-\d{2}$/.test(cleanDatum)) {
+        dt = new Date(cleanDatum + 'T' + cleanVrijeme);
+      }
+      // 2. DD/MM/YYYY or DD.MM.YYYY
+      if (!dt || isNaN(dt.getTime())) {
+        const normalized = cleanDatum.replace(/\./g, '/');
+        const parts = normalized.split('/');
+        if (parts.length === 3) {
+          let [d, m, y] = parts;
+          if (y && y.length === 4) {
+            dt = new Date(`${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}T${cleanVrijeme}`);
+          }
         }
       }
+      // 3. Fallback
       if (!dt || isNaN(dt.getTime())) {
-        dt = new Date(datum.trim() + ' ' + cleanVrijeme);
+        dt = new Date(cleanDatum + 'T' + cleanVrijeme);
       }
       if (!dt || isNaN(dt.getTime())) { skipped++; continue; }
 
