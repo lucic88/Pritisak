@@ -225,7 +225,7 @@
 <body>
 
 <header>
-  <div class="header-title" style="flex-direction:column;align-items:flex-start;gap:2px;"><div style="display:flex;align-items:center;gap:8px;"><span>🫀</span> Pritisak</div><span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);">v6.0.0</span></div>
+  <div class="header-title" style="flex-direction:column;align-items:flex-start;gap:2px;"><div style="display:flex;align-items:center;gap:8px;"><span>🫀</span> Pritisak</div><span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);">v6.0.1</span></div>
   <div style="display:flex;gap:8px;">
     <button class="icon-btn" onclick="openImportModal()" title="Import backup">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -1115,24 +1115,32 @@ function generateReport() {
 
   // This week vs last week
   const now = new Date(Math.max(...data.map(e=>new Date(e.dt))));
-  const startOfThisWeek = new Date(now); startOfThisWeek.setDate(now.getDate()-7); startOfThisWeek.setHours(0,0,0,0);
-  const startOfLastWeek = new Date(now); startOfLastWeek.setDate(now.getDate()-14); startOfLastWeek.setHours(0,0,0,0);
+  const startOfThisWeek  = new Date(now); startOfThisWeek.setDate(now.getDate()-7);  startOfThisWeek.setHours(0,0,0,0);
+  const startOfLastWeek  = new Date(now); startOfLastWeek.setDate(now.getDate()-14); startOfLastWeek.setHours(0,0,0,0);
+  const startOfPrevWeek  = new Date(now); startOfPrevWeek.setDate(now.getDate()-21); startOfPrevWeek.setHours(0,0,0,0);
   const thisWeek = allEntries.filter(e=>new Date(e.dt)>=startOfThisWeek);
   const lastWeek = allEntries.filter(e=>{ const d=new Date(e.dt); return d>=startOfLastWeek&&d<startOfThisWeek; });
+  const prevWeek = allEntries.filter(e=>{ const d=new Date(e.dt); return d>=startOfPrevWeek&&d<startOfLastWeek; });
   const twSys = avg(thisWeek.map(e=>e.sys));
   const lwSys = avg(lastWeek.map(e=>e.sys));
   const twDia = avg(thisWeek.map(e=>e.dia));
   const lwDia = avg(lastWeek.map(e=>e.dia));
+  const pwSys = avg(prevWeek.map(e=>e.sys));
+  const pwDia = avg(prevWeek.map(e=>e.dia));
 
   // This month vs last month
   const thisMonthStart = new Date(latestDate.getFullYear(), latestDate.getMonth(), 1);
   const lastMonthStart = new Date(latestDate.getFullYear(), latestDate.getMonth()-1, 1);
+  const prevMonthStart = new Date(latestDate.getFullYear(), latestDate.getMonth()-2, 1);
   const thisMonth = allEntries.filter(e=>new Date(e.dt)>=thisMonthStart);
   const lastMonth = allEntries.filter(e=>{ const d=new Date(e.dt); return d>=lastMonthStart&&d<thisMonthStart; });
+  const prevMonth = allEntries.filter(e=>{ const d=new Date(e.dt); return d>=prevMonthStart&&d<lastMonthStart; });
   const tmSys = avg(thisMonth.map(e=>e.sys));
   const lmSys = avg(lastMonth.map(e=>e.sys));
   const tmDia = avg(thisMonth.map(e=>e.dia));
   const lmDia = avg(lastMonth.map(e=>e.dia));
+  const pmSys = avg(prevMonth.map(e=>e.sys));
+  const pmDia = avg(prevMonth.map(e=>e.dia));
 
   const trendIcon = (curr, prev) => {
     if (!curr||!prev) return '<span class="tneut">&mdash;</span>';
@@ -1209,8 +1217,8 @@ function generateReport() {
     <div class="cc thisweek">
       <div class="clabel">📅 Zadnjih 7 dana (${thisWeek.length} mj.)</div>
       <div class="cval">${twSys||'&mdash;'}/${twDia||'&mdash;'}</div>
-      <div class="csub">mmHg · Sys/Dia prosjek</div>
-      <div style="display:flex;gap:8px;margin-top:6px;font-size:12px;">
+      <div class="csub">mmHg · Sys/Dia</div>
+      <div style="display:flex;gap:8px;margin-top:5px;font-size:11px;">
         <span>Sys: ${trendIcon(twSys,lwSys)} ${trendDiff(twSys,lwSys)}</span>
         <span>Dia: ${trendIcon(twDia,lwDia)} ${trendDiff(twDia,lwDia)}</span>
       </div>
@@ -1218,7 +1226,11 @@ function generateReport() {
     <div class="cc lastweek">
       <div class="clabel">📅 Preth. 7 dana (${lastWeek.length} mj.)</div>
       <div class="cval">${lwSys||'&mdash;'}/${lwDia||'&mdash;'}</div>
-      <div class="csub">mmHg · Sys/Dia prosjek</div>
+      <div class="csub">mmHg · Sys/Dia</div>
+      ${prevWeek.length>0 ? `<div style="display:flex;gap:8px;margin-top:5px;font-size:11px;">
+        <span>Sys: ${trendIcon(lwSys,pwSys)} ${trendDiff(lwSys,pwSys)}</span>
+        <span>Dia: ${trendIcon(lwDia,pwDia)} ${trendDiff(lwDia,pwDia)}</span>
+      </div>` : ''}
     </div>
   </div>` : '';
 
@@ -1226,14 +1238,15 @@ function generateReport() {
   const MONTH_NAMES = ['Januar','Februar','Mart','April','Maj','Juni','Juli','August','Septembar','Oktobar','Novembar','Decembar'];
   const thisMonthName = MONTH_NAMES[latestDate.getMonth()];
   const lastMonthName = MONTH_NAMES[latestDate.getMonth()===0 ? 11 : latestDate.getMonth()-1];
+  const prevMonthName = MONTH_NAMES[latestDate.getMonth()<=1 ? 12+latestDate.getMonth()-2 : latestDate.getMonth()-2];
   const cmpMonths = (thisMonth.length>0 || lastMonth.length>0) ? `
   <div class="stitle">Ovaj vs Prošli mjesec</div>
   <div class="cgrid">
     <div class="cc thismonth">
       <div class="clabel">🗓️ ${thisMonthName} (${thisMonth.length} mj.)</div>
       <div class="cval">${tmSys||'&mdash;'}/${tmDia||'&mdash;'}</div>
-      <div class="csub">mmHg · Sys/Dia prosjek</div>
-      <div style="display:flex;gap:8px;margin-top:6px;font-size:12px;">
+      <div class="csub">mmHg · Sys/Dia</div>
+      <div style="display:flex;gap:8px;margin-top:5px;font-size:11px;">
         <span>Sys: ${trendIcon(tmSys,lmSys)} ${trendDiff(tmSys,lmSys)}</span>
         <span>Dia: ${trendIcon(tmDia,lmDia)} ${trendDiff(tmDia,lmDia)}</span>
       </div>
@@ -1241,7 +1254,11 @@ function generateReport() {
     <div class="cc lastmonth">
       <div class="clabel">🗓️ ${lastMonthName} (${lastMonth.length} mj.)</div>
       <div class="cval">${lmSys||'&mdash;'}/${lmDia||'&mdash;'}</div>
-      <div class="csub">mmHg · Sys/Dia prosjek</div>
+      <div class="csub">mmHg · Sys/Dia</div>
+      ${prevMonth.length>0 ? `<div style="display:flex;gap:8px;margin-top:5px;font-size:11px;">
+        <span>Sys: ${trendIcon(lmSys,pmSys)} ${trendDiff(lmSys,pmSys)}</span>
+        <span>Dia: ${trendIcon(lmDia,pmDia)} ${trendDiff(lmDia,pmDia)}</span>
+      </div><div class="csub" style="margin-top:2px;">vs ${prevMonthName}</div>` : ''}
     </div>
   </div>` : '';
 
@@ -1465,7 +1482,7 @@ ${morningEveningChart}
   </div>
 </div>
 
-<div class="footer">Generisano: ${genDate} &nbsp;·&nbsp; Mjerač Pritiska v6.0.0</div>
+<div class="footer">Generisano: ${genDate} &nbsp;·&nbsp; Mjerač Pritiska v6.0.1</div>
 </div>
 
 <script>
