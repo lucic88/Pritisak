@@ -227,7 +227,7 @@
 <body>
 
 <header>
-  <div class="header-title" style="flex-direction:column;align-items:flex-start;gap:2px;"><div style="display:flex;align-items:center;gap:8px;"><span>🫀</span> Pritisak</div><span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);">v6.0.7</span></div>
+  <div class="header-title" style="flex-direction:column;align-items:flex-start;gap:2px;"><div style="display:flex;align-items:center;gap:8px;"><span>🫀</span> Pritisak</div><span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);">v6.0.8</span></div>
   <div style="display:flex;gap:8px;">
     <button class="icon-btn" onclick="openImportModal()" title="Import backup">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -279,14 +279,14 @@
 <div id="export-modal" onclick="if(event.target===this)closeExportModal()" style="display:none; position:fixed; inset:0; z-index:500; background:rgba(0,0,0,0.7); padding:20px; align-items:flex-end;">
   <div style="background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:20px; width:100%; max-width:480px; margin:0 auto;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-      <div style="font-family:var(--serif); font-size:18px;">⬇️ Export CSV</div>
+      <div style="font-family:var(--serif); font-size:18px;">⬇️ Export</div>
       <button onclick="closeExportModal()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);width:32px;height:32px;border-radius:8px;font-size:16px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;">✕</button>
     </div>
-    <div style="font-size:12px; color:var(--text-muted); margin-bottom:16px;">Exportovaće se sva mjerenja kao CSV fajl koji možeš otvoriti u Excelu.</div>
+    <div style="font-size:12px; color:var(--text-muted); margin-bottom:16px;">Exportovaće se sva mjerenja kao Excel (.xlsx) fajl.</div>
     <div id="export-count" style="font-size:13px; color:var(--accent); margin-bottom:16px;"></div>
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
       <button class="btn-secondary" onclick="closeExportModal()">Odustani</button>
-      <button class="btn-primary" style="margin:0;" onclick="doExportCSV()">💾 Sačuvaj CSV</button>
+      <button class="btn-primary" style="margin:0;" onclick="doExportXLSX()">💾 Sačuvaj XLSX</button>
     </div>
   </div>
 </div>
@@ -1016,39 +1016,176 @@ function openExportModal() {
 function closeExportModal() {
   document.getElementById('export-modal').style.display = 'none';
 }
-function doExportCSV() {
+function doExportXLSX() {
   const entries = load();
-  const SEP = ';';
-  const hdr = ['Datum','Vrijeme','Tag','Sistolni','Dijastolni','Puls','Komentar'].join(SEP) + '\n';
-  const rows = entries.map(e => {
-    const iso = e.dt ? e.dt : '';
-    const datePart = iso.slice(0, 10);
-    const timePart = iso.slice(11, 16);
-    const comment = (e.comment || '').replace(/;/g, ','); // sanitize separator char
-    return [datePart, timePart, e.tag, e.sys, e.dia, e.pulse||'', comment].join(SEP);
-  }).join('\n');
-  const csvContent = hdr + rows;
-  // UTF-16 LE with BOM — universally recognized by Google Sheets & Excel on all platforms
-  function encodeUTF16LE(str) {
-    const buf = new Uint8Array(2 + str.length * 2);
-    buf[0] = 0xFF; buf[1] = 0xFE; // UTF-16 LE BOM
-    for (let i = 0; i < str.length; i++) {
-      const code = str.charCodeAt(i);
-      buf[2 + i * 2]     = code & 0xFF;
-      buf[2 + i * 2 + 1] = (code >> 8) & 0xFF;
+  if (!entries.length) { showToast('⚠️ Nema podataka'); return; }
+
+  // ── CRC32 ──
+  const CRC_TABLE = (() => {
+    const t = new Uint32Array(256);
+    for (let i = 0; i < 256; i++) {
+      let c = i;
+      for (let j = 0; j < 8; j++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+      t[i] = c;
     }
-    return buf;
+    return t;
+  })();
+  function crc32(buf) {
+    let c = 0xFFFFFFFF;
+    for (let i = 0; i < buf.length; i++) c = CRC_TABLE[(c ^ buf[i]) & 0xFF] ^ (c >>> 8);
+    return (c ^ 0xFFFFFFFF) >>> 0;
   }
-  const blob = new Blob([encodeUTF16LE(csvContent)], {type: 'text/csv;charset=utf-16le'});
+  const enc = new TextEncoder();
+  function u32(n) { return [n&0xFF,(n>>8)&0xFF,(n>>16)&0xFF,(n>>24)&0xFF]; }
+  function u16(n) { return [n&0xFF,(n>>8)&0xFF]; }
+
+  function buildZip(files) {
+    const parts = [], cds = [];
+    let offset = 0;
+    for (const f of files) {
+      const name = enc.encode(f.name);
+      const data = enc.encode(f.data);
+      const crc  = crc32(data);
+      const lfh  = new Uint8Array([
+        0x50,0x4B,0x03,0x04, 0x14,0x00, 0x00,0x00, 0x00,0x00,
+        0x00,0x00, 0x00,0x00,
+        ...u32(crc), ...u32(data.length), ...u32(data.length),
+        ...u16(name.length), 0x00,0x00, ...name
+      ]);
+      parts.push(lfh, data);
+      cds.push(new Uint8Array([
+        0x50,0x4B,0x01,0x02, 0x14,0x00, 0x14,0x00, 0x00,0x00, 0x00,0x00,
+        0x00,0x00, 0x00,0x00,
+        ...u32(crc), ...u32(data.length), ...u32(data.length),
+        ...u16(name.length), 0x00,0x00, 0x00,0x00, 0x00,0x00, 0x00,0x00,
+        0x00,0x00,0x00,0x00, ...u32(offset), ...name
+      ]));
+      offset += lfh.length + data.length;
+    }
+    const cdStart = offset;
+    let cdSize = 0; cds.forEach(c => cdSize += c.length);
+    const eocd = new Uint8Array([
+      0x50,0x4B,0x05,0x06, 0x00,0x00, 0x00,0x00,
+      ...u16(files.length), ...u16(files.length),
+      ...u32(cdSize), ...u32(cdStart), 0x00,0x00
+    ]);
+    let total = 0;
+    [...parts, ...cds, eocd].forEach(p => total += p.length);
+    const out = new Uint8Array(total);
+    let pos = 0;
+    [...parts, ...cds, eocd].forEach(p => { out.set(p, pos); pos += p.length; });
+    return out;
+  }
+
+  function xesc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // ── Build shared strings ──
+  const ss = [], ssMap = {};
+  function si(str) {
+    str = String(str ?? '');
+    if (ssMap[str] === undefined) { ssMap[str] = ss.length; ss.push(str); }
+    return ssMap[str];
+  }
+  const COL = ['A','B','C','D','E','F','G'];
+  const hdrs = ['Datum','Vrijeme','Tag','Sistolni','Dijastolni','Puls','Komentar'];
+  hdrs.forEach(h => si(h));
+
+  const dataRows = entries.map(e => {
+    const iso = e.dt || '';
+    return [
+      iso.slice(0,10), iso.slice(11,16),
+      e.tag||'', e.sys, e.dia, e.pulse||'', e.comment||''
+    ];
+  });
+
+  // Pre-register all strings
+  dataRows.forEach(r => [0,1,2,6].forEach(i => si(r[i])));
+
+  // ── sheet1.xml ──
+  let sheetXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n' +
+    '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/sheet"><sheetData>\n';
+  // header row
+  sheetXml += '<row r="1">' + hdrs.map((h,i) =>
+    `<c r="${COL[i]}1" t="s"><v>${si(h)}</v></c>`).join('') + '</row>\n';
+  // data rows
+  dataRows.forEach((r, ri) => {
+    const row = ri + 2;
+    let cells = '';
+    r.forEach((val, ci) => {
+      const ref = COL[ci] + row;
+      if (ci === 3 || ci === 4) { // sys, dia — numbers
+        if (val !== '' && val != null) cells += `<c r="${ref}"><v>${val}</v></c>`;
+      } else if (ci === 5) { // pulse — number
+        if (val !== '' && val != null) cells += `<c r="${ref}"><v>${val}</v></c>`;
+      } else { // strings
+        cells += `<c r="${ref}" t="s"><v>${si(val)}</v></c>`;
+      }
+    });
+    sheetXml += `<row r="${row}">${cells}</row>\n`;
+  });
+  sheetXml += '</sheetData></worksheet>';
+
+  // ── sharedStrings.xml ──
+  let ssXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n' +
+    `<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/sheet" count="${ss.length}" uniqueCount="${ss.length}">`;
+  ss.forEach(s => { ssXml += `<si><t xml:space="preserve">${xesc(s)}</t></si>`; });
+  ssXml += '</sst>';
+
+  const files = [
+    { name: '[Content_Types].xml', data:
+      '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">' +
+      '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>' +
+      '<Default Extension="xml" ContentType="application/xml"/>' +
+      '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>' +
+      '<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>' +
+      '<Override PartName="/xl/sharedStrings.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml"/>' +
+      '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>' +
+      '</Types>' },
+    { name: '_rels/.rels', data:
+      '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+      '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>' +
+      '</Relationships>' },
+    { name: 'xl/workbook.xml', data:
+      '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/sheet" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">' +
+      '<sheets><sheet name="Pritisak" sheetId="1" r:id="rId1"/></sheets>' +
+      '</workbook>' },
+    { name: 'xl/_rels/workbook.xml.rels', data:
+      '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+      '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>' +
+      '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" Target="sharedStrings.xml"/>' +
+      '<Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>' +
+      '</Relationships>' },
+    { name: 'xl/worksheets/sheet1.xml', data: sheetXml },
+    { name: 'xl/sharedStrings.xml', data: ssXml },
+    { name: 'xl/styles.xml', data:
+      '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/sheet">' +
+      '<fonts count="1"><font><sz val="11"/><name val="Calibri"/></font></fonts>' +
+      '<fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills>' +
+      '<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>' +
+      '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>' +
+      '<cellXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/></cellXfs>' +
+      '</styleSheet>' },
+  ];
+
+  const zip = buildZip(files);
+  const blob = new Blob([zip], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `pritisak_${new Date().toISOString().slice(0,10)}.csv`;
+  a.download = `pritisak_${new Date().toISOString().slice(0,10)}.xlsx`;
   a.click();
   closeExportModal();
-  showToast('✅ CSV exportovan');
+  showToast('✅ XLSX exportovan');
 }
 // legacy alias
 function exportCSV() { openExportModal(); }
+
 
 // ── SHARE ─────────────────────────────────────────────────
 let shareTag = 'sve';
@@ -1501,7 +1638,7 @@ ${morningEveningChart}
   </div>
 </div>
 
-<div class="footer">Generisano: ${genDate} &nbsp;·&nbsp; Mjerač Pritiska v6.0.7</div>
+<div class="footer">Generisano: ${genDate} &nbsp;·&nbsp; Mjerač Pritiska v6.0.8</div>
 </div>
 
 <script>
@@ -1693,7 +1830,8 @@ function importCSV(event) {
     let imported = 0, skipped = 0;
 
     for (let i = 1; i < lines.length; i++) {
-      const cols = parseCSVLine(lines[i]);
+      const sep = lines[0].includes(';') ? ';' : ',';
+    const cols = parseCSVLine(lines[i], sep);
       if (cols.length < 5) continue;
       // Format: Datum, Vrijeme, Tag, Sistolni, Dijastolni, Puls, Komentar
       const [datum, vrijeme, tag, sysRaw, diaRaw, pulseRaw, ...commentParts] = cols;
@@ -1752,7 +1890,8 @@ function importCSV(event) {
   reader.readAsText(file, 'UTF-8');
 }
 
-function parseCSVLine(line) {
+function parseCSVLine(line, sep) {
+  if (!sep) sep = line.includes(';') ? ';' : ',';
   const result = [];
   let current = '';
   let inQuotes = false;
@@ -1761,7 +1900,7 @@ function parseCSVLine(line) {
     if (ch === '"') {
       if (inQuotes && line[i+1] === '"') { current += '"'; i++; }
       else inQuotes = !inQuotes;
-    } else if (ch === ',' && !inQuotes) {
+    } else if (ch === sep && !inQuotes) {
       result.push(current); current = '';
     } else {
       current += ch;
