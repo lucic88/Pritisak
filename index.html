@@ -227,7 +227,7 @@
 <body>
 
 <header>
-  <div class="header-title" style="flex-direction:column;align-items:flex-start;gap:2px;"><div style="display:flex;align-items:center;gap:8px;"><span>🫀</span> Pritisak</div><span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);">v6.0.5</span></div>
+  <div class="header-title" style="flex-direction:column;align-items:flex-start;gap:2px;"><div style="display:flex;align-items:center;gap:8px;"><span>🫀</span> Pritisak</div><span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);">v6.0.6</span></div>
   <div style="display:flex;gap:8px;">
     <button class="icon-btn" onclick="openImportModal()" title="Import backup">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -1026,32 +1026,18 @@ function doExportCSV() {
     return [datePart, timePart, e.tag, e.sys, e.dia, e.pulse||'', '"'+(e.comment||'').replace(/"/g,'""')+'"'].join(',');
   }).join('\n');
   const csvContent = hdr + rows;
-  // Encode as Windows-1250 so Google Sheets (Android/Excel) reads BCS chars correctly
-  const win1250 = {
-    '\u20AC':0x80,'\u201A':0x82,'\u201E':0x84,'\u2026':0x85,'\u2020':0x86,'\u2021':0x87,
-    '\u2030':0x89,'\u0160':0x8A,'\u2039':0x8B,'\u015A':0x8C,'\u0164':0x8D,'\u017D':0x8E,
-    '\u0179':0x8F,'\u2018':0x91,'\u2019':0x92,'\u201C':0x93,'\u201D':0x94,'\u2022':0x95,
-    '\u2013':0x96,'\u2014':0x97,'\u2122':0x99,'\u0161':0x9A,'\u203A':0x9B,'\u015B':0x9C,
-    '\u0165':0x9D,'\u017E':0x9E,'\u017A':0x9F,'\u02C7':0xA1,'\u02D8':0xA2,'\u0141':0xA3,
-    '\u0104':0xA5,'\u015E':0xA6,'\u00A7':0xA7,'\u00A8':0xA8,'\u015F':0xA9,'\u0106':0xC6,
-    '\u010C':0xC8,'\u0110':0xD0,'\u010D':0xE8,'\u0107':0xE6,'\u0111':0xF0,
-    '\u0143':0xC3,'\u0144':0xE3,'\u0150':0xD5,'\u0151':0xF5,'\u0158':0xD8,'\u0159':0xF8,
-    '\u016E':0xD9,'\u016F':0xF9,'\u0170':0xDB,'\u0171':0xFB,'\u0118':0xCA,'\u0119':0xEA,
-    '\u011A':0xCC,'\u011B':0xEC,'\u013D':0xBC,'\u013E':0xBE,'\u0154':0xC0,'\u0155':0xE0,
-    '\u0147':0xD2,'\u0148':0xF2,'\u0102':0xC3,'\u0103':0xE3
-  };
-  function encodeWin1250(str) {
-    const buf = new Uint8Array(str.length);
+  // UTF-16 LE with BOM — universally recognized by Google Sheets & Excel on all platforms
+  function encodeUTF16LE(str) {
+    const buf = new Uint8Array(2 + str.length * 2);
+    buf[0] = 0xFF; buf[1] = 0xFE; // UTF-16 LE BOM
     for (let i = 0; i < str.length; i++) {
-      const c = str[i], code = str.charCodeAt(i);
-      if (code < 0x80) { buf[i] = code; }
-      else if (win1250[c] !== undefined) { buf[i] = win1250[c]; }
-      else if (code <= 0xFF) { buf[i] = code; }
-      else { buf[i] = 0x3F; }
+      const code = str.charCodeAt(i);
+      buf[2 + i * 2]     = code & 0xFF;
+      buf[2 + i * 2 + 1] = (code >> 8) & 0xFF;
     }
     return buf;
   }
-  const blob = new Blob([encodeWin1250(csvContent)], {type: 'text/csv;charset=windows-1250'});
+  const blob = new Blob([encodeUTF16LE(csvContent)], {type: 'text/csv;charset=utf-16le'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = `pritisak_${new Date().toISOString().slice(0,10)}.csv`;
@@ -1513,7 +1499,7 @@ ${morningEveningChart}
   </div>
 </div>
 
-<div class="footer">Generisano: ${genDate} &nbsp;·&nbsp; Mjerač Pritiska v6.0.5</div>
+<div class="footer">Generisano: ${genDate} &nbsp;·&nbsp; Mjerač Pritiska v6.0.6</div>
 </div>
 
 <script>
