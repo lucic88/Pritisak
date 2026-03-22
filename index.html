@@ -227,7 +227,7 @@
 <body>
 
 <header>
-  <div class="header-title" style="flex-direction:column;align-items:flex-start;gap:2px;"><div style="display:flex;align-items:center;gap:8px;"><span>🫀</span> Pritisak</div><span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);">v6.0.9</span></div>
+  <div class="header-title" style="flex-direction:column;align-items:flex-start;gap:2px;"><div style="display:flex;align-items:center;gap:8px;"><span>🫀</span> Pritisak</div><span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);">v6.1.0</span></div>
   <div style="display:flex;gap:8px;">
     <button class="icon-btn" onclick="openImportModal()" title="Import backup">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -248,7 +248,7 @@
 </header>
 
 <!-- Hidden file input for import -->
-<input type="file" id="csv-import-input" accept=".csv" style="display:none" onchange="previewImport(event)" />
+<input type="file" id="csv-import-input" accept=".json" style="display:none" onchange="previewImport(event)" />
 
 <!-- IMPORT MODAL -->
 <div id="import-modal" onclick="if(event.target===this)closeImportModal()" style="display:none; position:fixed; inset:0; z-index:500; background:rgba(0,0,0,0.7); padding:20px; align-items:flex-end;">
@@ -257,12 +257,12 @@
       <div style="font-family:var(--serif); font-size:18px;">⬆️ Import backup</div>
       <button onclick="closeImportModal()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);width:32px;height:32px;border-radius:8px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
     </div>
-    <div style="font-size:12px; color:var(--text-muted); margin-bottom:16px; line-height:1.6;">Odaberi CSV fajl koji si prethodno exportovao. Duplikati se automatski preskaču.</div>
+    <div style="font-size:12px; color:var(--text-muted); margin-bottom:16px; line-height:1.6;">Odaberi JSON fajl koji si prethodno exportovao. Duplikati se automatski preskaču.</div>
 
     <div id="import-drop-zone" style="border:2px dashed var(--border); border-radius:10px; padding:24px 16px; text-align:center; margin-bottom:14px; cursor:pointer; transition:border-color 0.2s;" onclick="document.getElementById('csv-import-input').click()">
       <div style="font-size:28px; margin-bottom:8px;">📂</div>
       <div style="font-size:13px; color:var(--text);">Tapni da odabereš fajl</div>
-      <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">Podržani format: .csv</div>
+      <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">Podržani format: .json</div>
       <div id="import-filename" style="font-size:12px; color:var(--accent); margin-top:8px; display:none;"></div>
     </div>
 
@@ -282,11 +282,11 @@
       <div style="font-family:var(--serif); font-size:18px;">⬇️ Export</div>
       <button onclick="closeExportModal()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);width:32px;height:32px;border-radius:8px;font-size:16px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;">✕</button>
     </div>
-    <div style="font-size:12px; color:var(--text-muted); margin-bottom:16px;">Exportovaće se sva mjerenja kao Excel (.xlsx) fajl.</div>
+    <div style="font-size:12px; color:var(--text-muted); margin-bottom:16px;">Exportovaće se sva mjerenja kao JSON backup fajl.</div>
     <div id="export-count" style="font-size:13px; color:var(--accent); margin-bottom:16px;"></div>
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
       <button class="btn-secondary" onclick="closeExportModal()">Odustani</button>
-      <button class="btn-primary" style="margin:0;" onclick="doExportXLSX()">💾 Sačuvaj XLSX</button>
+      <button class="btn-primary" style="margin:0;" onclick="doExportJSON()">💾 Sačuvaj JSON</button>
     </div>
   </div>
 </div>
@@ -1016,189 +1016,21 @@ function openExportModal() {
 function closeExportModal() {
   document.getElementById('export-modal').style.display = 'none';
 }
-function doExportXLSX() {
+function doExportJSON() {
   const entries = load();
   if (!entries.length) { showToast('⚠️ Nema podataka'); return; }
-
-  const enc = new TextEncoder(); // UTF-8
-
-  // ── Helpers ──────────────────────────────────────────────────────────────
-  function concat(arrays) {
-    let len = 0; arrays.forEach(a => len += a.length);
-    const out = new Uint8Array(len); let p = 0;
-    arrays.forEach(a => { out.set(a, p); p += a.length; });
-    return out;
-  }
-  function dv32le(n) { const b=new Uint8Array(4),v=new DataView(b.buffer); v.setUint32(0,n,true); return b; }
-  function dv16le(n) { const b=new Uint8Array(2),v=new DataView(b.buffer); v.setUint16(0,n,true); return b; }
-
-  // ── CRC-32 ────────────────────────────────────────────────────────────────
-  const CRC_T = (()=>{
-    const t=new Uint32Array(256);
-    for(let i=0;i<256;i++){let c=i;for(let j=0;j<8;j++)c=(c&1)?(0xEDB88320^(c>>>1)):(c>>>1);t[i]=c;}
-    return t;
-  })();
-  function crc32(buf){let c=0xFFFFFFFF;for(let i=0;i<buf.length;i++)c=CRC_T[(c^buf[i])&0xFF]^(c>>>8);return(c^0xFFFFFFFF)>>>0;}
-
-  // ── ZIP builder ───────────────────────────────────────────────────────────
-  function zipFile(nameStr, dataStr) {
-    const name = enc.encode(nameStr);
-    const data = enc.encode(dataStr);
-    const crc  = crc32(data);
-    const sz   = data.length;
-    const nlen = name.length;
-    // Local file header (30 + nlen)
-    const lfh = concat([
-      new Uint8Array([0x50,0x4B,0x03,0x04]), // sig
-      dv16le(20),   // version needed
-      dv16le(0),    // flags
-      dv16le(0),    // compression: stored
-      dv16le(0),    // mod time
-      dv16le(0),    // mod date
-      dv32le(crc),
-      dv32le(sz),
-      dv32le(sz),
-      dv16le(nlen),
-      dv16le(0),    // extra length
-      name
-    ]);
-    return { lfh, data, name, crc, sz, nlen };
-  }
-
-  function buildZip(files) {
-    const entries = files.map(f => zipFile(f.name, f.data));
-    const locals = [];
-    const offsets = [];
-    let offset = 0;
-    for (const e of entries) {
-      offsets.push(offset);
-      locals.push(e.lfh, e.data);
-      offset += e.lfh.length + e.data.length;
-    }
-    // Central directory
-    const cds = entries.map((e, i) => concat([
-      new Uint8Array([0x50,0x4B,0x01,0x02]), // sig
-      dv16le(20), dv16le(20),  // version made by / needed
-      dv16le(0),  dv16le(0),   // flags, compression
-      dv16le(0),  dv16le(0),   // mod time, date
-      dv32le(e.crc),
-      dv32le(e.sz),
-      dv32le(e.sz),
-      dv16le(e.nlen),
-      dv16le(0), dv16le(0),    // extra, comment
-      dv16le(0),               // disk start
-      dv16le(0),               // internal attr
-      dv32le(0),               // external attr
-      dv32le(offsets[i]),
-      e.name
-    ]));
-    const cdStart = offset;
-    const cdSize  = cds.reduce((s,c)=>s+c.length, 0);
-    const eocd = concat([
-      new Uint8Array([0x50,0x4B,0x05,0x06]),
-      dv16le(0), dv16le(0),
-      dv16le(entries.length), dv16le(entries.length),
-      dv32le(cdSize),
-      dv32le(cdStart),
-      dv16le(0)
-    ]);
-    return concat([...locals, ...cds, eocd]);
-  }
-
-  // ── XLSX XML ──────────────────────────────────────────────────────────────
-  function xe(s){ return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-  const ss=[], ssMap={};
-  function si(v){ v=String(v??''); if(ssMap[v]===undefined){ssMap[v]=ss.length;ss.push(v);} return ssMap[v]; }
-
-  const COLS=['A','B','C','D','E','F','G'];
-  const HDRS=['Datum','Vrijeme','Tag','Sistolni','Dijastolni','Puls','Komentar'];
-  HDRS.forEach(h=>si(h));
-
-  const rows=entries.map(e=>{
-    const iso=e.dt||'';
-    return [iso.slice(0,10), iso.slice(11,16), e.tag||'', e.sys, e.dia, e.pulse||'', e.comment||''];
-  });
-  rows.forEach(r=>[0,1,2,6].forEach(i=>si(r[i])));
-
-  // sheet
-  let sheet='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'
-    +'<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/sheet"><sheetData>\n';
-  sheet+='<row r="1">'+HDRS.map((h,i)=>`<c r="${COLS[i]}1" t="s"><v>${si(h)}</v></c>`).join('')+'</row>\n';
-  rows.forEach((r,ri)=>{
-    const rn=ri+2;
-    let cells='';
-    r.forEach((v,ci)=>{
-      const ref=COLS[ci]+rn;
-      if(ci===3||ci===4||ci===5){ if(v!==''&&v!=null)cells+=`<c r="${ref}"><v>${v}</v></c>`; }
-      else cells+=`<c r="${ref}" t="s"><v>${si(v)}</v></c>`;
-    });
-    sheet+=`<row r="${rn}">${cells}</row>\n`;
-  });
-  sheet+='</sheetData></worksheet>';
-
-  // sharedStrings
-  let sharedStr='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-    +`<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/sheet" count="${ss.length}" uniqueCount="${ss.length}">`;
-  ss.forEach(s=>{ sharedStr+=`<si><t xml:space="preserve">${xe(s)}</t></si>`; });
-  sharedStr+='</sst>';
-
-  const NS='http://schemas.openxmlformats.org/';
-  const CT_NS=NS+'package/2006/content-types';
-  const REL_NS=NS+'package/2006/relationships';
-  const OD_NS=NS+'officeDocument/2006/relationships/';
-
-  const zipFiles=[
-    {name:'[Content_Types].xml', data:
-      `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`+
-      `<Types xmlns="${CT_NS}">`+
-      `<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>`+
-      `<Default Extension="xml" ContentType="application/xml"/>`+
-      `<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>`+
-      `<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`+
-      `<Override PartName="/xl/sharedStrings.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml"/>`+
-      `<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>`+
-      `</Types>`},
-    {name:'_rels/.rels', data:
-      `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`+
-      `<Relationships xmlns="${REL_NS}">`+
-      `<Relationship Id="rId1" Type="${OD_NS}officeDocument" Target="xl/workbook.xml"/>`+
-      `</Relationships>`},
-    {name:'xl/workbook.xml', data:
-      `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`+
-      `<workbook xmlns="${NS}spreadsheetml/sheet" xmlns:r="${REL_NS}">`+
-      `<sheets><sheet name="Pritisak" sheetId="1" r:id="rId1"/></sheets>`+
-      `</workbook>`},
-    {name:'xl/_rels/workbook.xml.rels', data:
-      `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`+
-      `<Relationships xmlns="${REL_NS}">`+
-      `<Relationship Id="rId1" Type="${OD_NS}worksheet" Target="worksheets/sheet1.xml"/>`+
-      `<Relationship Id="rId2" Type="${OD_NS}sharedStrings" Target="sharedStrings.xml"/>`+
-      `<Relationship Id="rId3" Type="${OD_NS}styles" Target="styles.xml"/>`+
-      `</Relationships>`},
-    {name:'xl/worksheets/sheet1.xml', data: sheet},
-    {name:'xl/sharedStrings.xml', data: sharedStr},
-    {name:'xl/styles.xml', data:
-      `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`+
-      `<styleSheet xmlns="${NS}spreadsheetml/sheet">`+
-      `<fonts count="1"><font><sz val="11"/><name val="Calibri"/></font></fonts>`+
-      `<fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills>`+
-      `<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>`+
-      `<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>`+
-      `<cellXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/></cellXfs>`+
-      `</styleSheet>`},
-  ];
-
-  const zip=buildZip(zipFiles);
-  const blob=new Blob([zip],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download=`pritisak_${new Date().toISOString().slice(0,10)}.xlsx`;
+  const json = JSON.stringify(entries, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'pritisak_' + new Date().toISOString().slice(0,10) + '.json';
   a.click();
   closeExportModal();
-  showToast('✅ XLSX exportovan');
+  showToast('✅ JSON exportovan');
 }
 // legacy alias
 function exportCSV() { openExportModal(); }
+
 
 
 // ── SHARE ─────────────────────────────────────────────────
@@ -1652,7 +1484,7 @@ ${morningEveningChart}
   </div>
 </div>
 
-<div class="footer">Generisano: ${genDate} &nbsp;·&nbsp; Mjerač Pritiska v6.0.9</div>
+<div class="footer">Generisano: ${genDate} &nbsp;·&nbsp; Mjerač Pritiska v6.1.0</div>
 </div>
 
 <script>
@@ -1771,158 +1603,61 @@ function previewImport(event) {
   const file = event.target.files[0];
   if (!file) return;
   window._pendingImportEvent = event;
-
-  // Show filename
   const fnEl = document.getElementById('import-filename');
   fnEl.textContent = '📄 ' + file.name;
   fnEl.style.display = 'block';
-
-  // Drop zone visual feedback
   document.getElementById('import-drop-zone').style.borderColor = 'var(--accent)';
-
-  // Quick count lines
   const reader = new FileReader();
   reader.onload = function(e) {
-    const text = e.target.result.replace(/^﻿/, '');
-    const lines = text.split('\n').filter(l => l.trim()).length - 1;
-    const prev = document.getElementById('import-preview');
-    prev.textContent = '✅ Pronađeno ' + Math.max(0, lines) + ' mjerenja u fajlu. Tapni "Uvezi" da nastaviš.';
-    prev.style.display = 'block';
-    // Enable confirm button
-    const btn = document.getElementById('import-confirm-btn');
-    btn.style.opacity = '1';
-    btn.style.pointerEvents = 'auto';
+    try {
+      const entries = JSON.parse(e.target.result);
+      if (!Array.isArray(entries)) throw new Error();
+      const prev = document.getElementById('import-preview');
+      prev.textContent = '✅ Pronađeno ' + entries.length + ' mjerenja u fajlu.';
+      prev.style.display = 'block';
+      const btn = document.getElementById('import-confirm-btn');
+      btn.style.opacity = '1';
+      btn.style.pointerEvents = 'auto';
+    } catch(err) {
+      const prev = document.getElementById('import-preview');
+      prev.textContent = '⚠️ Neispravan JSON fajl.';
+      prev.style.display = 'block';
+    }
   };
   reader.readAsText(file, 'UTF-8');
 }
 
-
-function openImportModal() {
-  // Reset state
-  document.getElementById('csv-import-input').value = '';
-  document.getElementById('import-filename').style.display = 'none';
-  document.getElementById('import-filename').textContent = '';
-  document.getElementById('import-preview').style.display = 'none';
-  document.getElementById('import-preview').textContent = '';
-  document.getElementById('import-confirm-btn').style.opacity = '0.4';
-  document.getElementById('import-confirm-btn').style.pointerEvents = 'none';
-  window._pendingImportEvent = null;
-  document.getElementById('import-modal').style.display = 'flex';
-}
-
-function closeImportModal() {
-  document.getElementById('import-modal').style.display = 'none';
-}
-
-function triggerImport() {
-  openImportModal();
-}
-
-function confirmImport() {
-  if (window._pendingImportEvent) {
-    importCSV(window._pendingImportEvent);
-    closeImportModal();
-  }
-}
-
-function importCSV(event) {
+function importJSON(event) {
   const file = event.target.files[0];
   if (!file) return;
   const reader = new FileReader();
   reader.onload = function(e) {
-    const text = e.target.result.replace(/^\uFEFF/, ''); // strip BOM
-    const lines = text.split('\n').filter(l => l.trim());
-    if (lines.length < 2) { showToast('⚠️ Fajl je prazan ili neispravan'); return; }
-
-    const header = lines[0].toLowerCase();
-    if (!header.includes('sistolni') && !header.includes('sistoli')) {
-      showToast('⚠️ Neispravan format CSV-a'); return;
+    try {
+      const imported = JSON.parse(e.target.result);
+      if (!Array.isArray(imported)) throw new Error();
+      const existing = load();
+      const existingIds = new Set(existing.map(e => e.dt));
+      let added = 0, skipped = 0;
+      imported.forEach(entry => {
+        if (!entry.dt || !entry.sys || !entry.dia) { skipped++; return; }
+        if (existingIds.has(entry.dt)) { skipped++; return; }
+        existing.push(entry);
+        existingIds.add(entry.dt);
+        added++;
+      });
+      existing.sort((a,b) => new Date(b.dt) - new Date(a.dt));
+      save(existing);
+      closeImportModal();
+      showToast('✅ Uvezeno ' + added + ', preskočeno ' + skipped);
+      renderHistory();
+      renderChart();
+    } catch(err) {
+      showToast('⚠️ Greška pri uvozu JSON fajla');
     }
-
-    const existing = load();
-    const existingIds = new Set(existing.map(e => e.dt));
-    let imported = 0, skipped = 0;
-
-    for (let i = 1; i < lines.length; i++) {
-      const sep = lines[0].includes(';') ? ';' : ',';
-    const cols = parseCSVLine(lines[i], sep);
-      if (cols.length < 5) continue;
-      // Format: Datum, Vrijeme, Tag, Sistolni, Dijastolni, Puls, Komentar
-      const [datum, vrijeme, tag, sysRaw, diaRaw, pulseRaw, ...commentParts] = cols;
-      const sys = parseInt(sysRaw);
-      const dia = parseInt(diaRaw);
-      const pulse = parseInt(pulseRaw) || null;
-      if (!datum || !vrijeme || isNaN(sys) || isNaN(dia)) continue;
-
-      // Parse date: try multiple formats
-      let dt = null;
-      const cleanDatum = datum.trim();
-      const cleanVrijeme = vrijeme.trim();
-      // 1. ISO format: YYYY-MM-DD (our export format)
-      if (/^\d{4}-\d{2}-\d{2}$/.test(cleanDatum)) {
-        dt = new Date(cleanDatum + 'T' + cleanVrijeme);
-      }
-      // 2. DD/MM/YYYY or DD.MM.YYYY
-      if (!dt || isNaN(dt.getTime())) {
-        const normalized = cleanDatum.replace(/\./g, '/');
-        const parts = normalized.split('/');
-        if (parts.length === 3) {
-          let [d, m, y] = parts;
-          if (y && y.length === 4) {
-            dt = new Date(`${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}T${cleanVrijeme}`);
-          }
-        }
-      }
-      // 3. Fallback
-      if (!dt || isNaN(dt.getTime())) {
-        dt = new Date(cleanDatum + 'T' + cleanVrijeme);
-      }
-      if (!dt || isNaN(dt.getTime())) { skipped++; continue; }
-
-      const isoStr = dt.toISOString();
-      if (existingIds.has(isoStr)) { skipped++; continue; }
-
-      const comment = commentParts.join(',').replace(/^"|"$/g,'').replace(/""/g,'"').trim();
-      const entry = {
-        id: dt.getTime() + Math.random(),
-        dt: isoStr,
-        sys, dia, pulse,
-        comment,
-        tag: tag ? tag.trim() : getTag(dt.getHours())
-      };
-      existing.push(entry);
-      existingIds.add(isoStr);
-      imported++;
-    }
-
-    // Sort descending
-    existing.sort((a,b) => new Date(b.dt) - new Date(a.dt));
-    save(existing);
-    renderHistory(); renderCharts();
-    showToast(`✅ Importovano: ${imported} | Preskočeno: ${skipped}`);
   };
   reader.readAsText(file, 'UTF-8');
 }
 
-function parseCSVLine(line, sep) {
-  if (!sep) sep = line.includes(';') ? ';' : ',';
-  const result = [];
-  let current = '';
-  let inQuotes = false;
-  for (let i = 0; i < line.length; i++) {
-    const ch = line[i];
-    if (ch === '"') {
-      if (inQuotes && line[i+1] === '"') { current += '"'; i++; }
-      else inQuotes = !inQuotes;
-    } else if (ch === sep && !inQuotes) {
-      result.push(current); current = '';
-    } else {
-      current += ch;
-    }
-  }
-  result.push(current);
-  return result;
-}
 
 // ── DELETE ────────────────────────────────────────────────
 function openDeleteModal() {
