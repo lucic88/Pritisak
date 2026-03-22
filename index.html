@@ -225,7 +225,7 @@
 <body>
 
 <header>
-  <div class="header-title" style="flex-direction:column;align-items:flex-start;gap:2px;"><div style="display:flex;align-items:center;gap:8px;"><span>🫀</span> Pritisak</div><span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);">v5.9.9</span></div>
+  <div class="header-title" style="flex-direction:column;align-items:flex-start;gap:2px;"><div style="display:flex;align-items:center;gap:8px;"><span>🫀</span> Pritisak</div><span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);">v6.0.0</span></div>
   <div style="display:flex;gap:8px;">
     <button class="icon-btn" onclick="openImportModal()" title="Import backup">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -1137,10 +1137,16 @@ function generateReport() {
   const trendIcon = (curr, prev) => {
     if (!curr||!prev) return '<span class="tneut">&mdash;</span>';
     const diff = curr - prev;
-    if (Math.abs(diff)<2) return `<span class="tneut">→ ${curr}</span>`;
+    if (Math.abs(diff)<2) return '<span class="tneut">→</span>';
+    return diff>0 ? '<span class="tup">↑</span>' : '<span class="tdown">↓</span>';
+  };
+  const trendDiff = (curr, prev) => {
+    if (!curr||!prev) return '';
+    const diff = curr - prev;
+    if (Math.abs(diff)<2) return '';
     return diff>0
-      ? `<span class="tup">↑ ${curr} (+${diff})</span>`
-      : `<span class="tdown">↓ ${curr} (${diff})</span>`;
+      ? `<span class="tup" style="font-size:11px;">(+${diff})</span>`
+      : `<span class="tdown" style="font-size:11px;">(${diff})</span>`;
   };
 
   const tagName = {sve:'Sva',jutarnje:'Jutarnja',vecernje:'Večernja',ostalo:'Ostala'}[shareTag];
@@ -1202,14 +1208,17 @@ function generateReport() {
   <div class="cgrid">
     <div class="cc thisweek">
       <div class="clabel">📅 Zadnjih 7 dana (${thisWeek.length} mj.)</div>
-      <div class="cval" style="font-size:16px;">${twSys||'&mdash;'}/${twDia||'&mdash;'}</div>
-      <div class="csub" style="margin-bottom:4px;">Prosjek Sys/Dia mmHg</div>
-      <div style="font-size:13px;font-weight:600;">${trendIcon(twSys, lwSys)}</div>
+      <div class="cval">${twSys||'&mdash;'}/${twDia||'&mdash;'}</div>
+      <div class="csub">mmHg · Sys/Dia prosjek</div>
+      <div style="display:flex;gap:8px;margin-top:6px;font-size:12px;">
+        <span>Sys: ${trendIcon(twSys,lwSys)} ${trendDiff(twSys,lwSys)}</span>
+        <span>Dia: ${trendIcon(twDia,lwDia)} ${trendDiff(twDia,lwDia)}</span>
+      </div>
     </div>
     <div class="cc lastweek">
       <div class="clabel">📅 Preth. 7 dana (${lastWeek.length} mj.)</div>
-      <div class="cval" style="font-size:16px;">${lwSys||'&mdash;'}/${lwDia||'&mdash;'}</div>
-      <div class="csub">Prosjek Sys/Dia mmHg</div>
+      <div class="cval">${lwSys||'&mdash;'}/${lwDia||'&mdash;'}</div>
+      <div class="csub">mmHg · Sys/Dia prosjek</div>
     </div>
   </div>` : '';
 
@@ -1222,14 +1231,17 @@ function generateReport() {
   <div class="cgrid">
     <div class="cc thismonth">
       <div class="clabel">🗓️ ${thisMonthName} (${thisMonth.length} mj.)</div>
-      <div class="cval" style="font-size:16px;">${tmSys||'&mdash;'}/${tmDia||'&mdash;'}</div>
-      <div class="csub" style="margin-bottom:4px;">Prosjek Sys/Dia mmHg</div>
-      <div style="font-size:13px;font-weight:600;">${tmSys ? trendIcon(tmSys, lmSys) : '&mdash;'}</div>
+      <div class="cval">${tmSys||'&mdash;'}/${tmDia||'&mdash;'}</div>
+      <div class="csub">mmHg · Sys/Dia prosjek</div>
+      <div style="display:flex;gap:8px;margin-top:6px;font-size:12px;">
+        <span>Sys: ${trendIcon(tmSys,lmSys)} ${trendDiff(tmSys,lmSys)}</span>
+        <span>Dia: ${trendIcon(tmDia,lmDia)} ${trendDiff(tmDia,lmDia)}</span>
+      </div>
     </div>
     <div class="cc lastmonth">
       <div class="clabel">🗓️ ${lastMonthName} (${lastMonth.length} mj.)</div>
-      <div class="cval" style="font-size:16px;">${lmSys||'&mdash;'}/${lmDia||'&mdash;'}</div>
-      <div class="csub">Prosjek Sys/Dia mmHg</div>
+      <div class="cval">${lmSys||'&mdash;'}/${lmDia||'&mdash;'}</div>
+      <div class="csub">mmHg · Sys/Dia prosjek</div>
     </div>
   </div>` : '';
 
@@ -1453,7 +1465,7 @@ ${morningEveningChart}
   </div>
 </div>
 
-<div class="footer">Generisano: ${genDate} &nbsp;·&nbsp; Mjerač Pritiska v5.9.9</div>
+<div class="footer">Generisano: ${genDate} &nbsp;·&nbsp; Mjerač Pritiska v6.0.0</div>
 </div>
 
 <script>
