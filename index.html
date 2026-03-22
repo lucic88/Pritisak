@@ -227,7 +227,7 @@
 <body>
 
 <header>
-  <div class="header-title" style="flex-direction:column;align-items:flex-start;gap:2px;"><div style="display:flex;align-items:center;gap:8px;"><span>🫀</span> Pritisak</div><span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);">v6.1.0</span></div>
+  <div class="header-title" style="flex-direction:column;align-items:flex-start;gap:2px;"><div style="display:flex;align-items:center;gap:8px;"><span>🫀</span> Pritisak</div><span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);">v6.1.1</span></div>
   <div style="display:flex;gap:8px;">
     <button class="icon-btn" onclick="openImportModal()" title="Import backup">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -1484,7 +1484,7 @@ ${morningEveningChart}
   </div>
 </div>
 
-<div class="footer">Generisano: ${genDate} &nbsp;·&nbsp; Mjerač Pritiska v6.1.0</div>
+<div class="footer">Generisano: ${genDate} &nbsp;·&nbsp; Mjerač Pritiska v6.1.1</div>
 </div>
 
 <script>
@@ -1599,6 +1599,31 @@ function downloadReport() {
 }
 
 // ── IMPORT CSV ────────────────────────────────────────────
+function openImportModal() {
+  document.getElementById('csv-import-input').value = '';
+  document.getElementById('import-filename').style.display = 'none';
+  document.getElementById('import-filename').textContent = '';
+  document.getElementById('import-preview').style.display = 'none';
+  document.getElementById('import-preview').textContent = '';
+  document.getElementById('import-drop-zone').style.borderColor = 'var(--border)';
+  const btn = document.getElementById('import-confirm-btn');
+  btn.style.opacity = '0.4';
+  btn.style.pointerEvents = 'none';
+  window._pendingImportEvent = null;
+  document.getElementById('import-modal').style.display = 'flex';
+}
+function closeImportModal() {
+  document.getElementById('import-modal').style.display = 'none';
+}
+function triggerImport() {
+  document.getElementById('csv-import-input').click();
+}
+function confirmImport() {
+  if (window._pendingImportEvent) {
+    importJSON(window._pendingImportEvent);
+  }
+}
+
 function previewImport(event) {
   const file = event.target.files[0];
   if (!file) return;
