@@ -227,7 +227,7 @@
 <body>
 
 <header>
-  <div class="header-title" style="flex-direction:column;align-items:flex-start;gap:2px;"><div style="display:flex;align-items:center;gap:8px;"><span>🫀</span> Pritisak</div><span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);">v6.1.6</span></div>
+  <div class="header-title" style="flex-direction:column;align-items:flex-start;gap:2px;"><div style="display:flex;align-items:center;gap:8px;"><span>🫀</span> Pritisak</div><span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);">v6.1.7</span></div>
   <div style="display:flex;gap:8px;">
     <button class="icon-btn" onclick="openImportModal()" title="Import backup">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -418,22 +418,29 @@
     </div>
     <div style="font-size:12px; color:var(--text-muted); margin-bottom:20px;">Odaberi šta želiš obrisati. Ova akcija je nepovratna!</div>
 
-    <div style="margin-bottom:10px;">
-      <div style="font-size:11px; letter-spacing:0.5px; text-transform:uppercase; color:var(--text-muted); margin-bottom:8px;">Obriši po periodu</div>
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
-        <button class="btn-secondary" onclick="deleteByDays(7)">Zadnjih 7 dana</button>
-        <button class="btn-secondary" onclick="deleteByDays(30)">Zadnjih 30 dana</button>
-        <button class="btn-secondary" onclick="deleteByDays(90)">Zadnja 3 mj.</button>
-        <button class="btn-secondary" onclick="deleteByDays(365)">Zadnja godina</button>
+    <div id="del-select">
+      <div style="margin-bottom:10px;">
+        <div style="font-size:11px; letter-spacing:0.5px; text-transform:uppercase; color:var(--text-muted); margin-bottom:8px;">Obriši po periodu</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
+          <button class="btn-secondary" onclick="askDelete('days',7)">Zadnjih 7 dana</button>
+          <button class="btn-secondary" onclick="askDelete('days',30)">Zadnjih 30 dana</button>
+          <button class="btn-secondary" onclick="askDelete('days',90)">Zadnja 3 mj.</button>
+          <button class="btn-secondary" onclick="askDelete('days',365)">Zadnja godina</button>
+        </div>
+      </div>
+      <div style="margin-bottom:16px;">
+        <div style="font-size:11px; letter-spacing:0.5px; text-transform:uppercase; color:var(--text-muted); margin-bottom:8px;">Obriši sve</div>
+        <button style="width:100%; padding:12px; background:rgba(248,81,73,0.12); color:var(--warn); border:1px solid rgba(248,81,73,0.3); border-radius:10px; font-family:var(--mono); font-size:13px; cursor:pointer;" onclick="askDelete('all')">⚠️ Obriši cjelokupnu istoriju</button>
+      </div>
+      <button class="btn-secondary" onclick="closeDeleteModal()">Odustani</button>
+    </div>
+    <div id="del-confirm" style="display:none;">
+      <div id="del-confirm-msg" style="font-size:14px; color:var(--text); margin-bottom:20px; line-height:1.5;"></div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+        <button class="btn-secondary" onclick="document.getElementById('del-confirm').style.display='none';document.getElementById('del-select').style.display='block';">Odustani</button>
+        <button onclick="doDelete()" style="padding:12px; background:rgba(248,81,73,0.15); color:var(--warn); border:1px solid rgba(248,81,73,0.4); border-radius:10px; font-family:var(--mono); font-size:13px; cursor:pointer; font-weight:600;">🗑️ Potvrdi</button>
       </div>
     </div>
-
-    <div style="margin-bottom:16px;">
-      <div style="font-size:11px; letter-spacing:0.5px; text-transform:uppercase; color:var(--text-muted); margin-bottom:8px;">Obriši sve</div>
-      <button style="width:100%; padding:12px; background:rgba(248,81,73,0.12); color:var(--warn); border:1px solid rgba(248,81,73,0.3); border-radius:10px; font-family:var(--mono); font-size:13px; cursor:pointer;" onclick="deleteAll()">⚠️ Obriši cjelokupnu istoriju</button>
-    </div>
-
-    <button class="btn-secondary" onclick="closeDeleteModal()">Odustani</button>
   </div>
 </div>
 
@@ -1484,7 +1491,7 @@ ${morningEveningChart}
   </div>
 </div>
 
-<div class="footer">Generisano: ${genDate} &nbsp;·&nbsp; Mjerač Pritiska v6.1.6</div>
+<div class="footer">Generisano: ${genDate} &nbsp;·&nbsp; Mjerač Pritiska v6.1.7</div>
 </div>
 
 <script>
@@ -1670,8 +1677,10 @@ function importJSON() {
 
 // ── DELETE ────────────────────────────────────────────────
 function openDeleteModal() {
-  const m = document.getElementById('delete-modal');
-  m.style.display = 'flex';
+  document.getElementById('del-select').style.display = 'block';
+  document.getElementById('del-confirm').style.display = 'none';
+  _delPending = null;
+  document.getElementById('delete-modal').style.display = 'flex';
 }
 function closeDeleteModal() {
   document.getElementById('delete-modal').style.display = 'none';
@@ -1690,6 +1699,40 @@ function deleteByDays(days) {
   showToast('🗑️ Obrisano ' + count + ' mjerenja');
 }
 
+let _delPending = null;
+function askDelete(type, days) {
+  const entries = load();
+  let count, msg;
+  if (type === 'all') {
+    count = entries.length;
+    if (!count) { showToast('⚠️ Nema podataka'); return; }
+    msg = 'Obrisaće se sva <strong>' + count + '</strong> mjerenja.<br>Ova akcija je nepovratna!';
+    _delPending = { type: 'all' };
+  } else {
+    const cut = new Date(); cut.setDate(cut.getDate() - days);
+    count = entries.filter(e => new Date(e.dt) >= cut).length;
+    if (!count) { showToast('⚠️ Nema mjerenja u tom periodu'); return; }
+    msg = 'Obrisaće se <strong>' + count + '</strong> mjerenja iz zadnjih ' + days + ' dana.<br>Ova akcija je nepovratna!';
+    _delPending = { type: 'days', days };
+  }
+  document.getElementById('del-confirm-msg').innerHTML = msg;
+  document.getElementById('del-select').style.display = 'none';
+  document.getElementById('del-confirm').style.display = 'block';
+}
+function doDelete() {
+  if (!_delPending) return;
+  if (_delPending.type === 'all') {
+    save([]); showToast('🗑️ Sva istorija obrisana');
+  } else {
+    const cut = new Date(); cut.setDate(cut.getDate() - _delPending.days);
+    const after = load().filter(e => new Date(e.dt) < cut);
+    const n = load().length - after.length;
+    save(after); showToast('🗑️ Obrisano ' + n + ' mjerenja');
+  }
+  _delPending = null;
+  renderHistory(); renderCharts();
+  closeDeleteModal();
+}
 function deleteAll() {
   const count = load().length;
   if (count === 0) { showToast('⚠️ Nema podataka'); return; }
