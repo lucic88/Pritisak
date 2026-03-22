@@ -227,7 +227,7 @@
 <body>
 
 <header>
-  <div class="header-title" style="flex-direction:column;align-items:flex-start;gap:2px;"><div style="display:flex;align-items:center;gap:8px;"><span>🫀</span> Pritisak</div><span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);">v6.0.6</span></div>
+  <div class="header-title" style="flex-direction:column;align-items:flex-start;gap:2px;"><div style="display:flex;align-items:center;gap:8px;"><span>🫀</span> Pritisak</div><span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);">v6.0.7</span></div>
   <div style="display:flex;gap:8px;">
     <button class="icon-btn" onclick="openImportModal()" title="Import backup">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -1018,12 +1018,14 @@ function closeExportModal() {
 }
 function doExportCSV() {
   const entries = load();
-  const hdr = 'Datum,Vrijeme,Tag,Sistolni,Dijastolni,Puls,Komentar\n';
+  const SEP = ';';
+  const hdr = ['Datum','Vrijeme','Tag','Sistolni','Dijastolni','Puls','Komentar'].join(SEP) + '\n';
   const rows = entries.map(e => {
     const iso = e.dt ? e.dt : '';
     const datePart = iso.slice(0, 10);
     const timePart = iso.slice(11, 16);
-    return [datePart, timePart, e.tag, e.sys, e.dia, e.pulse||'', '"'+(e.comment||'').replace(/"/g,'""')+'"'].join(',');
+    const comment = (e.comment || '').replace(/;/g, ','); // sanitize separator char
+    return [datePart, timePart, e.tag, e.sys, e.dia, e.pulse||'', comment].join(SEP);
   }).join('\n');
   const csvContent = hdr + rows;
   // UTF-16 LE with BOM — universally recognized by Google Sheets & Excel on all platforms
@@ -1499,7 +1501,7 @@ ${morningEveningChart}
   </div>
 </div>
 
-<div class="footer">Generisano: ${genDate} &nbsp;·&nbsp; Mjerač Pritiska v6.0.6</div>
+<div class="footer">Generisano: ${genDate} &nbsp;·&nbsp; Mjerač Pritiska v6.0.7</div>
 </div>
 
 <script>
