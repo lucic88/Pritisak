@@ -227,7 +227,7 @@
 <body>
 
 <header>
-  <div class="header-title" style="flex-direction:column;align-items:flex-start;gap:2px;"><div style="display:flex;align-items:center;gap:8px;"><span>🫀</span> Pritisak</div><span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);">v6.1.5</span></div>
+  <div class="header-title" style="flex-direction:column;align-items:flex-start;gap:2px;"><div style="display:flex;align-items:center;gap:8px;"><span>🫀</span> Pritisak</div><span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);">v6.1.6</span></div>
   <div style="display:flex;gap:8px;">
     <button class="icon-btn" onclick="openImportModal()" title="Import backup">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -1484,7 +1484,7 @@ ${morningEveningChart}
   </div>
 </div>
 
-<div class="footer">Generisano: ${genDate} &nbsp;·&nbsp; Mjerač Pritiska v6.1.5</div>
+<div class="footer">Generisano: ${genDate} &nbsp;·&nbsp; Mjerač Pritiska v6.1.6</div>
 </div>
 
 <script>
@@ -1515,10 +1515,10 @@ const sysAnnot = {
   zE: {type:'box',yMin:130,yMax:140,backgroundColor:'rgba(254,243,199,0.35)',borderWidth:0},
   zH1:{type:'box',yMin:140,yMax:160,backgroundColor:'rgba(254,226,226,0.35)',borderWidth:0},
   zH2:{type:'box',yMin:160,yMax:300,backgroundColor:'rgba(254,202,202,0.40)',borderWidth:0},
-  l120:{type:'line',yMin:120,yMax:120,borderColor:'rgba(34,197,94,0.5)',borderWidth:1,borderDash:[5,4],label:{content:'120',display:true,position:'end',color:'#16a34a',font:{size:9}}},
-  l130:{type:'line',yMin:130,yMax:130,borderColor:'rgba(234,179,8,0.5)',borderWidth:1,borderDash:[5,4],label:{content:'130',display:true,position:'end',color:'#d97706',font:{size:9}}},
-  l140:{type:'line',yMin:140,yMax:140,borderColor:'rgba(239,68,68,0.5)',borderWidth:1,borderDash:[5,4],label:{content:'140',display:true,position:'end',color:'#dc2626',font:{size:9}}},
-  l160:{type:'line',yMin:160,yMax:160,borderColor:'rgba(185,28,28,0.5)',borderWidth:1,borderDash:[5,4],label:{content:'160',display:true,position:'end',color:'#b91c1c',font:{size:9}}},
+  l120:{type:'line',yMin:120,yMax:120,borderColor:'rgba(34,197,94,0.5)',borderWidth:1,borderDash:[5,4],label:{content:'120',display:false,position:'end',color:'#16a34a',font:{size:9}}},
+  l130:{type:'line',yMin:130,yMax:130,borderColor:'rgba(234,179,8,0.5)',borderWidth:1,borderDash:[5,4],label:{content:'130',display:false,position:'end',color:'#d97706',font:{size:9}}},
+  l140:{type:'line',yMin:140,yMax:140,borderColor:'rgba(239,68,68,0.5)',borderWidth:1,borderDash:[5,4],label:{content:'140',display:false,position:'end',color:'#dc2626',font:{size:9}}},
+  l160:{type:'line',yMin:160,yMax:160,borderColor:'rgba(185,28,28,0.5)',borderWidth:1,borderDash:[5,4],label:{content:'160',display:false,position:'end',color:'#b91c1c',font:{size:9}}},
 };
 new Chart(document.getElementById('sys-chart'),{type:'line',data:{labels,datasets:[
   {label:'Sistolni',data:sysVals,borderColor:'#3b82f6',borderWidth:2.5,pointRadius:4,pointBackgroundColor:'#3b82f6',tension:0.3,fill:false}
@@ -1533,10 +1533,10 @@ const diaAnnot = {
   zE: {type:'box',yMin:85, yMax:90, backgroundColor:'rgba(254,243,199,0.35)',borderWidth:0},
   zH1:{type:'box',yMin:90, yMax:100,backgroundColor:'rgba(254,226,226,0.35)',borderWidth:0},
   zH2:{type:'box',yMin:100,yMax:200,backgroundColor:'rgba(254,202,202,0.40)',borderWidth:0},
-  l80: {type:'line',yMin:80, yMax:80, borderColor:'rgba(34,197,94,0.5)',borderWidth:1,borderDash:[5,4],label:{content:'80',display:true,position:'end',color:'#16a34a',font:{size:9}}},
-  l85: {type:'line',yMin:85, yMax:85, borderColor:'rgba(234,179,8,0.4)',borderWidth:1,borderDash:[5,4],label:{content:'85',display:true,position:'end',color:'#d97706',font:{size:9}}},
-  l90: {type:'line',yMin:90, yMax:90, borderColor:'rgba(239,68,68,0.5)',borderWidth:1,borderDash:[5,4],label:{content:'90',display:true,position:'end',color:'#dc2626',font:{size:9}}},
-  l100:{type:'line',yMin:100,yMax:100,borderColor:'rgba(185,28,28,0.5)',borderWidth:1,borderDash:[5,4],label:{content:'100',display:true,position:'end',color:'#b91c1c',font:{size:9}}},
+  l80: {type:'line',yMin:80, yMax:80, borderColor:'rgba(34,197,94,0.5)',borderWidth:1,borderDash:[5,4],label:{content:'80',display:false,position:'end',color:'#16a34a',font:{size:9}}},
+  l85: {type:'line',yMin:85, yMax:85, borderColor:'rgba(234,179,8,0.4)',borderWidth:1,borderDash:[5,4],label:{content:'85',display:false,position:'end',color:'#d97706',font:{size:9}}},
+  l90: {type:'line',yMin:90, yMax:90, borderColor:'rgba(239,68,68,0.5)',borderWidth:1,borderDash:[5,4],label:{content:'90',display:false,position:'end',color:'#dc2626',font:{size:9}}},
+  l100:{type:'line',yMin:100,yMax:100,borderColor:'rgba(185,28,28,0.5)',borderWidth:1,borderDash:[5,4],label:{content:'100',display:false,position:'end',color:'#b91c1c',font:{size:9}}},
 };
 new Chart(document.getElementById('dia-chart'),{type:'line',data:{labels,datasets:[
   {label:'Dijastolni',data:diaVals,borderColor:'#22c55e',borderWidth:2.5,pointRadius:4,pointBackgroundColor:'#22c55e',tension:0.3,fill:false}
@@ -1551,9 +1551,9 @@ const pulseAnnot = {
   zNorm: {type:'box',yMin:60, yMax:100,backgroundColor:'rgba(220,252,231,0.20)',borderWidth:0},
   zMed:  {type:'box',yMin:100,yMax:120,backgroundColor:'rgba(254,243,199,0.25)',borderWidth:0},
   zHigh: {type:'box',yMin:120,yMax:300,backgroundColor:'rgba(254,226,226,0.25)',borderWidth:0},
-  l60:  {type:'line',yMin:60, yMax:60, borderColor:'rgba(59,130,246,0.4)', borderWidth:1,borderDash:[5,4],label:{content:'60', display:true,position:'end',color:'#2563eb',font:{size:9}}},
-  l100: {type:'line',yMin:100,yMax:100,borderColor:'rgba(234,179,8,0.5)',  borderWidth:1,borderDash:[5,4],label:{content:'100',display:true,position:'end',color:'#d97706',font:{size:9}}},
-  l120: {type:'line',yMin:120,yMax:120,borderColor:'rgba(239,68,68,0.5)',  borderWidth:1,borderDash:[5,4],label:{content:'120',display:true,position:'end',color:'#dc2626',font:{size:9}}},
+  l60:  {type:'line',yMin:60, yMax:60, borderColor:'rgba(59,130,246,0.4)', borderWidth:1,borderDash:[5,4],label:{content:'60', display:false,position:'end',color:'#2563eb',font:{size:9}}},
+  l100: {type:'line',yMin:100,yMax:100,borderColor:'rgba(234,179,8,0.5)',  borderWidth:1,borderDash:[5,4],label:{content:'100',display:false,position:'end',color:'#d97706',font:{size:9}}},
+  l120: {type:'line',yMin:120,yMax:120,borderColor:'rgba(239,68,68,0.5)',  borderWidth:1,borderDash:[5,4],label:{content:'120',display:false,position:'end',color:'#dc2626',font:{size:9}}},
 };
 new Chart(document.getElementById('pulse-chart'),{type:'line',data:{labels,datasets:[
   {label:'Puls',data:pulseVals,borderColor:'#ef4444',borderWidth:2.5,pointRadius:4,pointBackgroundColor:'#ef4444',tension:0.3,fill:false,spanGaps:true}
