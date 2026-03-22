@@ -8,6 +8,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Pritisak" />
   <title>Mjerač Pritiska</title>
+  <link rel="manifest" id="pwa-manifest" />
+  <link rel="apple-touch-icon" id="apple-icon" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -225,7 +227,7 @@
 <body>
 
 <header>
-  <div class="header-title" style="flex-direction:column;align-items:flex-start;gap:2px;"><div style="display:flex;align-items:center;gap:8px;"><span>🫀</span> Pritisak</div><span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);">v6.0.1</span></div>
+  <div class="header-title" style="flex-direction:column;align-items:flex-start;gap:2px;"><div style="display:flex;align-items:center;gap:8px;"><span>🫀</span> Pritisak</div><span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);">v6.0.2</span></div>
   <div style="display:flex;gap:8px;">
     <button class="icon-btn" onclick="openImportModal()" title="Import backup">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -1482,7 +1484,7 @@ ${morningEveningChart}
   </div>
 </div>
 
-<div class="footer">Generisano: ${genDate} &nbsp;·&nbsp; Mjerač Pritiska v6.0.1</div>
+<div class="footer">Generisano: ${genDate} &nbsp;·&nbsp; Mjerač Pritiska v6.0.2</div>
 </div>
 
 <script>
@@ -1812,9 +1814,71 @@ function installPWA() {
 }
 
 // ── SERVICE WORKER (inline) ───────────────────────────────
+// ── PWA ICON + MANIFEST ──────────────────────────────────
+function generateAppIcon() {
+  const c = document.createElement('canvas');
+  c.width = 512; c.height = 512;
+  const ctx = c.getContext('2d');
+  // Background circle
+  ctx.fillStyle = '#0d1117';
+  ctx.beginPath();
+  ctx.roundRect(0, 0, 512, 512, 100);
+  ctx.fill();
+  // Heart shape
+  ctx.fillStyle = '#e84545';
+  ctx.beginPath();
+  const x = 256, y = 230, size = 160;
+  ctx.moveTo(x, y + size * 0.35);
+  ctx.bezierCurveTo(x, y, x - size * 0.6, y, x - size * 0.6, y + size * 0.35);
+  ctx.bezierCurveTo(x - size * 0.6, y + size * 0.7, x, y + size * 1.05, x, y + size * 1.05);
+  ctx.bezierCurveTo(x, y + size * 1.05, x + size * 0.6, y + size * 0.7, x + size * 0.6, y + size * 0.35);
+  ctx.bezierCurveTo(x + size * 0.6, y, x, y, x, y + size * 0.35);
+  ctx.fill();
+  // ECG line on heart
+  ctx.strokeStyle = '#fff';
+  ctx.lineWidth = 14;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  ctx.moveTo(156, 280);
+  ctx.lineTo(196, 280);
+  ctx.lineTo(216, 240);
+  ctx.lineTo(236, 330);
+  ctx.lineTo(256, 220);
+  ctx.lineTo(276, 330);
+  ctx.lineTo(296, 280);
+  ctx.lineTo(356, 280);
+  ctx.stroke();
+  return c.toDataURL('image/png');
+}
+
+const iconDataUrl = generateAppIcon();
+
+// Set apple-touch-icon
+document.getElementById('apple-icon').href = iconDataUrl;
+
+// Inject manifest with icon
+const manifestData = {
+  name: 'Mjerač Pritiska',
+  short_name: 'Pritisak',
+  description: 'Praćenje krvnog pritiska i pulsa',
+  start_url: './',
+  display: 'standalone',
+  background_color: '#0d1117',
+  theme_color: '#0d1117',
+  orientation: 'portrait',
+  icons: [
+    { src: iconDataUrl, sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
+    { src: iconDataUrl, sizes: '192x192', type: 'image/png' }
+  ]
+};
+const manifestBlob = new Blob([JSON.stringify(manifestData)], {type: 'application/manifest+json'});
+document.getElementById('pwa-manifest').href = URL.createObjectURL(manifestBlob);
+
+// ── SERVICE WORKER ────────────────────────────────────────
 if ('serviceWorker' in navigator) {
   const swCode = `
-    const CACHE='pritisak-v2';
+    const CACHE='pritisak-v3';
     self.addEventListener('install', e => {
       e.waitUntil(caches.open(CACHE).then(c => c.addAll(['./'])).then(()=>self.skipWaiting()));
     });
