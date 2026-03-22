@@ -225,7 +225,7 @@
 <body>
 
 <header>
-  <div class="header-title" style="flex-direction:column;align-items:flex-start;gap:2px;"><div style="display:flex;align-items:center;gap:8px;"><span>🫀</span> Pritisak</div><span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);">v5.9.6</span></div>
+  <div class="header-title" style="flex-direction:column;align-items:flex-start;gap:2px;"><div style="display:flex;align-items:center;gap:8px;"><span>🫀</span> Pritisak</div><span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);">v5.9.7</span></div>
   <div style="display:flex;gap:8px;">
     <button class="icon-btn" onclick="openImportModal()" title="Import backup">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -1097,6 +1097,9 @@ function generateReport() {
   const maxSys   = Math.max(...data.map(e=>e.sys));
   const minDia   = Math.min(...data.map(e=>e.dia));
   const maxDia   = Math.max(...data.map(e=>e.dia));
+  const pulseArr = data.filter(e=>e.pulse).map(e=>e.pulse);
+  const minPulse = pulseArr.length ? Math.min(...pulseArr) : null;
+  const maxPulse = pulseArr.length ? Math.max(...pulseArr) : null;
 
   // Morning vs Evening split
   const morning = data.filter(e=>e.tag==='jutarnje');
@@ -1326,13 +1329,39 @@ tr:last-child td{border-bottom:none;}
 <div class="subtitle">${tagName} mjerenja &nbsp;·&nbsp; ${fromFmt} &ndash; ${toFmt} &nbsp;·&nbsp; Ukupno: <strong>${data.length}</strong> mjerenja</div>
 
 <div class="stitle">Ukupni prosjek</div>
-<div class="stats3" style="margin-bottom:24px;">
+<div class="stats3" style="margin-bottom:10px;">
   <div class="stat"><div class="slabel">Prosj. Sys</div><div class="sval">${avgSys}</div><div class="sunit">mmHg</div></div>
   <div class="stat"><div class="slabel">Prosj. Dia</div><div class="sval">${avgDia}</div><div class="sunit">mmHg</div></div>
   <div class="stat"><div class="slabel">Prosj. Puls</div><div class="sval">${avgPulse||'&mdash;'}</div><div class="sunit">bpm</div></div>
-  <div class="stat"><div class="slabel">Min Sys</div><div class="sval" style="color:#22c55e;">${minSys}</div><div class="sunit">mmHg</div></div>
-  <div class="stat"><div class="slabel">Max Sys</div><div class="sval" style="color:#ef4444;">${maxSys}</div><div class="sunit">mmHg</div></div>
-  <div class="stat"><div class="slabel">Min/Max Dia</div><div class="sval" style="font-size:15px;white-space:nowrap;">${minDia}/${maxDia}</div><div class="sunit">mmHg</div></div>
+</div>
+<div class="stats3" style="margin-bottom:24px;">
+  <div class="stat">
+    <div class="slabel">Sys min/max</div>
+    <div style="display:flex;align-items:baseline;justify-content:center;gap:4px;">
+      <span class="sval" style="color:#22c55e;font-size:18px;">${minSys}</span>
+      <span style="color:#94a3b8;font-size:12px;">/</span>
+      <span class="sval" style="color:#ef4444;font-size:18px;">${maxSys}</span>
+    </div>
+    <div class="sunit">mmHg</div>
+  </div>
+  <div class="stat">
+    <div class="slabel">Dia min/max</div>
+    <div style="display:flex;align-items:baseline;justify-content:center;gap:4px;">
+      <span class="sval" style="color:#22c55e;font-size:18px;">${minDia}</span>
+      <span style="color:#94a3b8;font-size:12px;">/</span>
+      <span class="sval" style="color:#ef4444;font-size:18px;">${maxDia}</span>
+    </div>
+    <div class="sunit">mmHg</div>
+  </div>
+  <div class="stat">
+    <div class="slabel">Puls min/max</div>
+    <div style="display:flex;align-items:baseline;justify-content:center;gap:4px;">
+      <span class="sval" style="color:#22c55e;font-size:18px;">${minPulse||'&mdash;'}</span>
+      <span style="color:#94a3b8;font-size:12px;">/</span>
+      <span class="sval" style="color:#ef4444;font-size:18px;">${maxPulse||'&mdash;'}</span>
+    </div>
+    <div class="sunit">bpm</div>
+  </div>
 </div>
 
 ${cmpMorningEvening}
@@ -1418,7 +1447,7 @@ ${morningEveningChart}
   </div>
 </div>
 
-<div class="footer">Generisano: ${genDate} &nbsp;·&nbsp; Mjerač Pritiska v5.9.6</div>
+<div class="footer">Generisano: ${genDate} &nbsp;·&nbsp; Mjerač Pritiska v5.9.7</div>
 </div>
 
 <script>
