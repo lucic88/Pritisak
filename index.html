@@ -6,9 +6,12 @@
   <meta name="theme-color" content="#0d1117" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Pritisak + Health" />
-  <title>Mjerač Pritiska + Samsung Health</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <meta name="apple-mobile-web-app-title" content="Pritisak" />
+  <title>Mjerač Pritiska</title>
+  <link rel="manifest" id="pwa-manifest" />
+  <link rel="apple-touch-icon" id="apple-icon" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
     :root {
@@ -26,9 +29,10 @@
       --tag-other: #6b7280;
       --radius: 12px;
       --mono: 'DM Mono', monospace;
+      --serif: 'Instrument Serif', serif;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-    body { background: var(--bg); color: var(--text); font-family: var(--mono); min-height: 100dvh; }
+    body { background: var(--bg); color: var(--text); font-family: var(--mono); min-height: 100dvh; overscroll-behavior: none; }
 
     header {
       position: sticky; top: 0; z-index: 100;
@@ -37,7 +41,16 @@
       padding: 14px 20px 12px;
       display: flex; align-items: center; justify-content: space-between;
     }
-    .header-title { font-size: 20px; letter-spacing: -0.3px; }
+    .header-title { font-family: var(--serif); font-size: 22px; letter-spacing: -0.3px; display: flex; align-items: center; gap: 8px; }
+    .icon-btn {
+      background: var(--surface); border: 1px solid var(--border); color: var(--text-muted);
+      width: 36px; height: 36px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .icon-btn:hover { color: var(--accent); border-color: var(--accent); }
+    .icon-btn:active { background: var(--surface2); transform: scale(0.95); }
+    .icon-btn svg { display: block; }
 
     nav {
       display: flex; flex-direction: row; flex-wrap: nowrap;
@@ -45,541 +58,1810 @@
       border-bottom: 1px solid var(--border);
       position: sticky; top: 63px; z-index: 99;
       width: 100%;
-      overflow-x: auto;
     }
-    nav::-webkit-scrollbar { display: none; }
     .tab {
-      flex-shrink: 0; padding: 10px 12px; text-align: center;
-      font-size: 11px; letter-spacing: 0.5px;
+      flex: 1 1 0; min-width: 0; padding: 10px 4px; text-align: center;
+      font-size: 11px; font-family: var(--mono); letter-spacing: 0.5px;
       color: var(--text-muted); cursor: pointer;
       border-bottom: 2px solid transparent; transition: all 0.2s;
-      text-transform: uppercase; white-space: nowrap;
+      text-transform: uppercase;
     }
     .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .tab-icon { display: block; font-size: 18px; margin-bottom: 2px; }
 
     .page { display: none; padding: 20px 16px 100px; }
     .page.active { display: block; }
 
-    .samsung-upload-box {
-      background: var(--surface); border: 2px dashed var(--accent);
-      border-radius: var(--radius); padding: 30px 20px; text-align: center;
-      cursor: pointer; transition: all 0.2s; margin-bottom: 16px;
-    }
-    .samsung-upload-box:hover { background: var(--surface2); }
-    .samsung-upload-box.dragover { border-color: var(--accent2); background: var(--surface2); }
-    .samsung-upload-box input[type="file"] { display: none; }
-    .samsung-upload-box .upload-icon { font-size: 40px; margin-bottom: 10px; }
-    .samsung-upload-box .upload-text { font-size: 13px; color: var(--text); margin-bottom: 4px; }
-    .samsung-upload-box .upload-hint { font-size: 11px; color: var(--text-muted); }
+    .form-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; }
+    .form-card h2 { font-family: var(--serif); font-size: 18px; margin-bottom: 16px; }
 
-    .stats-grid {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;
+    .datetime-row {
+      background: var(--bg); border: 1px solid var(--border); border-radius: 10px;
+      margin-bottom: 14px;
+      display: flex;
     }
-    .stat-card {
+    .datetime-row input[type=date],
+    .datetime-row input[type=time] {
+      background: none; border: none; color: var(--accent);
+      font-family: var(--mono); outline: none; cursor: pointer;
+      -webkit-appearance: none; appearance: none;
+      color-scheme: dark; width: 100%; display: block;
+      line-height: 1.2;
+    }
+    .datetime-row input[type=date] { border-bottom: 1px solid var(--border); }
+    .dt-sep { display: none; }
+
+    .tag-preview { font-size: 11px; padding: 3px 8px; border-radius: 20px; font-weight: 500; letter-spacing: 0.5px; white-space: nowrap; }
+    .tag-jutarnje { background: rgba(210,153,34,0.15); color: var(--tag-morning); }
+    .tag-vecernje { background: rgba(139,92,246,0.15); color: var(--tag-evening); }
+    .tag-ostalo { background: rgba(107,114,128,0.15); color: var(--tag-other); }
+
+    .bp-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+    .input-group label { display: block; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
+    .input-group input {
+      width: 100%; background: var(--bg); border: 1px solid var(--border);
+      border-radius: 8px; padding: 10px 12px;
+      font-family: var(--mono); font-size: 20px; color: var(--text);
+      text-align: center; outline: none; transition: border-color 0.2s; -webkit-appearance: none;
+    }
+    .input-group input:focus { border-color: var(--accent); }
+    .input-group input::placeholder { color: var(--border); font-size: 16px; }
+    .input-group .unit { font-size: 9px; color: var(--text-muted); text-align: center; margin-top: 4px; letter-spacing: 0.5px; }
+
+    .comment-input {
+      width: 100%; background: var(--bg); border: 1px solid var(--border);
+      border-radius: 8px; padding: 10px 12px;
+      font-family: var(--mono); font-size: 13px; color: var(--text);
+      outline: none; resize: none; height: 64px; margin-bottom: 14px; transition: border-color 0.2s;
+    }
+    .comment-input:focus { border-color: var(--accent); }
+    .comment-input::placeholder { color: var(--border); }
+
+    .btn-primary {
+      width: 100%; padding: 14px; background: var(--accent); color: #0d1117;
+      border: none; border-radius: 10px; font-family: var(--mono);
+      font-size: 14px; font-weight: 500; letter-spacing: 0.5px; cursor: pointer; transition: all 0.15s;
+    }
+    .btn-primary:active { transform: scale(0.98); opacity: 0.9; }
+
+    .success-flash {
+      display: none; align-items: center; gap: 8px;
+      background: rgba(63,185,80,0.1); border: 1px solid rgba(63,185,80,0.3);
+      border-radius: 8px; padding: 10px 14px; font-size: 13px; color: var(--accent2); margin-top: 10px;
+    }
+    .success-flash.show { display: flex; }
+
+    .filter-row { display: flex; gap: 6px; margin-bottom: 14px; overflow-x: auto; padding-bottom: 2px; }
+    .filter-row::-webkit-scrollbar { display: none; }
+    div[style*='overflow-x:auto']::-webkit-scrollbar { display: none; }
+    .filter-chip {
+      flex-shrink: 0; padding: 6px 12px; border-radius: 20px; font-size: 11px;
+      letter-spacing: 0.5px; cursor: pointer; border: 1px solid var(--border);
+      background: var(--surface); color: var(--text-muted); transition: all 0.15s;
+    }
+    .filter-chip.active { background: var(--accent); border-color: var(--accent); color: #0d1117; }
+
+    .entry-card {
       background: var(--surface); border: 1px solid var(--border);
-      border-radius: 10px; padding: 14px; text-align: center;
+      border-radius: var(--radius); padding: 14px 16px; margin-bottom: 10px;
+      position: relative; overflow: hidden;
     }
-    .stat-label { font-size: 9px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
-    .stat-value { font-size: 20px; color: var(--accent); font-weight: 500; line-height: 1; }
-    .stat-unit { font-size: 9px; color: var(--text-muted); display: block; margin-top: 3px; }
+    .entry-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; }
+    .entry-card.jutarnje::before { background: var(--tag-morning); }
+    .entry-card.vecernje::before { background: var(--tag-evening); }
+    .entry-card.ostalo::before { background: var(--tag-other); }
 
-    .chart-card {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 16px; margin-bottom: 16px;
-    }
-    .chart-title { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
-    .chart-wrap { position: relative; height: 300px; }
+    .entry-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+    .entry-datetime { font-size: 11px; color: var(--text-muted); line-height: 1.5; }
+    .del-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px 6px; border-radius: 6px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+    .del-btn:hover { background: var(--surface2); }
+    .del-btn:active { color: var(--warn); transform: scale(0.9); }
+    .del-btn svg { display: block; }
 
-    .data-types-filter {
-      display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 16px;
-    }
-    .type-toggle {
-      padding: 10px; background: var(--surface); border: 1px solid var(--border);
-      border-radius: 8px; text-align: center; font-size: 12px; cursor: pointer;
-      transition: all 0.2s; color: var(--text-muted);
-    }
-    .type-toggle.active { background: var(--accent); color: #0d1117; border-color: var(--accent); }
+    .entry-bp { display: flex; align-items: baseline; gap: 4px; margin-bottom: 4px; flex-wrap: wrap; }
+    .bp-value { font-size: 28px; letter-spacing: -1px; color: var(--text); line-height: 1; }
+    .bp-sep { color: var(--text-muted); font-size: 20px; }
+    .bp-unit { font-size: 11px; color: var(--text-muted); margin-left: 2px; }
+    .entry-pulse { font-size: 13px; color: var(--text-muted); margin-bottom: 4px; }
+    .entry-pulse span { color: var(--warn); }
+    .entry-comment { font-size: 12px; color: var(--text-muted); font-style: italic; border-top: 1px solid var(--border); margin-top: 6px; padding-top: 6px; }
 
-    .loading { text-align: center; padding: 20px; color: var(--text-muted); }
-    .error-msg { background: rgba(248,81,73,0.1); border: 1px solid rgba(248,81,73,0.3); color: var(--warn); padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 12px; }
-    .success-msg { background: rgba(63,185,80,0.1); border: 1px solid rgba(63,185,80,0.3); color: var(--accent2); padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 12px; }
+    .bp-status { font-size: 10px; letter-spacing: 0.5px; padding: 2px 7px; border-radius: 20px; display: inline-block; }
+    .bp-low     { background: rgba(88,166,255,0.12); color: #58a6ff; }
+    .bp-ideal   { background: rgba(63,185,80,0.15);  color: #3fb950; }
+    .bp-normal  { background: rgba(63,185,80,0.10);  color: #56d364; }
+    .bp-elevated{ background: rgba(210,153,34,0.15); color: #d29922; }
+    .bp-high1   { background: rgba(248,81,73,0.12);  color: #f85149; }
+    .bp-high2   { background: rgba(248,81,73,0.20);  color: #ff6b6b; }
+    .bp-crisis  { background: rgba(248,81,73,0.30);  color: #fff; font-weight:600; animation: pulse-warn 1s infinite; }
+    @keyframes pulse-warn { 0%,100%{opacity:1} 50%{opacity:0.6} }
 
     .empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); }
     .empty-state .emoji { font-size: 48px; display: block; margin-bottom: 12px; }
     .empty-state p { font-size: 13px; }
 
-    .btn-primary {
-      width: 100%; padding: 12px; background: var(--accent); color: #0d1117;
-      border: none; border-radius: 10px; font-family: var(--mono);
-      font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s;
+    .chart-controls { display: flex; gap: 6px; margin-bottom: 16px; overflow-x: auto; }
+    .chart-controls::-webkit-scrollbar { display: none; }
+    .range-chip {
+      flex-shrink: 0; padding: 6px 12px; border-radius: 20px; font-size: 11px;
+      cursor: pointer; border: 1px solid var(--border); background: var(--surface); color: var(--text-muted); transition: all 0.15s;
     }
-    .btn-primary:active { transform: scale(0.98); }
+    .range-chip.active { background: var(--surface2); border-color: var(--accent); color: var(--accent); }
 
-    .data-table {
-      width: 100%; border-collapse: collapse; font-size: 11px;
-    }
-    .data-table th { background: var(--surface2); padding: 10px; text-align: left; color: var(--text-muted); border-bottom: 1px solid var(--border); font-weight: 500; }
-    .data-table td { padding: 10px; border-bottom: 1px solid var(--border); }
-    .data-table tr:hover { background: rgba(88,166,255,0.05); }
+    .chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 16px; }
+    .chart-card h3 { font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 14px; }
+    .chart-wrap { position: relative; height: 200px; }
+
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px; text-align: center; }
+    .stat-label { font-size: 9px; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
+    .stat-value { font-size: 22px; color: var(--text); letter-spacing: -0.5px; line-height: 1; }
+    .stat-unit { font-size: 9px; color: var(--text-muted); }
+
+    .legend { display: flex; gap: 12px; margin-top: 10px; flex-wrap: wrap; }
+    .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-muted); }
+    .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
 
     .toast {
-      position: fixed; bottom: 20px; left: 50%;
+      position: fixed; bottom: 80px; left: 50%;
       transform: translateX(-50%) translateY(20px);
       background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 8px; padding: 12px 16px; font-size: 12px;
+      border-radius: 8px; padding: 10px 16px; font-size: 13px;
       opacity: 0; transition: all 0.3s; z-index: 999; white-space: nowrap;
     }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    .install-banner {
+      display: none; position: fixed; bottom: 0; left: 0; right: 0;
+      background: var(--surface2); border-top: 1px solid var(--border);
+      padding: 12px 16px; z-index: 200; align-items: center; gap: 10px;
+    }
+    .install-banner.show { display: flex; }
+    .install-banner p { flex: 1; font-size: 13px; color: var(--text-muted); }
+    .install-btn { background: var(--accent); color: #0d1117; border: none; border-radius: 8px; padding: 8px 14px; font-family: var(--mono); font-size: 12px; cursor: pointer; font-weight: 500; }
+    .close-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 16px; }
+    .btn-secondary { width:100%; padding:11px; background:var(--surface2); color:var(--text); border:1px solid var(--border); border-radius:10px; font-family:var(--mono); font-size:12px; cursor:pointer; transition:all 0.15s; margin-bottom:0; text-align:center; display:block; }
+    .btn-secondary:active { background:var(--border); }
   </style>
 </head>
 <body>
 
-<header>🫀 Pritisak + Samsung Health</header>
-
-<nav>
-  <div class="tab active" data-page="pressures" onclick="switchPage('pressures')">📊 Pritisak</div>
-  <div class="tab" data-page="samsung" onclick="switchPage('samsung')">📱 Samsung Health</div>
-</nav>
-
-<div id="toast" class="toast"></div>
-
-<!-- PRESSURES PAGE (Pritisak) -->
-<div id="pressures-page" class="page active">
-  <div class="empty-state">
-    <div class="emoji">🫀</div>
-    <p>Dodaj mjerenja pritiska<br>kliknuvši na dugme ispod</p>
+<header>
+  <div class="header-title" style="flex-direction:column;align-items:flex-start;gap:2px;"><div style="display:flex;align-items:center;gap:8px;"><span>🫀</span> Pritisak</div><span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);">v6.1.7</span></div>
+  <div style="display:flex;gap:8px;">
+    <button class="icon-btn" onclick="openImportModal()" title="Import backup">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    </button>
+    <button class="icon-btn" onclick="openExportModal()" title="Export backup">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    </button>
+    <button class="icon-btn" onclick="openShareModal()" title="Generiši izvještaj">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+    </button>
+    <button class="icon-btn" onclick="openHelpModal()" title="Opsezi pritiska">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    </button>
+    <button class="icon-btn" onclick="openDeleteModal()" title="Brisanje podataka">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+    </button>
   </div>
-  <button class="btn-primary" onclick="switchPage('samsung')" style="position: fixed; bottom: 30px; left: 20px; right: 20px; width: calc(100% - 40px);">📊 Dodaj mjerenje ili idi na Samsung Health</button>
+</header>
+
+<!-- Hidden file input for import -->
+<input type="file" id="csv-import-input" accept=".json" style="display:none" onchange="previewImport(event)" />
+
+<!-- IMPORT MODAL -->
+<div id="import-modal" onclick="if(event.target===this)closeImportModal()" style="display:none; position:fixed; inset:0; z-index:500; background:rgba(0,0,0,0.7); padding:20px; align-items:flex-end;">
+  <div style="background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:20px; width:100%; max-width:480px; margin:0 auto;">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
+      <div style="font-family:var(--serif); font-size:18px;">⬆️ Import backup</div>
+      <button onclick="closeImportModal()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);width:32px;height:32px;border-radius:8px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
+    </div>
+    <div style="font-size:12px; color:var(--text-muted); margin-bottom:16px; line-height:1.6;">Odaberi JSON fajl koji si prethodno exportovao. Odaberi JSON fajl koji si prethodno exportovao.</div>
+
+    <div id="import-drop-zone" style="border:2px dashed var(--border); border-radius:10px; padding:24px 16px; text-align:center; margin-bottom:14px; cursor:pointer; transition:border-color 0.2s;" id="import-drop-zone-inner" onclick="document.getElementById('csv-import-input').click()">
+      <div style="font-size:28px; margin-bottom:8px;">📂</div>
+      <div style="font-size:13px; color:var(--text);">Tapni da odabereš fajl</div>
+      <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">Podržani format: .json</div>
+      <div id="import-filename" style="font-size:12px; color:var(--accent); margin-top:8px; display:none;"></div>
+    </div>
+
+    <div id="import-preview" style="display:none; background:rgba(63,185,80,0.08); border:1px solid rgba(63,185,80,0.2); border-radius:8px; padding:10px 14px; font-size:12px; color:var(--accent2); margin-bottom:14px;"></div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+      <button class="btn-secondary" onclick="closeImportModal()">Odustani</button>
+      <button id="import-confirm-btn" class="btn-primary" style="margin:0; opacity:0.4; pointer-events:none;" onclick="importJSON()">📥 Uvezi</button>
+    </div>
+  </div>
 </div>
 
-<!-- SAMSUNG HEALTH PAGE -->
-<div id="samsung-page" class="page">
-  <div class="samsung-upload-box" id="upload-box" onclick="document.getElementById('samsung-zip').click()">
-    <div class="upload-icon">📱</div>
-    <div class="upload-text">Klikni da uploaduješ Samsung Health ZIP</div>
-    <div class="upload-hint">ili prevuci ZIP fajl</div>
-    <input type="file" id="samsung-zip" accept=".zip" onchange="handleZipUpload(event)" />
+<!-- EXPORT MODAL -->
+<div id="export-modal" onclick="if(event.target===this)closeExportModal()" style="display:none; position:fixed; inset:0; z-index:500; background:rgba(0,0,0,0.7); padding:20px; align-items:flex-end;">
+  <div style="background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:20px; width:100%; max-width:480px; margin:0 auto;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+      <div style="font-family:var(--serif); font-size:18px;">⬇️ Export</div>
+      <button onclick="closeExportModal()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);width:32px;height:32px;border-radius:8px;font-size:16px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;">✕</button>
+    </div>
+    <div style="font-size:12px; color:var(--text-muted); margin-bottom:16px;">Exportovaće se sva mjerenja kao JSON backup fajl.</div>
+    <div id="export-count" style="font-size:13px; color:var(--accent); margin-bottom:16px;"></div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+      <button class="btn-secondary" onclick="closeExportModal()">Odustani</button>
+      <button class="btn-primary" style="margin:0;" onclick="doExportJSON()">💾 Sačuvaj JSON</button>
+    </div>
   </div>
+</div>
 
-  <div id="samsung-content" style="display: none;">
-    <div id="stats-container"></div>
-    <div id="data-types" class="data-types-filter"></div>
-    <div id="charts-container"></div>
+<!-- SHARE MODAL -->
+<div id="share-modal" onclick="if(event.target===this)closeShareModal()" style="display:none; position:fixed; inset:0; z-index:500; background:rgba(0,0,0,0.7); padding:16px; align-items:center; overflow-y:auto;">
+  <div style="background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:20px; width:100%; max-width:480px; margin:auto;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <div style="font-family:var(--serif); font-size:18px;">📤 Izvještaj</div>
+      <button onclick="closeShareModal()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);width:32px;height:32px;border-radius:8px;font-size:16px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;">✕</button>
+    </div>
+
+    <div style="font-size:11px; letter-spacing:0.5px; text-transform:uppercase; color:var(--text-muted); margin-bottom:8px;">Period</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px;">
+      <div>
+        <label style="font-size:10px; color:var(--text-muted); display:block; margin-bottom:4px;">Od</label>
+        <input type="date" id="share-from" style="width:100%; background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:8px 10px; font-family:var(--mono); font-size:13px; color:var(--text); outline:none;" />
+      </div>
+      <div>
+        <label style="font-size:10px; color:var(--text-muted); display:block; margin-bottom:4px;">Do</label>
+        <input type="date" id="share-to" style="width:100%; background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:8px 10px; font-family:var(--mono); font-size:13px; color:var(--text); outline:none;" />
+      </div>
+    </div>
+
+    <div style="font-size:11px; letter-spacing:0.5px; text-transform:uppercase; color:var(--text-muted); margin-bottom:8px;">Mjerenja</div>
+    <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:16px;">
+      <div class="filter-chip active" id="stag-sve" onclick="setShareTag('sve')">Sve</div>
+      <div class="filter-chip" id="stag-jutarnje" onclick="setShareTag('jutarnje')">🌅 Jutarnje</div>
+      <div class="filter-chip" id="stag-vecernje" onclick="setShareTag('vecernje')">🌙 Večernje</div>
+      <div class="filter-chip" id="stag-ostalo" onclick="setShareTag('ostalo')">🕐 Ostalo</div>
+    </div>
+
+    <div id="share-preview" style="font-size:12px; color:var(--accent); margin-bottom:16px;"></div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+      <button class="btn-secondary" onclick="closeShareModal()">Odustani</button>
+      <button class="btn-primary" style="margin:0;" onclick="generateReport()">📊 Generiši</button>
+    </div>
   </div>
+</div>
 
-  <div id="error-container"></div>
+<!-- HELP MODAL -->
+<div id="help-modal" onclick="if(event.target===this)closeHelpModal()" style="display:none; position:fixed; inset:0; z-index:500; background:rgba(0,0,0,0.7); padding:16px; align-items:center; overflow-y:auto;">
+  <div style="background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:20px; width:100%; max-width:480px; margin:auto;">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
+      <div style="font-family:var(--serif); font-size:20px;">ℹ️ Opsezi krvnog pritiska</div>
+      <button onclick="closeHelpModal()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);width:32px;height:32px;border-radius:8px;font-size:16px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;">✕</button>
+    </div>
+    <div style="font-size:11px; color:var(--text-muted); margin-bottom:18px;">Opšte smjernice za odrasle osobe (mmHg)</div>
+
+    <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:18px;">
+      <div style="display:grid; grid-template-columns:28px 1fr auto; align-items:center; gap:10px; background:rgba(88,166,255,0.08); border:1px solid rgba(88,166,255,0.2); border-radius:10px; padding:10px 12px;">
+        <div style="width:12px;height:12px;border-radius:50%;background:#58a6ff;margin:auto;"></div>
+        <div><div style="font-size:13px;color:var(--text);">Nizak pritisak</div><div style="font-size:11px;color:var(--text-muted);">Hipotenzija — problem samo uz simptome</div></div>
+        <div style="font-size:12px;color:#58a6ff;text-align:right;white-space:nowrap;">&lt;90 / &lt;60</div>
+      </div>
+      <div style="display:grid; grid-template-columns:28px 1fr auto; align-items:center; gap:10px; background:rgba(63,185,80,0.10); border:1px solid rgba(63,185,80,0.25); border-radius:10px; padding:10px 12px;">
+        <div style="width:12px;height:12px;border-radius:50%;background:#3fb950;margin:auto;"></div>
+        <div><div style="font-size:13px;color:var(--text);">Idealan</div><div style="font-size:11px;color:var(--text-muted);">Optimalne vrijednosti za zdravu odraslu osobu</div></div>
+        <div style="font-size:12px;color:#3fb950;text-align:right;white-space:nowrap;">&lt;120 / &lt;80</div>
+      </div>
+      <div style="display:grid; grid-template-columns:28px 1fr auto; align-items:center; gap:10px; background:rgba(63,185,80,0.07); border:1px solid rgba(63,185,80,0.15); border-radius:10px; padding:10px 12px;">
+        <div style="width:12px;height:12px;border-radius:50%;background:#56d364;margin:auto;"></div>
+        <div><div style="font-size:13px;color:var(--text);">Normalan</div><div style="font-size:11px;color:var(--text-muted);">Prihvatljive vrijednosti, bez zabrinutosti</div></div>
+        <div style="font-size:12px;color:#56d364;text-align:right;white-space:nowrap;">120–129 / 80–84</div>
+      </div>
+      <div style="display:grid; grid-template-columns:28px 1fr auto; align-items:center; gap:10px; background:rgba(210,153,34,0.10); border:1px solid rgba(210,153,34,0.25); border-radius:10px; padding:10px 12px;">
+        <div style="width:12px;height:12px;border-radius:50%;background:#d29922;margin:auto;"></div>
+        <div><div style="font-size:13px;color:var(--text);">Visoko normalan</div><div style="font-size:11px;color:var(--text-muted);">Pred-hipertenzija — vrijedi pratiti</div></div>
+        <div style="font-size:12px;color:#d29922;text-align:right;white-space:nowrap;">130–139 / 85–89</div>
+      </div>
+      <div style="display:grid; grid-template-columns:28px 1fr auto; align-items:center; gap:10px; background:rgba(248,81,73,0.08); border:1px solid rgba(248,81,73,0.2); border-radius:10px; padding:10px 12px;">
+        <div style="width:12px;height:12px;border-radius:50%;background:#f85149;margin:auto;"></div>
+        <div><div style="font-size:13px;color:var(--text);">Visok I — blaga hipertenzija</div><div style="font-size:11px;color:var(--text-muted);">Konzultacija s ljekarom preporučena</div></div>
+        <div style="font-size:12px;color:#f85149;text-align:right;white-space:nowrap;">140–159 / 90–99</div>
+      </div>
+      <div style="display:grid; grid-template-columns:28px 1fr auto; align-items:center; gap:10px; background:rgba(248,81,73,0.14); border:1px solid rgba(248,81,73,0.3); border-radius:10px; padding:10px 12px;">
+        <div style="width:12px;height:12px;border-radius:50%;background:#ff6b6b;margin:auto;"></div>
+        <div><div style="font-size:13px;color:var(--text);">Visok II — umjerena hipertenzija</div><div style="font-size:11px;color:var(--text-muted);">Potrebna ljekarska pažnja</div></div>
+        <div style="font-size:12px;color:#ff6b6b;text-align:right;white-space:nowrap;">160–179 / 100–109</div>
+      </div>
+      <div style="display:grid; grid-template-columns:28px 1fr auto; align-items:center; gap:10px; background:rgba(248,81,73,0.25); border:1px solid rgba(248,81,73,0.5); border-radius:10px; padding:10px 12px;">
+        <div style="width:12px;height:12px;border-radius:50%;background:#fff;margin:auto;"></div>
+        <div><div style="font-size:13px;color:#fff;font-weight:600;">⚠️ Hipertenzivna kriza</div><div style="font-size:11px;color:#ffb3b0;">Hitna medicinska pomoć odmah!</div></div>
+        <div style="font-size:12px;color:#fff;text-align:right;white-space:nowrap;">&gt;180 / &gt;110</div>
+      </div>
+    </div>
+
+    <div style="background:rgba(88,166,255,0.06); border:1px solid rgba(88,166,255,0.15); border-radius:10px; padding:12px; font-size:12px; color:var(--text-muted); line-height:1.6; margin-bottom:16px;">
+      💡 <strong style="color:var(--text);">Napomena:</strong> Jedno mjerenje ne znači dijagnozu. Pritisak varira u zavisnosti od stresa, fizičke aktivnosti i doba dana. Ako su vrijednosti često van normalnog opsega — konsultuj se s ljekarom.
+    </div>
+
+    <div style="font-family:var(--serif); font-size:16px; margin-bottom:4px; margin-top:6px;">Puls (srčana frekvencija)</div>
+    <div style="font-size:11px; color:var(--text-muted); margin-bottom:12px;">Opšte smjernice za odrasle osobe u mirovanju (bpm)</div>
+
+    <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:18px;">
+      <div style="display:grid; grid-template-columns:28px 1fr auto; align-items:center; gap:10px; background:rgba(88,166,255,0.08); border:1px solid rgba(88,166,255,0.2); border-radius:10px; padding:10px 12px;">
+        <div style="width:12px;height:12px;border-radius:50%;background:#58a6ff;margin:auto;"></div>
+        <div><div style="font-size:13px;color:var(--text);">Nizak puls (bradikardija)</div><div style="font-size:11px;color:var(--text-muted);">Problem samo uz simptome (vrtoglavica, umor)</div></div>
+        <div style="font-size:12px;color:#58a6ff;text-align:right;white-space:nowrap;">&lt; 60</div>
+      </div>
+      <div style="display:grid; grid-template-columns:28px 1fr auto; align-items:center; gap:10px; background:rgba(63,185,80,0.10); border:1px solid rgba(63,185,80,0.25); border-radius:10px; padding:10px 12px;">
+        <div style="width:12px;height:12px;border-radius:50%;background:#3fb950;margin:auto;"></div>
+        <div><div style="font-size:13px;color:var(--text);">Normalan</div><div style="font-size:11px;color:var(--text-muted);">Zdrava srčana frekvencija u mirovanju</div></div>
+        <div style="font-size:12px;color:#3fb950;text-align:right;white-space:nowrap;">60 – 99</div>
+      </div>
+      <div style="display:grid; grid-template-columns:28px 1fr auto; align-items:center; gap:10px; background:rgba(210,153,34,0.10); border:1px solid rgba(210,153,34,0.25); border-radius:10px; padding:10px 12px;">
+        <div style="width:12px;height:12px;border-radius:50%;background:#d29922;margin:auto;"></div>
+        <div><div style="font-size:13px;color:var(--text);">Umjereno visok (tahikardija)</div><div style="font-size:11px;color:var(--text-muted);">Može biti od stresa, kafe, napora — prati trend</div></div>
+        <div style="font-size:12px;color:#d29922;text-align:right;white-space:nowrap;">100 – 119</div>
+      </div>
+      <div style="display:grid; grid-template-columns:28px 1fr auto; align-items:center; gap:10px; background:rgba(248,81,73,0.10); border:1px solid rgba(248,81,73,0.25); border-radius:10px; padding:10px 12px;">
+        <div style="width:12px;height:12px;border-radius:50%;background:#f85149;margin:auto;"></div>
+        <div><div style="font-size:13px;color:var(--text);">Visok puls</div><div style="font-size:11px;color:var(--text-muted);">Konzultacija s ljekarom preporučena</div></div>
+        <div style="font-size:12px;color:#f85149;text-align:right;white-space:nowrap;">120+</div>
+      </div>
+    </div>
+
+    <button class="btn-primary" onclick="closeHelpModal()">Razumijem</button>
+  </div>
+</div>
+
+<!-- DELETE MODAL -->
+<div id="delete-modal" onclick="if(event.target===this)closeDeleteModal()" style="display:none; position:fixed; inset:0; z-index:500; background:rgba(0,0,0,0.7); padding:20px; align-items:flex-end;">
+  <div style="background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:20px; width:100%; max-width:480px; margin:0 auto;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+      <div style="font-family:var(--serif); font-size:18px;">Brisanje podataka</div>
+      <button onclick="closeDeleteModal()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);width:32px;height:32px;border-radius:8px;font-size:16px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;">✕</button>
+    </div>
+    <div style="font-size:12px; color:var(--text-muted); margin-bottom:20px;">Odaberi šta želiš obrisati. Ova akcija je nepovratna!</div>
+
+    <div id="del-select">
+      <div style="margin-bottom:10px;">
+        <div style="font-size:11px; letter-spacing:0.5px; text-transform:uppercase; color:var(--text-muted); margin-bottom:8px;">Obriši po periodu</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
+          <button class="btn-secondary" onclick="askDelete('days',7)">Zadnjih 7 dana</button>
+          <button class="btn-secondary" onclick="askDelete('days',30)">Zadnjih 30 dana</button>
+          <button class="btn-secondary" onclick="askDelete('days',90)">Zadnja 3 mj.</button>
+          <button class="btn-secondary" onclick="askDelete('days',365)">Zadnja godina</button>
+        </div>
+      </div>
+      <div style="margin-bottom:16px;">
+        <div style="font-size:11px; letter-spacing:0.5px; text-transform:uppercase; color:var(--text-muted); margin-bottom:8px;">Obriši sve</div>
+        <button style="width:100%; padding:12px; background:rgba(248,81,73,0.12); color:var(--warn); border:1px solid rgba(248,81,73,0.3); border-radius:10px; font-family:var(--mono); font-size:13px; cursor:pointer;" onclick="askDelete('all')">⚠️ Obriši cjelokupnu istoriju</button>
+      </div>
+      <button class="btn-secondary" onclick="closeDeleteModal()">Odustani</button>
+    </div>
+    <div id="del-confirm" style="display:none;">
+      <div id="del-confirm-msg" style="font-size:14px; color:var(--text); margin-bottom:20px; line-height:1.5;"></div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+        <button class="btn-secondary" onclick="document.getElementById('del-confirm').style.display='none';document.getElementById('del-select').style.display='block';">Odustani</button>
+        <button onclick="doDelete()" style="padding:12px; background:rgba(248,81,73,0.15); color:var(--warn); border:1px solid rgba(248,81,73,0.4); border-radius:10px; font-family:var(--mono); font-size:13px; cursor:pointer; font-weight:600;">🗑️ Potvrdi</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div id="edit-modal" onclick="if(event.target===this)closeEditModal()" style="display:none; position:fixed; inset:0; z-index:500; background:rgba(0,0,0,0.7); padding:20px; align-items:flex-end; overflow-y:auto;">
+  <div style="background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:20px; width:100%; max-width:480px; margin:0 auto;">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+      <div style="font-family:var(--serif); font-size:18px;">✏️ Uredi mjerenje</div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span class="tag-preview" id="edit-tag-display">—</span>
+        <button onclick="closeEditModal()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);width:32px;height:32px;border-radius:8px;font-size:16px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;">✕</button>
+      </div>
+    </div>
+
+    <div class="datetime-row" style="margin-bottom:14px; flex-direction:column; align-items:stretch; gap:0; padding:14px 16px;">
+      <input type="date" id="edit-date" style="width:100%; font-size:22px; padding-bottom:8px; border-bottom:1px solid var(--border);" />
+      <input type="time" id="edit-time" style="width:100%; font-size:28px; font-weight:500; letter-spacing:2px; padding-top:8px;" />
+    </div>
+
+    <div class="bp-grid" style="margin-bottom:14px;">
+      <div class="input-group">
+        <label>Sistolni</label>
+        <input type="number" id="edit-sys" min="60" max="250" inputmode="numeric" />
+        <div class="unit">mmHg</div>
+      </div>
+      <div class="input-group">
+        <label>Dijastolni</label>
+        <input type="number" id="edit-dia" min="40" max="150" inputmode="numeric" />
+        <div class="unit">mmHg</div>
+      </div>
+      <div class="input-group">
+        <label>Puls</label>
+        <input type="number" id="edit-pulse" min="30" max="250" inputmode="numeric" />
+        <div class="unit">bpm</div>
+      </div>
+    </div>
+
+    <textarea class="comment-input" id="edit-comment" placeholder="Komentar (opcionalno)..." style="margin-bottom:10px;"></textarea>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:4px;">
+      <button class="btn-secondary" onclick="closeEditModal()">Odustani</button>
+      <button class="btn-primary" style="margin:0;" onclick="saveEdit()">💾 Sačuvaj</button>
+    </div>
+  </div>
+</div>
+
+
+<nav>
+  <div class="tab active" onclick="switchTab('unos', this)"><span class="tab-icon">➕</span>Unos</div>
+  <div class="tab" onclick="switchTab('istorija', this)"><span class="tab-icon">📋</span>Istorija</div>
+  <div class="tab" onclick="switchTab('grafik', this)"><span class="tab-icon">📈</span>Grafik</div>
+</nav>
+
+<!-- UNOS -->
+<div id="page-unos" class="page active">
+  <div class="form-card">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+      <h2 style="margin-bottom:0;">Novo mjerenje</h2>
+      <span class="tag-preview" id="tag-display">—</span>
+    </div>
+    <div class="datetime-row" style="flex-direction:column; align-items:stretch; gap:0; padding:14px 16px; position:relative;">
+      <input type="date" id="inp-date" style="width:100%; font-size:22px; padding-bottom:8px;" />
+      <input type="time" id="inp-time" style="width:100%; font-size:28px; font-weight:500; letter-spacing:2px;" />
+      <button onclick="setNow()" title="Postavi trenutno vrijeme" style="position:absolute; top:10px; right:12px; background:rgba(56,182,255,0.12); border:1px solid rgba(56,182,255,0.35); color:#38b6ff; border-radius:8px; padding:5px 12px; font-size:12px; font-weight:600; letter-spacing:1px; cursor:pointer; font-family:inherit; display:flex; align-items:center; gap:5px;">⏱ SADA</button>
+    </div>
+    <div class="bp-grid">
+      <div class="input-group">
+        <label>Sistolni</label>
+        <input type="number" id="inp-sys" placeholder="120" min="60" max="250" inputmode="numeric" />
+        <div class="unit">mmHg</div>
+      </div>
+      <div class="input-group">
+        <label>Dijastolni</label>
+        <input type="number" id="inp-dia" placeholder="80" min="40" max="150" inputmode="numeric" />
+        <div class="unit">mmHg</div>
+      </div>
+      <div class="input-group">
+        <label>Puls</label>
+        <input type="number" id="inp-pulse" placeholder="72" min="30" max="250" inputmode="numeric" />
+        <div class="unit">bpm</div>
+      </div>
+    </div>
+    <textarea class="comment-input" id="inp-comment" placeholder="Komentar (opcionalno)..."></textarea>
+    <button class="btn-primary" onclick="saveEntry()">💾 Sačuvaj mjerenje</button>
+    <div class="success-flash" id="success-flash">✅ Mjerenje sačuvano!</div>
+  </div>
+  <div style="padding:4px 4px 8px; display:flex; flex-direction:column; gap:8px;">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--tag-morning)"></div> 🌅 Jutarnje · 06–10h</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--tag-evening)"></div> 🌙 Večernje · 20–24h</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--tag-other)"></div> 🕐 Ostalo</div>
+  </div>
+</div>
+
+<!-- ISTORIJA -->
+<div id="page-istorija" class="page">
+  <div style="display:flex; gap:6px; margin-bottom:12px; overflow-x:auto; padding-bottom:2px; -webkit-overflow-scrolling:touch; scrollbar-width:none;">
+    <div class="filter-chip active" style="flex-shrink:0;" onclick="setFilter('sve', this)">Sve</div>
+    <div class="filter-chip" style="flex-shrink:0;" onclick="setFilter('jutarnje', this)">🌅 Jutarnje</div>
+    <div class="filter-chip" style="flex-shrink:0;" onclick="setFilter('vecernje', this)">🌙 Večernje</div>
+    <div class="filter-chip" style="flex-shrink:0;" onclick="setFilter('ostalo', this)">🕐 Ostalo</div>
+    <button id="sort-btn" onclick="toggleSort()" style="flex-shrink:0; padding:6px 12px; border-radius:20px; font-size:11px; letter-spacing:0.5px; cursor:pointer; border:1px solid var(--border); background:var(--surface); color:var(--text-muted); white-space:nowrap; font-family:var(--mono);">↓ Noviji</button>
+  </div>
+  <div id="entries-list"></div>
+</div>
+
+<!-- GRAFIK -->
+<div id="page-grafik" class="page">
+  <div class="chart-controls">
+    <div class="range-chip active" onclick="setRange(7, this)">7 dana</div>
+    <div class="range-chip" onclick="setRange(14, this)">14 dana</div>
+    <div class="range-chip" onclick="setRange(30, this)">30 dana</div>
+    <div class="range-chip" onclick="setRange(90, this)">3 mj.</div>
+    <div class="range-chip" onclick="setRange(0, this)">Sve</div>
+  </div>
+  <div style="display:flex; gap:6px; margin-bottom:14px; overflow-x:auto; padding-bottom:2px; -webkit-overflow-scrolling:touch; scrollbar-width:none;">
+    <div class="filter-chip active" style="flex-shrink:0;" onclick="setChartTag('sve', this)">Sve</div>
+    <div class="filter-chip" style="flex-shrink:0;" onclick="setChartTag('jutarnje', this)">🌅 Jutarnje</div>
+    <div class="filter-chip" style="flex-shrink:0;" onclick="setChartTag('vecernje', this)">🌙 Večernje</div>
+    <div class="filter-chip" style="flex-shrink:0;" onclick="setChartTag('ostalo', this)">🕐 Ostalo</div>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-label">Prosjek SIS</div><div class="stat-value" id="avg-sys">—</div><div class="stat-unit">mmHg</div></div>
+    <div class="stat-card"><div class="stat-label">Prosjek DIA</div><div class="stat-value" id="avg-dia">—</div><div class="stat-unit">mmHg</div></div>
+    <div class="stat-card"><div class="stat-label">Prosjek Puls</div><div class="stat-value" id="avg-pulse">—</div><div class="stat-unit">bpm</div></div>
+  </div>
+  <div class="chart-card">
+    <h3>Pritisak (mmHg)</h3>
+    <div class="chart-wrap"><canvas id="bp-chart"></canvas></div>
+    <div class="legend" style="margin-top:12px;">
+      <div class="legend-item"><div class="legend-dot" style="background:#58a6ff"></div> Sistolni</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#3fb950"></div> Dijastolni</div>
+    </div>
+  </div>
+  <div class="chart-card">
+    <h3>Puls (bpm)</h3>
+    <div class="chart-wrap"><canvas id="pulse-chart"></canvas></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="install-banner" id="install-banner">
+  <p>📲 Instaliraj app na početni ekran</p>
+  <button class="install-btn" onclick="installPWA()">Instaliraj</button>
+  <button class="close-btn" onclick="document.getElementById('install-banner').classList.remove('show')">✕</button>
 </div>
 
 <script>
-// ─── SAMSUNG HEALTH PARSER ───────────────────────────────────────
-const Samsung = {
-  data: {},
-  rawFiles: {},
+// ── DATA ──────────────────────────────────────────────────
+const STORE_KEY = 'pritisak_v1';
+const load = () => { try { return JSON.parse(localStorage.getItem(STORE_KEY)||'[]'); } catch { return []; } };
+const save = d => localStorage.setItem(STORE_KEY, JSON.stringify(d));
 
-  async parseZip(zipFile) {
-    try {
-      const zip = new JSZip();
-      const contents = await zip.loadAsync(zipFile);
-      this.data = {};
-      this.rawFiles = {};
+function getTag(h) {
+  if (h >= 6 && h < 10) return 'jutarnje';
+  if (h >= 20 && h < 24) return 'vecernje';
+  return 'ostalo';
+}
+function tagLabel(t) { return {jutarnje:'🌅 Jutarnje', vecernje:'🌙 Večernje', ostalo:'🕐 Ostalo'}[t]||t; }
+function bpStatus(s,d) {
+  if (s<90||d<60)            return {label:'Nizak',      cls:'bp-low'};
+  if (s<120&&d<80)           return {label:'Idealan',    cls:'bp-ideal'};
+  if (s<=129&&d<=84)         return {label:'Normalan',   cls:'bp-normal'};
+  if (s<=139&&d<=89)         return {label:'Vis. norm.', cls:'bp-elevated'};
+  if (s<=159&&d<=99)         return {label:'Visok I',    cls:'bp-high1'};
+  if (s<=179&&d<=109)        return {label:'Visok II',   cls:'bp-high2'};
+  return                            {label:'⚠️ Kriza',   cls:'bp-crisis'};
+}
+function fmtDate(dt) {
+  const d = new Date(dt);
+  const months = ['jan','feb','mar','apr','maj','jun','jul','aug','sep','okt','nov','dec'];
+  return d.getDate() + '. ' + months[d.getMonth()] + ' ' + d.getFullYear() + '.';
+}
+function fmtTime(dt) {
+  const d = new Date(dt);
+  return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+}
 
-      for (const [filename, file] of Object.entries(contents.files)) {
-        if (!file.dir) {
-          const content = await file.async('string');
-          this.rawFiles[filename] = content;
+// ── FORM ──────────────────────────────────────────────────
+function setNow() {
+  const n = new Date();
+  document.getElementById('inp-date').value = n.toISOString().slice(0,10);
+  document.getElementById('inp-time').value = n.toTimeString().slice(0,5);
+  updateTag();
+}
 
-          // Parse XML files
-          if (filename.endsWith('.xml')) {
-            this.parseXmlFile(filename, content);
-          }
-          // Parse CSV files
-          else if (filename.endsWith('.csv')) {
-            this.parseCsvFile(filename, content);
-          }
-        }
-      }
+function updateTag() {
+  const t = document.getElementById('inp-time').value;
+  if (!t) return;
+  const tag = getTag(parseInt(t.split(':')[0]));
+  const el = document.getElementById('tag-display');
+  el.textContent = tagLabel(tag);
+  el.className = 'tag-preview tag-' + tag;
+}
 
-      return this.data;
-    } catch (err) {
-      throw new Error('ZIP parsing failed: ' + err.message);
+document.getElementById('inp-time').addEventListener('change', updateTag);
+document.getElementById('inp-date').addEventListener('change', updateTag);
+
+function saveEntry() {
+  const date = document.getElementById('inp-date').value;
+  const time = document.getElementById('inp-time').value;
+  const sys  = parseInt(document.getElementById('inp-sys').value);
+  const dia  = parseInt(document.getElementById('inp-dia').value);
+  const pulse= parseInt(document.getElementById('inp-pulse').value);
+  const comment = document.getElementById('inp-comment').value.trim();
+
+  if (!date||!time) { showToast('⚠️ Unesite datum i vrijeme'); return; }
+  if (!sys||!dia||sys<60||dia<40) { showToast('⚠️ Unesite ispravne vrijednosti'); return; }
+
+  const dt = new Date(date+'T'+time);
+  const entry = { id: Date.now(), dt: dt.toISOString(), sys, dia, pulse: isNaN(pulse)?null:pulse, comment, tag: getTag(dt.getHours()) };
+
+  const entries = load();
+  entries.unshift(entry);
+  save(entries);
+
+  document.getElementById('inp-sys').value = '';
+  document.getElementById('inp-dia').value = '';
+  document.getElementById('inp-pulse').value = '';
+  document.getElementById('inp-comment').value = '';
+  setNow();
+
+  const f = document.getElementById('success-flash');
+  f.classList.add('show');
+  setTimeout(()=>f.classList.remove('show'), 2500);
+
+  renderHistory(); renderCharts();
+}
+
+// ── HISTORY ───────────────────────────────────────────────
+let currentFilter = 'sve';
+
+function setFilter(f, el) {
+  currentFilter = f;
+  document.querySelectorAll('#page-istorija .filter-chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  renderHistory();
+}
+
+// Track which year/month groups are expanded: key = "YYYY" or "YYYY-MM"
+const expandedGroups = new Set();
+
+function getLatestMonthKey(entries) {
+  if (!entries.length) return null;
+  const d = new Date(entries[0].dt);
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+}
+
+function toggleGroup(key, el) {
+  if (expandedGroups.has(key)) {
+    expandedGroups.delete(key);
+    el.setAttribute('data-open', 'false');
+  } else {
+    expandedGroups.add(key);
+    el.setAttribute('data-open', 'true');
+  }
+  const content = document.getElementById('grp-' + key);
+  if (content) content.style.display = expandedGroups.has(key) ? 'block' : 'none';
+  const arrow = el.querySelector('.grp-arrow');
+  if (arrow) arrow.style.transform = expandedGroups.has(key) ? 'rotate(90deg)' : 'rotate(0deg)';
+}
+
+function toggleYear(year) {
+  const key = String(year);
+  const el = document.getElementById('yhdr-' + key);
+  toggleGroup(key, el);
+}
+
+function toggleMonth(year, month) {
+  const key = year + '-' + String(month).padStart(2,'0');
+  const el = document.getElementById('mhdr-' + key);
+  toggleGroup(key, el);
+}
+
+const MONTHS_BS = ['Januar','Februar','Mart','April','Maj','Juni','Juli','August','Septembar','Oktobar','Novembar','Decembar'];
+
+function renderHistory() {
+  const entries = load();
+  let filtered = currentFilter==='sve' ? [...entries] : entries.filter(e=>e.tag===currentFilter);
+  filtered.sort((a,b) => sortAsc ? new Date(a.dt)-new Date(b.dt) : new Date(b.dt)-new Date(a.dt));
+  const c = document.getElementById('entries-list');
+
+  if (!filtered.length) {
+    c.innerHTML = `<div class="empty-state"><span class="emoji">📭</span><p>Nema mjerenja.<br>Dodaj prvo mjerenje!</p></div>`;
+    return;
+  }
+
+  // On first render (or if expandedGroups is empty), auto-expand only the latest month
+  if (expandedGroups.size === 0) {
+    const latestKey = getLatestMonthKey(filtered);
+    if (latestKey) {
+      expandedGroups.add(latestKey.split('-')[0]);
+      expandedGroups.add(latestKey);
     }
-  },
+  }
 
-  parseXmlFile(filename, content) {
-    try {
-      const parser = new DOMParser();
-      const xmlDoc = parser.parseFromString(content, 'text/xml');
+  // Group by year then month
+  const byYear = {};
+  filtered.forEach(e => {
+    const d = new Date(e.dt);
+    const yr = d.getFullYear();
+    const mo = d.getMonth() + 1;
+    const moKey = yr + '-' + String(mo).padStart(2,'0');
+    if (!byYear[yr]) byYear[yr] = {};
+    if (!byYear[yr][moKey]) byYear[yr][moKey] = [];
+    byYear[yr][moKey].push(e);
+  });
 
-      if (xmlDoc.getElementsByTagName('parsererror').length > 0) {
-        console.warn('XML parse error in ' + filename);
-        return;
-      }
+  const years = Object.keys(byYear).sort((a,b) => sortAsc ? a-b : b-a);
 
-      // Extract data based on file type
-      const dataType = this.getDataType(filename);
-      if (!dataType) return;
+  let html = '';
+  years.forEach(yr => {
+    const yrOpen = expandedGroups.has(yr);
+    const months = Object.keys(byYear[yr]).sort((a,b) => sortAsc ? a.localeCompare(b) : b.localeCompare(a));
+    const yrCount = months.reduce((sum, mk) => sum + byYear[yr][mk].length, 0);
 
-      if (!this.data[dataType]) {
-        this.data[dataType] = [];
-      }
+    html += `
+    <div style="margin-bottom:6px;">
+      <div id="yhdr-${yr}" data-open="${yrOpen}" onclick="toggleYear(${yr})"
+        style="display:flex;align-items:center;justify-content:space-between;
+               padding:10px 14px;background:var(--surface2);border:1px solid var(--border);
+               border-radius:10px;cursor:pointer;user-select:none;margin-bottom:${yrOpen?'6px':'0'};">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="grp-arrow" style="color:var(--accent);font-size:12px;transition:transform 0.2s;transform:${yrOpen?'rotate(90deg)':'rotate(0deg)'};">▶</span>
+          <span style="font-size:14px;font-weight:600;color:var(--text);">${yr}</span>
+        </div>
+        <span style="font-size:11px;color:var(--text-muted);">${yrCount} mjerenja</span>
+      </div>
+      <div id="grp-${yr}" style="display:${yrOpen?'block':'none'}; padding-left:10px;">`;
 
-      // Parse different types of health data
-      const records = xmlDoc.querySelectorAll('record');
-      records.forEach(record => {
-        const entry = {
-          date: record.getAttribute('start_time'),
-          value: record.getAttribute('value'),
-          unit: record.getAttribute('unit'),
-          raw: record.outerHTML
-        };
+    months.forEach(moKey => {
+      const moNum = parseInt(moKey.split('-')[1]);
+      const moName = MONTHS_BS[moNum-1];
+      const moEntries = byYear[yr][moKey];
+      const moOpen = expandedGroups.has(moKey);
 
-        if (entry.date && entry.value) {
-          this.data[dataType].push(entry);
-        }
+      html += `
+        <div style="margin-bottom:6px;">
+          <div id="mhdr-${moKey}" data-open="${moOpen}" onclick="toggleMonth(${yr},${moNum})"
+            style="display:flex;align-items:center;justify-content:space-between;
+                   padding:8px 12px;background:var(--surface);border:1px solid var(--border);
+                   border-radius:8px;cursor:pointer;user-select:none;margin-bottom:${moOpen?'6px':'0'};">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span class="grp-arrow" style="color:var(--text-muted);font-size:11px;transition:transform 0.2s;transform:${moOpen?'rotate(90deg)':'rotate(0deg)'};">▶</span>
+              <span style="font-size:13px;color:var(--text);">${moName} ${yr}</span>
+            </div>
+            <span style="font-size:11px;color:var(--text-muted);">${moEntries.length} mjerenja</span>
+          </div>
+          <div id="grp-${moKey}" style="display:${moOpen?'block':'none'};">`;
+
+      moEntries.forEach(e => {
+        const st = bpStatus(e.sys, e.dia);
+        html += `<div class="entry-card ${e.tag}">
+          <div class="entry-top">
+            <div class="entry-datetime">
+              <div>${fmtDate(e.dt)}</div>
+              <div>${fmtTime(e.dt)} · <span class="tag-preview tag-${e.tag}" style="font-size:9px;padding:1px 6px;">${tagLabel(e.tag)}</span></div>
+            </div>
+            <div style="display:flex;gap:6px;">
+              <button class="del-btn" onclick="openEditModal(${e.id})" style="color:var(--accent);" title="Uredi">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              </button>
+              <button class="del-btn" onclick="delEntry(${e.id})" title="Obriši">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="entry-bp">
+            <span class="bp-value">${e.sys}</span>
+            <span class="bp-sep">/</span>
+            <span class="bp-value">${e.dia}</span>
+            <span class="bp-unit">mmHg</span>
+            <span class="bp-status ${st.cls}" style="margin-left:8px;">${st.label}</span>
+          </div>
+          ${e.pulse ? `<div class="entry-pulse">❤️ Puls: <span>${e.pulse}</span> bpm</div>` : ''}
+          ${e.comment ? `<div class="entry-comment">💬 ${e.comment}</div>` : ''}
+        </div>`;
       });
 
-      console.log(`Parsed ${this.data[dataType].length} records from ${dataType}`);
-    } catch (err) {
-      console.warn('Error parsing XML ' + filename + ': ' + err.message);
-    }
-  },
+      html += `</div></div>`;  // close month content + month div
+    });
 
-  parseCsvFile(filename, content) {
-    try {
-      const dataType = this.getDataType(filename);
-      if (!dataType) return;
+    html += `</div></div>`;  // close year content + year div
+  });
 
-      if (!this.data[dataType]) {
-        this.data[dataType] = [];
-      }
+  c.innerHTML = html;
+}
 
-      const lines = content.split('\n').filter(l => l.trim());
-      const headers = lines[0].split(',').map(h => h.trim());
+function delEntry(id) {
+  if (!confirm('Obrisati ovo mjerenje?')) return;
+  save(load().filter(e=>e.id!==id));
+  renderHistory(); renderCharts();
+  showToast('🗑️ Obrisano');
+}
 
-      for (let i = 1; i < lines.length; i++) {
-        const values = lines[i].split(',').map(v => v.trim());
-        const entry = {};
-        headers.forEach((h, idx) => {
-          entry[h.toLowerCase()] = values[idx];
-        });
+// ── EDIT ──────────────────────────────────────────────────
+let editingId = null;
 
-        if (entry.date || entry.start_time || entry.time) {
-          this.data[dataType].push(entry);
-        }
-      }
+function openEditModal(id) {
+  const entry = load().find(e=>e.id===id);
+  if (!entry) return;
+  editingId = id;
 
-      console.log(`Parsed ${this.data[dataType].length} CSV records from ${dataType}`);
-    } catch (err) {
-      console.warn('Error parsing CSV ' + filename + ': ' + err.message);
-    }
-  },
+  const dt = new Date(entry.dt);
+  document.getElementById('edit-date').value = dt.toISOString().slice(0,10);
+  document.getElementById('edit-time').value = dt.toTimeString().slice(0,5);
+  document.getElementById('edit-sys').value = entry.sys;
+  document.getElementById('edit-dia').value = entry.dia;
+  document.getElementById('edit-pulse').value = entry.pulse || '';
+  document.getElementById('edit-comment').value = entry.comment || '';
+  updateEditTag();
 
-  getDataType(filename) {
-    const lower = filename.toLowerCase();
-    if (lower.includes('step')) return 'steps';
-    if (lower.includes('heart') || lower.includes('pulse')) return 'heart_rate';
-    if (lower.includes('oxygen') || lower.includes('spo2')) return 'oxygen';
-    if (lower.includes('sleep')) return 'sleep';
-    if (lower.includes('calor') || lower.includes('energy')) return 'calories';
-    if (lower.includes('distance')) return 'distance';
-    if (lower.includes('floor')) return 'floors';
-    if (lower.includes('exercise') || lower.includes('workout')) return 'exercise';
-    if (lower.includes('water')) return 'water';
-    if (lower.includes('weight')) return 'weight';
-    if (lower.includes('blood_pressure') || lower.includes('pressure')) return 'blood_pressure';
-    if (lower.includes('temperature') || lower.includes('temp')) return 'temperature';
-    return null;
-  },
+  const m = document.getElementById('edit-modal');
+  m.style.display = 'flex';
+}
 
-  getDataLabel(type) {
-    const labels = {
-      steps: '👟 Koraci',
-      heart_rate: '❤️ Otkucaji srca',
-      oxygen: '🫁 Kiseonik (SpO₂)',
-      sleep: '😴 San',
-      calories: '🔥 Kalorije',
-      distance: '🚶 Distanca',
-      floors: '🏢 Spratovi',
-      exercise: '🏃 Vježba',
-      water: '💧 Voda',
-      weight: '⚖️ Težina',
-      blood_pressure: '🩸 Krvni pritisak',
-      temperature: '🌡️ Temperatura'
-    };
-    return labels[type] || type;
+function updateEditTag() {
+  const t = document.getElementById('edit-time').value;
+  if (!t) return;
+  const tag = getTag(parseInt(t.split(':')[0]));
+  const el = document.getElementById('edit-tag-display');
+  el.textContent = tagLabel(tag);
+  el.className = 'tag-preview tag-' + tag;
+}
+
+document.getElementById('edit-time').addEventListener('change', updateEditTag);
+document.getElementById('edit-date').addEventListener('change', updateEditTag);
+
+function closeEditModal() {
+  document.getElementById('edit-modal').style.display = 'none';
+  editingId = null;
+}
+
+function saveEdit() {
+  const date = document.getElementById('edit-date').value;
+  const time = document.getElementById('edit-time').value;
+  const sys  = parseInt(document.getElementById('edit-sys').value);
+  const dia  = parseInt(document.getElementById('edit-dia').value);
+  const pulse= parseInt(document.getElementById('edit-pulse').value);
+  const comment = document.getElementById('edit-comment').value.trim();
+
+  if (!date||!time) { showToast('⚠️ Unesite datum i vrijeme'); return; }
+  if (!sys||!dia||sys<60||dia<40) { showToast('⚠️ Unesite ispravne vrijednosti'); return; }
+
+  const dt = new Date(date+'T'+time);
+  const entries = load().map(e => {
+    if (e.id !== editingId) return e;
+    return { ...e, dt: dt.toISOString(), sys, dia, pulse: isNaN(pulse)?null:pulse, comment, tag: getTag(dt.getHours()) };
+  });
+  // Re-sort descending
+  entries.sort((a,b) => new Date(b.dt) - new Date(a.dt));
+  save(entries);
+  closeEditModal();
+  renderHistory(); renderCharts();
+  showToast('✅ Mjerenje ažurirano');
+}
+
+// ── CHARTS ────────────────────────────────────────────────
+let bpChart=null, pulseChart=null, currentRange=7, currentChartTag='sve';
+
+function setRange(d, el) {
+  currentRange = d;
+  document.querySelectorAll('.range-chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  renderCharts();
+}
+
+function setChartTag(tag, el) {
+  currentChartTag = tag;
+  // only update filter-chips inside grafik page
+  document.querySelectorAll('#page-grafik .filter-chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  renderCharts();
+}
+
+function renderCharts() {
+  const all = load();
+  let data;
+  if (!currentRange) {
+    data = [...all].reverse();
+  } else {
+    const cut = new Date(); cut.setDate(cut.getDate()-currentRange);
+    data = all.filter(e=>new Date(e.dt)>=cut).reverse();
   }
+  // Apply tag filter
+  if (currentChartTag !== 'sve') {
+    data = data.filter(e => e.tag === currentChartTag);
+  }
+
+  const avg = arr => arr.length ? Math.round(arr.reduce((a,b)=>a+b,0)/arr.length) : null;
+  document.getElementById('avg-sys').textContent   = avg(data.map(e=>e.sys)) || '—';
+  document.getElementById('avg-dia').textContent   = avg(data.map(e=>e.dia)) || '—';
+  const pulses = data.filter(e=>e.pulse).map(e=>e.pulse);
+  document.getElementById('avg-pulse').textContent = avg(pulses) || '—';
+
+  const MONS = ['jan','feb','mar','apr','maj','jun','jul','aug','sep','okt','nov','dec'];
+  const labels = data.map(e => {
+    const d = new Date(e.dt);
+    const time = String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+    return d.getDate() + '. ' + MONS[d.getMonth()] + ' ' + time;
+  });
+
+  const base = {
+    responsive:true, maintainAspectRatio:false,
+    interaction:{mode:'index',intersect:false},
+    plugins:{
+      legend:{display:false},
+      tooltip:{
+        backgroundColor:'#1f2937', borderColor:'#30363d', borderWidth:1,
+        titleColor:'#7d8590', bodyColor:'#e6edf3',
+        titleFont:{family:'DM Mono',size:10}, bodyFont:{family:'DM Mono',size:12},
+        padding:10, cornerRadius:8
+      }
+    },
+    scales:{
+      x:{ticks:{color:'#7d8590',font:{family:'DM Mono',size:9},maxRotation:45,maxTicksLimit:8},grid:{color:'#21262d'}},
+      y:{ticks:{color:'#7d8590',font:{family:'DM Mono',size:10}},grid:{color:'#21262d'}}
+    }
+  };
+
+  const bpMin = data.length ? Math.max(40, Math.min(...data.map(e=>e.dia)) - 10) : 40;
+  const bpMax = data.length ? Math.min(220, Math.max(...data.map(e=>e.sys)) + 10) : 220;
+  const bpBase = JSON.parse(JSON.stringify(base));
+  bpBase.scales.y.min = bpMin;
+  bpBase.scales.y.max = bpMax;
+
+  if (bpChart) bpChart.destroy();
+  bpChart = new Chart(document.getElementById('bp-chart').getContext('2d'), {
+    type:'line',
+    data:{
+      labels,
+      datasets:[
+        {label:'Sistolni',data:data.map(e=>e.sys),borderColor:'#58a6ff',backgroundColor:'rgba(88,166,255,0.08)',borderWidth:2,pointRadius:4,pointBackgroundColor:'#58a6ff',tension:0.3,fill:false},
+        {label:'Dijastolni',data:data.map(e=>e.dia),borderColor:'#3fb950',backgroundColor:'rgba(63,185,80,0.06)',borderWidth:2,pointRadius:4,pointBackgroundColor:'#3fb950',tension:0.3,fill:false}
+      ]
+    },
+    options:bpBase
+  });
+
+  const pulseData = data.map(e=>e.pulse);
+  const validPulse = pulseData.filter(v=>v!=null);
+  const pulseMin = validPulse.length ? Math.max(30, Math.min(...validPulse) - 10) : 30;
+  const pulseMax = validPulse.length ? Math.min(220, Math.max(...validPulse) + 10) : 220;
+  const pulseBase = JSON.parse(JSON.stringify(base));
+  pulseBase.scales.y.min = pulseMin;
+  pulseBase.scales.y.max = pulseMax;
+
+  if (pulseChart) pulseChart.destroy();
+  pulseChart = new Chart(document.getElementById('pulse-chart').getContext('2d'), {
+    type:'line',
+    data:{
+      labels,
+      datasets:[{label:'Puls',data:pulseData,borderColor:'#f85149',backgroundColor:'rgba(248,81,73,0.08)',borderWidth:2,pointRadius:4,pointBackgroundColor:'#f85149',tension:0.3,fill:false,spanGaps:true}]
+    },
+    options:pulseBase
+  });
+}
+
+// ── TABS ──────────────────────────────────────────────────
+function switchTab(tab, el) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+tab).classList.add('active');
+  el.classList.add('active');
+  if (tab==='istorija') renderHistory();
+  if (tab==='grafik') renderCharts();
+}
+
+// ── EXPORT ────────────────────────────────────────────────
+function openExportModal() {
+  const entries = load();
+  if (!entries.length) { showToast('⚠️ Nema podataka'); return; }
+  const oldest = entries[entries.length-1];
+  const newest = entries[0];
+  const MNS_E = ['jan','feb','mar','apr','maj','jun','jul','aug','sep','okt','nov','dec'];
+  const fmtE = dt => { const d=new Date(dt); return d.getDate()+'. '+MNS_E[d.getMonth()]+' '+d.getFullYear()+'.'; };
+  document.getElementById('export-count').innerHTML = `Ukupno: <strong>${entries.length}</strong> mjerenja &nbsp;·&nbsp; ${fmtE(newest.dt)} &ndash; ${fmtE(oldest.dt)}`;
+  document.getElementById('export-modal').style.display = 'flex';
+}
+function closeExportModal() {
+  document.getElementById('export-modal').style.display = 'none';
+}
+function doExportJSON() {
+  const entries = load();
+  if (!entries.length) { showToast('⚠️ Nema podataka'); return; }
+  const json = JSON.stringify(entries, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'pritisak_' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  closeExportModal();
+  showToast('✅ JSON exportovan');
+}
+// legacy alias
+function exportCSV() { openExportModal(); }
+
+
+
+// ── SHARE ─────────────────────────────────────────────────
+let shareTag = 'sve';
+
+function openShareModal() {
+  const entries = load();
+  if (!entries.length) { showToast('⚠️ Nema podataka'); return; }
+  // default: last 30 days
+  const to = new Date();
+  const from = new Date(); from.setDate(from.getDate()-30);
+  document.getElementById('share-to').value = to.toISOString().slice(0,10);
+  document.getElementById('share-from').value = from.toISOString().slice(0,10);
+  shareTag = 'sve';
+  document.querySelectorAll('[id^="stag-"]').forEach(el=>el.classList.remove('active'));
+  document.getElementById('stag-sve').classList.add('active');
+  updateSharePreview();
+  document.getElementById('share-modal').style.display = 'flex';
+}
+function closeShareModal() {
+  document.getElementById('share-modal').style.display = 'none';
+}
+function setShareTag(tag) {
+  shareTag = tag;
+  document.querySelectorAll('[id^="stag-"]').forEach(el=>el.classList.remove('active'));
+  document.getElementById('stag-'+tag).classList.add('active');
+  updateSharePreview();
+}
+function updateSharePreview() {
+  const from = document.getElementById('share-from').value;
+  const to = document.getElementById('share-to').value;
+  if (!from||!to) return;
+  let data = getShareData(from, to, shareTag);
+  const el = document.getElementById('share-preview');
+  el.textContent = data.length ? `Pronađeno ${data.length} mjerenja za odabrani period.` : '⚠️ Nema mjerenja za odabrani period.';
+  el.style.color = data.length ? 'var(--accent)' : 'var(--warn)';
+}
+document.addEventListener('change', e => {
+  if (e.target.id==='share-from'||e.target.id==='share-to') updateSharePreview();
+});
+
+function getShareData(from, to, tag) {
+  const f = new Date(from+'T00:00:00');
+  const t = new Date(to+'T23:59:59');
+  let data = load().filter(e => { const d=new Date(e.dt); return d>=f&&d<=t; });
+  if (tag!=='sve') data = data.filter(e=>e.tag===tag);
+  return data.sort((a,b)=>new Date(a.dt)-new Date(b.dt));
+}
+
+function generateReport() {
+  const from = document.getElementById('share-from').value;
+  const to   = document.getElementById('share-to').value;
+  if (!from||!to) { showToast('⚠️ Odaberite period'); return; }
+  const data = getShareData(from, to, shareTag);
+  if (!data.length) { showToast('⚠️ Nema mjerenja za ovaj period'); return; }
+
+  const avg = arr => arr.length ? Math.round(arr.reduce((a,b)=>a+b,0)/arr.length) : null;
+  const avf = arr => arr.length ? (arr.reduce((a,b)=>a+b,0)/arr.length).toFixed(1) : null;
+
+  // Overall stats
+  const avgSys   = avg(data.map(e=>e.sys));
+  const avgDia   = avg(data.map(e=>e.dia));
+  const pulses   = data.filter(e=>e.pulse).map(e=>e.pulse);
+  const avgPulse = avg(pulses);
+  const minSys   = Math.min(...data.map(e=>e.sys));
+  const maxSys   = Math.max(...data.map(e=>e.sys));
+  const minDia   = Math.min(...data.map(e=>e.dia));
+  const maxDia   = Math.max(...data.map(e=>e.dia));
+  const pulseArr = data.filter(e=>e.pulse).map(e=>e.pulse);
+  const minPulse = pulseArr.length ? Math.min(...pulseArr) : null;
+  const maxPulse = pulseArr.length ? Math.max(...pulseArr) : null;
+
+  // Morning vs Evening split
+  const morning = data.filter(e=>e.tag==='jutarnje');
+  const evening = data.filter(e=>e.tag==='vecernje');
+  const mAvgSys = avg(morning.map(e=>e.sys));
+  const mAvgDia = avg(morning.map(e=>e.dia));
+  const eAvgSys = avg(evening.map(e=>e.sys));
+  const eAvgDia = avg(evening.map(e=>e.dia));
+
+  // Use all stored entries for week/month comparisons (not just filtered period)
+  const allEntries = load();
+  const latestDate = new Date(Math.max(...data.map(e=>new Date(e.dt))));
+
+  // This week vs last week
+  const now = new Date(Math.max(...data.map(e=>new Date(e.dt))));
+  const startOfThisWeek  = new Date(now); startOfThisWeek.setDate(now.getDate()-7);  startOfThisWeek.setHours(0,0,0,0);
+  const startOfLastWeek  = new Date(now); startOfLastWeek.setDate(now.getDate()-14); startOfLastWeek.setHours(0,0,0,0);
+  const startOfPrevWeek  = new Date(now); startOfPrevWeek.setDate(now.getDate()-21); startOfPrevWeek.setHours(0,0,0,0);
+  const thisWeek = allEntries.filter(e=>new Date(e.dt)>=startOfThisWeek);
+  const lastWeek = allEntries.filter(e=>{ const d=new Date(e.dt); return d>=startOfLastWeek&&d<startOfThisWeek; });
+  const prevWeek = allEntries.filter(e=>{ const d=new Date(e.dt); return d>=startOfPrevWeek&&d<startOfLastWeek; });
+  const twSys = avg(thisWeek.map(e=>e.sys));
+  const lwSys = avg(lastWeek.map(e=>e.sys));
+  const twDia = avg(thisWeek.map(e=>e.dia));
+  const lwDia = avg(lastWeek.map(e=>e.dia));
+  const pwSys = avg(prevWeek.map(e=>e.sys));
+  const pwDia = avg(prevWeek.map(e=>e.dia));
+
+  // This month vs last month
+  const thisMonthStart = new Date(latestDate.getFullYear(), latestDate.getMonth(), 1);
+  const lastMonthStart = new Date(latestDate.getFullYear(), latestDate.getMonth()-1, 1);
+  const prevMonthStart = new Date(latestDate.getFullYear(), latestDate.getMonth()-2, 1);
+  const thisMonth = allEntries.filter(e=>new Date(e.dt)>=thisMonthStart);
+  const lastMonth = allEntries.filter(e=>{ const d=new Date(e.dt); return d>=lastMonthStart&&d<thisMonthStart; });
+  const prevMonth = allEntries.filter(e=>{ const d=new Date(e.dt); return d>=prevMonthStart&&d<lastMonthStart; });
+  const tmSys = avg(thisMonth.map(e=>e.sys));
+  const lmSys = avg(lastMonth.map(e=>e.sys));
+  const tmDia = avg(thisMonth.map(e=>e.dia));
+  const lmDia = avg(lastMonth.map(e=>e.dia));
+  const pmSys = avg(prevMonth.map(e=>e.sys));
+  const pmDia = avg(prevMonth.map(e=>e.dia));
+
+  const trendIcon = (curr, prev) => {
+    if (!curr||!prev) return '<span class="tneut">&mdash;</span>';
+    const diff = curr - prev;
+    if (Math.abs(diff)<2) return '<span class="tneut">→</span>';
+    return diff>0 ? '<span class="tup">↑</span>' : '<span class="tdown">↓</span>';
+  };
+  const trendDiff = (curr, prev) => {
+    if (!curr||!prev) return '';
+    const diff = curr - prev;
+    if (Math.abs(diff)<2) return '';
+    return diff>0
+      ? `<span class="tup" style="font-size:11px;">(+${diff})</span>`
+      : `<span class="tdown" style="font-size:11px;">(${diff})</span>`;
+  };
+
+  const tagName = {sve:'Sva',jutarnje:'Jutarnja',vecernje:'Večernja',ostalo:'Ostala'}[shareTag];
+  const MONS2   = ['januara','februara','marta','aprila','maja','juna','jula','augusta','septembra','oktobra','novembra','decembra'];
+  const fromFmt = new Date(from).getDate()+'. '+MONS2[new Date(from).getMonth()]+' '+new Date(from).getFullYear()+'.';
+  const toFmt   = new Date(to).getDate()+'. '+MONS2[new Date(to).getMonth()]+' '+new Date(to).getFullYear()+'.';
+
+  // Table rows
+  const statusBadge = (s,d) => {
+    const st = bpStatus(s,d);
+    const cls = {
+      'bp-low':'b-low','bp-ideal':'b-ideal','bp-normal':'b-normal',
+      'bp-elevated':'b-elevated','bp-high1':'b-high1','bp-high2':'b-high2','bp-crisis':'b-crisis'
+    }[st.cls]||'b-normal';
+    return `<span class="badge ${cls}">${st.label}</span>`;
+  };
+  const MNS = ['jan','feb','mar','apr','maj','jun','jul','aug','sep','okt','nov','dec'];
+  const rows = data.map(e=>{
+    const dt=new Date(e.dt);
+    const tagLbl={jutarnje:'🌅 Jut.',vecernje:'🌙 Več.',ostalo:'🕐 Ost.'}[e.tag]||e.tag;
+    const time = String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0');
+    const date = dt.getDate()+'. '+MNS[dt.getMonth()]+' '+dt.getFullYear()+'.';
+    const commentRow = e.comment ? `<tr><td colspan="5" style="padding:2px 10px 8px;color:#94a3b8;font-style:italic;font-size:11px;border-bottom:1px solid #f1f5f9;">💬 ${e.comment}</td></tr>` : '';
+    return `<tr><td style="white-space:nowrap;"><div style="font-size:12px;">${date}</div><div style="font-size:11px;color:#94a3b8;margin-top:1px;">${time}</div></td><td style="white-space:nowrap;">${tagLbl}</td><td style="font-weight:600;white-space:nowrap;">${e.sys}/${e.dia}</td><td style="white-space:nowrap;">${e.pulse||'&mdash;'}</td><td>${statusBadge(e.sys,e.dia)}</td></tr>${commentRow}`;
+  }).join('');
+
+  // Chart data
+  const labels     = data.map(e=>{ const d=new Date(e.dt); return d.getDate()+'. '+MNS[d.getMonth()]+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); });
+  const sysVals    = data.map(e=>e.sys);
+  const diaVals    = data.map(e=>e.dia);
+  const pulseVals  = data.map(e=>e.pulse);
+  const morningLabels = morning.map((_,i)=>'Jut. '+(i+1));
+  const morningSys    = morning.map(e=>e.sys);
+  const morningDia    = morning.map(e=>e.dia);
+  const eveningLabels = evening.map((_,i)=>'Več. '+(i+1));
+  const eveningSys    = evening.map(e=>e.sys);
+  const eveningDia    = evening.map(e=>e.dia);
+  const chartPayload  = {labels,sysVals,diaVals,pulseVals,morningLabels,morningSys,morningDia,eveningLabels,eveningSys,eveningDia};
+
+  // Morning vs Evening card
+  const cmpMorningEvening = (mAvgSys||eAvgSys) ? `
+  <div class="stitle">Jutarnje vs Večernje</div>
+  <div class="cgrid">
+    <div class="cc morning">
+      <div class="clabel">🌅 Jutarnje (${morning.length} mj.)</div>
+      <div class="cval">${mAvgSys||'&mdash;'}/${mAvgDia||'&mdash;'}</div>
+      <div class="csub">Prosjek mmHg</div>
+    </div>
+    <div class="cc evening">
+      <div class="clabel">🌙 Večernje (${evening.length} mj.)</div>
+      <div class="cval">${eAvgSys||'&mdash;'}/${eAvgDia||'&mdash;'}</div>
+      <div class="csub">Prosjek mmHg</div>
+    </div>
+  </div>` : '';
+
+  // Week comparison
+  const cmpWeeks = (thisWeek.length>0 || lastWeek.length>0) ? `
+  <div class="stitle">Ova vs Prošla sedmica</div>
+  <div class="cgrid">
+    <div class="cc thisweek">
+      <div class="clabel">📅 Zadnjih 7 dana (${thisWeek.length} mj.)</div>
+      <div class="cval">${twSys||'&mdash;'}/${twDia||'&mdash;'}</div>
+      <div class="csub">mmHg · Sys/Dia</div>
+      <div style="display:flex;gap:8px;margin-top:5px;font-size:11px;">
+        <span>Sys: ${trendIcon(twSys,lwSys)} ${trendDiff(twSys,lwSys)}</span>
+        <span>Dia: ${trendIcon(twDia,lwDia)} ${trendDiff(twDia,lwDia)}</span>
+      </div>
+    </div>
+    <div class="cc lastweek">
+      <div class="clabel">📅 Preth. 7 dana (${lastWeek.length} mj.)</div>
+      <div class="cval">${lwSys||'&mdash;'}/${lwDia||'&mdash;'}</div>
+      <div class="csub">mmHg · Sys/Dia</div>
+      ${prevWeek.length>0 ? `<div style="display:flex;gap:8px;margin-top:5px;font-size:11px;">
+        <span>Sys: ${trendIcon(lwSys,pwSys)} ${trendDiff(lwSys,pwSys)}</span>
+        <span>Dia: ${trendIcon(lwDia,pwDia)} ${trendDiff(lwDia,pwDia)}</span>
+      </div>` : ''}
+    </div>
+  </div>` : '';
+
+  // Month comparison
+  const MONTH_NAMES = ['Januar','Februar','Mart','April','Maj','Juni','Juli','August','Septembar','Oktobar','Novembar','Decembar'];
+  const thisMonthName = MONTH_NAMES[latestDate.getMonth()];
+  const lastMonthName = MONTH_NAMES[latestDate.getMonth()===0 ? 11 : latestDate.getMonth()-1];
+  const prevMonthName = MONTH_NAMES[latestDate.getMonth()<=1 ? 12+latestDate.getMonth()-2 : latestDate.getMonth()-2];
+  const cmpMonths = (thisMonth.length>0 || lastMonth.length>0) ? `
+  <div class="stitle">Ovaj vs Prošli mjesec</div>
+  <div class="cgrid">
+    <div class="cc thismonth">
+      <div class="clabel">🗓️ ${thisMonthName} (${thisMonth.length} mj.)</div>
+      <div class="cval">${tmSys||'&mdash;'}/${tmDia||'&mdash;'}</div>
+      <div class="csub">mmHg · Sys/Dia</div>
+      <div style="display:flex;gap:8px;margin-top:5px;font-size:11px;">
+        <span>Sys: ${trendIcon(tmSys,lmSys)} ${trendDiff(tmSys,lmSys)}</span>
+        <span>Dia: ${trendIcon(tmDia,lmDia)} ${trendDiff(tmDia,lmDia)}</span>
+      </div>
+    </div>
+    <div class="cc lastmonth">
+      <div class="clabel">🗓️ ${lastMonthName} (${lastMonth.length} mj.)</div>
+      <div class="cval">${lmSys||'&mdash;'}/${lmDia||'&mdash;'}</div>
+      <div class="csub">mmHg · Sys/Dia</div>
+      ${prevMonth.length>0 ? `<div style="display:flex;gap:8px;margin-top:5px;font-size:11px;">
+        <span>Sys: ${trendIcon(lmSys,pmSys)} ${trendDiff(lmSys,pmSys)}</span>
+        <span>Dia: ${trendIcon(lmDia,pmDia)} ${trendDiff(lmDia,pmDia)}</span>
+      </div><div class="csub" style="margin-top:2px;">vs ${prevMonthName}</div>` : ''}
+    </div>
+  </div>` : '';
+
+  // Morning vs Evening chart (only if both have data)
+  const morningEveningChart = (morning.length>0 && evening.length>0) ? `
+  <div class="card">
+    <div class="stitle">Poređenje jutarnjeg i večernjeg mjerenja</div>
+    <div class="chart-sm"><canvas id="me-chart"></canvas></div>
+    <p style="font-size:11px;color:#94a3b8;margin-top:8px;">X osa prikazuje redni broj mjerenja, ne kalendarski datum.</p>
+  </div>` : '';
+
+
+  const MONS3 = ['jan','feb','mar','apr','maj','jun','jul','aug','sep','okt','nov','dec'];
+  const genDate = new Date().getDate()+'. '+MONS3[new Date().getMonth()]+' '+new Date().getFullYear()+'.';
+
+  const html = `<!DOCTYPE html>
+<html lang="bs">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Izvještaj pritiska</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"><\/script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"><\/script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#f1f5f9;color:#1e293b;}
+.wrap{max-width:920px;margin:0 auto;padding:24px 16px 60px;}
+h1{font-size:24px;font-weight:700;color:#0f172a;margin-bottom:2px;}
+.subtitle{color:#64748b;font-size:13px;margin-bottom:24px;}
+.stitle{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#94a3b8;margin-bottom:10px;font-weight:600;}
+.card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px;margin-bottom:16px;}
+.stats3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px;}
+.stat{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:10px 6px;text-align:center;display:flex;flex-direction:column;justify-content:center;}
+.slabel{font-size:9px;letter-spacing:0.8px;text-transform:uppercase;color:#94a3b8;margin-bottom:4px;line-height:1.3;}
+.sval{font-size:22px;font-weight:700;color:#0f172a;letter-spacing:-0.5px;line-height:1;}
+.sunit{font-size:9px;color:#94a3b8;margin-top:2px;}
+.cgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+.cc{border-radius:12px;padding:14px;}
+.cc.morning{background:#fffbeb;border:1px solid #fde68a;}
+.cc.evening{background:#f5f3ff;border:1px solid #ddd6fe;}
+.cc.thisweek{background:#f0fdf4;border:1px solid #bbf7d0;}
+.cc.lastweek{background:#f8fafc;border:1px solid #e2e8f0;}
+.cc.thismonth{background:#eff6ff;border:1px solid #bfdbfe;}
+.cc.lastmonth{background:#f8fafc;border:1px solid #e2e8f0;}
+.clabel{font-size:10px;font-weight:600;color:#64748b;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;}
+.cval{font-size:20px;font-weight:700;color:#0f172a;letter-spacing:-0.5px;}
+.csub{font-size:11px;color:#94a3b8;margin-top:2px;}
+.tup{color:#ef4444;} .tdown{color:#22c55e;} .tneut{color:#94a3b8;}
+.chart-wrap{position:relative;height:250px;margin-bottom:4px;}
+.chart-sm{position:relative;height:190px;margin-bottom:4px;}
+.zlegend{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;}
+.zitem{display:flex;align-items:center;gap:4px;font-size:11px;color:#64748b;}
+.zdot{width:10px;height:10px;border-radius:2px;flex-shrink:0;}
+table{width:100%;border-collapse:collapse;font-size:12px;table-layout:auto;}
+th{background:#f8fafc;padding:7px 9px;text-align:left;font-size:10px;letter-spacing:0.5px;text-transform:uppercase;color:#94a3b8;font-weight:600;border-bottom:1px solid #e2e8f0;white-space:nowrap;}
+td{padding:7px 9px;border-bottom:1px solid #f8fafc;vertical-align:top;}
+tr:last-child td{border-bottom:none;}
+.badge{display:inline-block;padding:2px 6px;border-radius:20px;font-size:10px;font-weight:600;}
+.b-low{background:#dbeafe;color:#2563eb;} .b-ideal{background:#dcfce7;color:#16a34a;}
+.b-normal{background:#d1fae5;color:#059669;} .b-elevated{background:#fef3c7;color:#d97706;}
+.b-high1{background:#fee2e2;color:#dc2626;} .b-high2{background:#fecaca;color:#b91c1c;}
+.b-crisis{background:#dc2626;color:#fff;}
+.note{background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:12px;font-size:12px;color:#1e40af;line-height:1.6;margin-top:12px;}
+.footer{text-align:center;color:#94a3b8;font-size:11px;margin-top:24px;}
+@media print{
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  body{background:#fff;}
+  button{display:none !important;}
+  .wrap{max-width:100% !important;padding:0 !important;margin:0 !important;}
+  .card{break-inside:avoid;page-break-inside:avoid;box-shadow:none;border:1px solid #ddd;margin-bottom:10px;padding:12px;}
+  h1{font-size:20px;}
+  .subtitle{margin-bottom:12px;}
+  .chart-wrap{height:220px !important;width:100% !important;}
+  .chart-sm{height:170px !important;width:100% !important;}
+  canvas{width:100% !important;max-width:100% !important;}
+  .stats3{gap:6px;}
+  .stat{padding:7px 5px;}
+  .sval{font-size:17px;}
+  .cgrid{gap:8px;}
+  .cc{padding:10px;}
+  .cval{font-size:17px;}
+  table{font-size:11px;}
+  th,td{padding:5px 7px;}
+  .zlegend{font-size:10px;gap:6px;}
+  .stitle{margin-bottom:6px;}
+  .footer{margin-top:8px;}
+  .note{padding:8px;font-size:11px;}
+}
+@page{size:210mm 297mm;margin:12mm 14mm;}
+@media(max-width:600px){.cgrid{grid-template-columns:1fr 1fr;}.stats3{grid-template-columns:repeat(3,1fr);}.sval{font-size:16px;}.slabel{font-size:8px;}}
+<\/style>
+</head>
+<body>
+<div class="wrap">
+
+<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:2px;flex-wrap:wrap;">
+  <h1>🫀 Izvještaj krvnog pritiska</h1>
+  <div style="display:flex;gap:8px;flex-shrink:0;margin-top:4px;">
+    <button id="dl-btn" onclick="downloadReport()" style="padding:8px 14px;background:#1e293b;color:#fff;border:none;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit;white-space:nowrap;">⬇️ Preuzmi HTML</button>
+    <button onclick="window.print()" style="padding:8px 14px;background:#0f172a;color:#fff;border:none;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit;white-space:nowrap;">🖨️ Štampaj / PDF</button>
+  </div>
+</div>
+<div class="subtitle">${tagName} mjerenja &nbsp;·&nbsp; ${fromFmt} &ndash; ${toFmt} &nbsp;·&nbsp; Ukupno: <strong>${data.length}</strong> mjerenja</div>
+
+<div class="stitle">Ukupni prosjek</div>
+<div class="stats3" style="margin-bottom:10px;">
+  <div class="stat"><div class="slabel">Prosj. Sys</div><div class="sval">${avgSys}</div><div class="sunit">mmHg</div></div>
+  <div class="stat"><div class="slabel">Prosj. Dia</div><div class="sval">${avgDia}</div><div class="sunit">mmHg</div></div>
+  <div class="stat"><div class="slabel">Prosj. Puls</div><div class="sval">${avgPulse||'&mdash;'}</div><div class="sunit">bpm</div></div>
+</div>
+<div class="stats3" style="margin-bottom:24px;">
+  <div class="stat">
+    <div class="slabel">Sys min/max</div>
+    <div style="display:flex;align-items:baseline;justify-content:center;gap:4px;">
+      <span class="sval" style="color:#22c55e;font-size:18px;">${minSys}</span>
+      <span style="color:#94a3b8;font-size:12px;">/</span>
+      <span class="sval" style="color:#ef4444;font-size:18px;">${maxSys}</span>
+    </div>
+    <div class="sunit">mmHg</div>
+  </div>
+  <div class="stat">
+    <div class="slabel">Dia min/max</div>
+    <div style="display:flex;align-items:baseline;justify-content:center;gap:4px;">
+      <span class="sval" style="color:#22c55e;font-size:18px;">${minDia}</span>
+      <span style="color:#94a3b8;font-size:12px;">/</span>
+      <span class="sval" style="color:#ef4444;font-size:18px;">${maxDia}</span>
+    </div>
+    <div class="sunit">mmHg</div>
+  </div>
+  <div class="stat">
+    <div class="slabel">Puls min/max</div>
+    <div style="display:flex;align-items:baseline;justify-content:center;gap:4px;">
+      <span class="sval" style="color:#22c55e;font-size:18px;">${minPulse||'&mdash;'}</span>
+      <span style="color:#94a3b8;font-size:12px;">/</span>
+      <span class="sval" style="color:#ef4444;font-size:18px;">${maxPulse||'&mdash;'}</span>
+    </div>
+    <div class="sunit">bpm</div>
+  </div>
+</div>
+
+${cmpMorningEvening}
+${cmpWeeks}
+${cmpMonths}
+
+<!-- SISTOLNI GRAFIK SA ZONAMA -->
+<div class="card">
+  <div class="stitle">Kretanje sistolnog pritiska &mdash; sa zonama</div>
+  <div class="chart-wrap"><canvas id="sys-chart"></canvas></div>
+  <div class="zlegend">
+    <div class="zitem"><div class="zdot" style="background:rgba(220,252,231,0.8);border:1px solid #86efac;"></div> Idealan (&lt;120)</div>
+    <div class="zitem"><div class="zdot" style="background:rgba(254,249,195,0.8);border:1px solid #fde047;"></div> Vis. norm. (120&ndash;129)</div>
+    <div class="zitem"><div class="zdot" style="background:rgba(254,243,199,0.8);border:1px solid #fcd34d;"></div> Pred-hiper. (130&ndash;139)</div>
+    <div class="zitem"><div class="zdot" style="background:rgba(254,226,226,0.8);border:1px solid #fca5a5;"></div> Visok I (140&ndash;159)</div>
+    <div class="zitem"><div class="zdot" style="background:rgba(254,202,202,0.8);border:1px solid #f87171;"></div> Visok II (160+)</div>
+  </div>
+</div>
+
+<!-- DIJASTOLNI GRAFIK SA ZONAMA -->
+<div class="card">
+  <div class="stitle">Kretanje dijastolnog pritiska &mdash; sa zonama</div>
+  <div class="chart-wrap"><canvas id="dia-chart"></canvas></div>
+  <div class="zlegend">
+    <div class="zitem"><div class="zdot" style="background:rgba(220,252,231,0.8);border:1px solid #86efac;"></div> Idealan (&lt;80)</div>
+    <div class="zitem"><div class="zdot" style="background:rgba(254,249,195,0.8);border:1px solid #fde047;"></div> Normalan (80&ndash;84)</div>
+    <div class="zitem"><div class="zdot" style="background:rgba(254,243,199,0.8);border:1px solid #fcd34d;"></div> Pred-hiper. (85&ndash;89)</div>
+    <div class="zitem"><div class="zdot" style="background:rgba(254,226,226,0.8);border:1px solid #fca5a5;"></div> Visok I (90&ndash;99)</div>
+    <div class="zitem"><div class="zdot" style="background:rgba(254,202,202,0.8);border:1px solid #f87171;"></div> Visok II (100+)</div>
+  </div>
+</div>
+
+<!-- PULS GRAFIK -->
+<div class="card">
+  <div class="stitle">Kretanje pulsa</div>
+  <div class="chart-sm"><canvas id="pulse-chart"></canvas></div>
+  <div class="zlegend">
+    <div class="zitem"><div class="zdot" style="background:rgba(219,234,254,0.8);border:1px solid #93c5fd;"></div> Nizak (&lt;60)</div>
+    <div class="zitem"><div class="zdot" style="background:rgba(220,252,231,0.8);border:1px solid #86efac;"></div> Normalan (60&ndash;99)</div>
+    <div class="zitem"><div class="zdot" style="background:rgba(254,243,199,0.8);border:1px solid #fcd34d;"></div> Umjereno visok (100&ndash;119)</div>
+    <div class="zitem"><div class="zdot" style="background:rgba(254,226,226,0.8);border:1px solid #fca5a5;"></div> Visok (120+)</div>
+  </div>
+</div>
+
+${morningEveningChart}
+
+<!-- TABELA -->
+<div class="card">
+  <div class="stitle">Sva mjerenja</div>
+  <table>
+  <thead><tr><th>Datum / Vrij.</th><th>Tag</th><th>Pritisak</th><th>Puls</th><th>Status</th></tr></thead>
+  <tbody>${rows}</tbody></table>
+</div>
+
+<!-- REFERENTNE VRIJEDNOSTI -->
+<div class="card">
+  <div class="stitle">Referentne vrijednosti</div>
+  <table>
+    <thead><tr><th>Kategorija</th><th>Sistolni</th><th>Dijastolni</th><th>Napomena</th></tr></thead>
+    <tbody>
+      <tr><td><span class="badge b-low">Nizak</span></td><td>&lt;90</td><td>&lt;60</td><td style="color:#64748b;">Hipotenzija &mdash; problem samo uz simptome</td></tr>
+      <tr><td><span class="badge b-ideal">Idealan</span></td><td>&lt;120</td><td>&lt;80</td><td style="color:#64748b;">Optimalne vrijednosti</td></tr>
+      <tr><td><span class="badge b-normal">Normalan</span></td><td>120&ndash;129</td><td>80&ndash;84</td><td style="color:#64748b;">Prihvatljivo</td></tr>
+      <tr><td><span class="badge b-elevated">Vis. norm.</span></td><td>130&ndash;139</td><td>85&ndash;89</td><td style="color:#64748b;">Pred-hipertenzija</td></tr>
+      <tr><td><span class="badge b-high1">Visok I</span></td><td>140&ndash;159</td><td>90&ndash;99</td><td style="color:#64748b;">Blaga hipertenzija</td></tr>
+      <tr><td><span class="badge b-high2">Visok II</span></td><td>160&ndash;179</td><td>100&ndash;109</td><td style="color:#64748b;">Umjerena hipertenzija</td></tr>
+      <tr><td><span class="badge b-crisis">⚠️ Kriza</span></td><td>&gt;180</td><td>&gt;110</td><td style="color:#dc2626;font-weight:600;">Hitna medicinska pomoć!</td></tr>
+    </tbody>
+  </table>
+  <div class="note">💡 Jedno mjerenje ne znači dijagnozu. Pritisak varira u zavisnosti od stresa, fizičke aktivnosti i doba dana. Ako su vrijednosti često van normalnog opsega &mdash; konsultuj se s ljekarom.</div>
+
+  <div style="margin-top:20px;">
+    <div class="stitle">Referentne vrijednosti pulsa (u mirovanju)</div>
+    <table style="margin-top:4px;">
+      <thead><tr><th>Kategorija</th><th>Puls (bpm)</th><th>Napomena</th></tr></thead>
+      <tbody>
+        <tr><td><span class="badge" style="background:#dbeafe;color:#2563eb;">Nizak</span></td><td>&lt; 60</td><td style="color:#64748b;">Bradikardija &mdash; problem samo uz simptome</td></tr>
+        <tr><td><span class="badge" style="background:#dcfce7;color:#16a34a;">Normalan</span></td><td>60 &ndash; 99</td><td style="color:#64748b;">Zdrava frekvencija u mirovanju</td></tr>
+        <tr><td><span class="badge" style="background:#fef3c7;color:#d97706;">Vis. normalan</span></td><td>100 &ndash; 119</td><td style="color:#64748b;">Tahikardija &mdash; prati trend, može biti od stresa</td></tr>
+        <tr><td><span class="badge" style="background:#fee2e2;color:#dc2626;">Visok</span></td><td>120+</td><td style="color:#64748b;">Konzultacija s ljekarom preporučena</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="footer">Generisano: ${genDate} &nbsp;·&nbsp; Mjerač Pritiska v6.1.7</div>
+</div>
+
+<script>
+try { Chart.register(window['chartjs-plugin-annotation']); } catch(e) {}
+const PL = ${JSON.stringify(chartPayload)};
+const { labels, sysVals, diaVals, pulseVals, morningSys, morningDia, eveningSys, eveningDia } = PL;
+
+const mkBase = (yMin, yMax, extra) => ({
+  responsive:true, maintainAspectRatio:false,
+  interaction:{mode:'index',intersect:false},
+  plugins:{
+    legend:{position:'top',labels:{font:{size:11},usePointStyle:true,padding:10}},
+    tooltip:{backgroundColor:'#1e293b',titleFont:{size:10},bodyFont:{size:12},padding:8,cornerRadius:8},
+    ...(extra||{})
+  },
+  scales:{
+    x:{ticks:{font:{size:9},maxRotation:45,maxTicksLimit:10,color:'#94a3b8'},grid:{color:'#f1f5f9'}},
+    y:{min:yMin,max:yMax,ticks:{font:{size:10},color:'#94a3b8'},grid:{color:'#f1f5f9'}}
+  }
+});
+
+// SISTOLNI chart with zones
+const sysMin = Math.max(50, Math.min(...sysVals)-15);
+const sysMax = Math.min(210, Math.max(...sysVals)+15);
+const sysAnnot = {
+  zI: {type:'box',yMin:0,  yMax:120,backgroundColor:'rgba(220,252,231,0.25)',borderWidth:0},
+  zN: {type:'box',yMin:120,yMax:130,backgroundColor:'rgba(254,249,195,0.30)',borderWidth:0},
+  zE: {type:'box',yMin:130,yMax:140,backgroundColor:'rgba(254,243,199,0.35)',borderWidth:0},
+  zH1:{type:'box',yMin:140,yMax:160,backgroundColor:'rgba(254,226,226,0.35)',borderWidth:0},
+  zH2:{type:'box',yMin:160,yMax:300,backgroundColor:'rgba(254,202,202,0.40)',borderWidth:0},
+  l120:{type:'line',yMin:120,yMax:120,borderColor:'rgba(34,197,94,0.5)',borderWidth:1,borderDash:[5,4],label:{content:'120',display:false,position:'end',color:'#16a34a',font:{size:9}}},
+  l130:{type:'line',yMin:130,yMax:130,borderColor:'rgba(234,179,8,0.5)',borderWidth:1,borderDash:[5,4],label:{content:'130',display:false,position:'end',color:'#d97706',font:{size:9}}},
+  l140:{type:'line',yMin:140,yMax:140,borderColor:'rgba(239,68,68,0.5)',borderWidth:1,borderDash:[5,4],label:{content:'140',display:false,position:'end',color:'#dc2626',font:{size:9}}},
+  l160:{type:'line',yMin:160,yMax:160,borderColor:'rgba(185,28,28,0.5)',borderWidth:1,borderDash:[5,4],label:{content:'160',display:false,position:'end',color:'#b91c1c',font:{size:9}}},
 };
+new Chart(document.getElementById('sys-chart'),{type:'line',data:{labels,datasets:[
+  {label:'Sistolni',data:sysVals,borderColor:'#3b82f6',borderWidth:2.5,pointRadius:4,pointBackgroundColor:'#3b82f6',tension:0.3,fill:false}
+]},options:mkBase(sysMin,sysMax,{annotation:{annotations:sysAnnot}})});
 
-// ─── UI RENDERING ───────────────────────────────────────────
-function switchPage(page) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+// DIJASTOLNI chart with zones
+const diaMin2 = Math.max(40, Math.min(...diaVals)-15);
+const diaMax2 = Math.min(160, Math.max(...diaVals)+15);
+const diaAnnot = {
+  zI: {type:'box',yMin:0, yMax:80, backgroundColor:'rgba(220,252,231,0.25)',borderWidth:0},
+  zN: {type:'box',yMin:80, yMax:85, backgroundColor:'rgba(254,249,195,0.30)',borderWidth:0},
+  zE: {type:'box',yMin:85, yMax:90, backgroundColor:'rgba(254,243,199,0.35)',borderWidth:0},
+  zH1:{type:'box',yMin:90, yMax:100,backgroundColor:'rgba(254,226,226,0.35)',borderWidth:0},
+  zH2:{type:'box',yMin:100,yMax:200,backgroundColor:'rgba(254,202,202,0.40)',borderWidth:0},
+  l80: {type:'line',yMin:80, yMax:80, borderColor:'rgba(34,197,94,0.5)',borderWidth:1,borderDash:[5,4],label:{content:'80',display:false,position:'end',color:'#16a34a',font:{size:9}}},
+  l85: {type:'line',yMin:85, yMax:85, borderColor:'rgba(234,179,8,0.4)',borderWidth:1,borderDash:[5,4],label:{content:'85',display:false,position:'end',color:'#d97706',font:{size:9}}},
+  l90: {type:'line',yMin:90, yMax:90, borderColor:'rgba(239,68,68,0.5)',borderWidth:1,borderDash:[5,4],label:{content:'90',display:false,position:'end',color:'#dc2626',font:{size:9}}},
+  l100:{type:'line',yMin:100,yMax:100,borderColor:'rgba(185,28,28,0.5)',borderWidth:1,borderDash:[5,4],label:{content:'100',display:false,position:'end',color:'#b91c1c',font:{size:9}}},
+};
+new Chart(document.getElementById('dia-chart'),{type:'line',data:{labels,datasets:[
+  {label:'Dijastolni',data:diaVals,borderColor:'#22c55e',borderWidth:2.5,pointRadius:4,pointBackgroundColor:'#22c55e',tension:0.3,fill:false}
+]},options:mkBase(diaMin2,diaMax2,{annotation:{annotations:diaAnnot}})});
 
-  const pageEl = document.getElementById(page + '-page');
-  const tabEl = document.querySelector(`[data-page="${page}"]`);
+// PULS chart with zones
+const pv = pulseVals.filter(v=>v!=null);
+const pMin = pv.length?Math.max(30,Math.min(...pv)-10):30;
+const pMax = pv.length?Math.min(200,Math.max(...pv)+10):200;
+const pulseAnnot = {
+  zLow:  {type:'box',yMin:0,  yMax:60, backgroundColor:'rgba(219,234,254,0.20)',borderWidth:0},
+  zNorm: {type:'box',yMin:60, yMax:100,backgroundColor:'rgba(220,252,231,0.20)',borderWidth:0},
+  zMed:  {type:'box',yMin:100,yMax:120,backgroundColor:'rgba(254,243,199,0.25)',borderWidth:0},
+  zHigh: {type:'box',yMin:120,yMax:300,backgroundColor:'rgba(254,226,226,0.25)',borderWidth:0},
+  l60:  {type:'line',yMin:60, yMax:60, borderColor:'rgba(59,130,246,0.4)', borderWidth:1,borderDash:[5,4],label:{content:'60', display:false,position:'end',color:'#2563eb',font:{size:9}}},
+  l100: {type:'line',yMin:100,yMax:100,borderColor:'rgba(234,179,8,0.5)',  borderWidth:1,borderDash:[5,4],label:{content:'100',display:false,position:'end',color:'#d97706',font:{size:9}}},
+  l120: {type:'line',yMin:120,yMax:120,borderColor:'rgba(239,68,68,0.5)',  borderWidth:1,borderDash:[5,4],label:{content:'120',display:false,position:'end',color:'#dc2626',font:{size:9}}},
+};
+new Chart(document.getElementById('pulse-chart'),{type:'line',data:{labels,datasets:[
+  {label:'Puls',data:pulseVals,borderColor:'#ef4444',borderWidth:2.5,pointRadius:4,pointBackgroundColor:'#ef4444',tension:0.3,fill:false,spanGaps:true}
+]},options:{...mkBase(pMin,pMax,{annotation:{annotations:pulseAnnot}}),plugins:{...mkBase(pMin,pMax).plugins,legend:{display:false},annotation:{annotations:pulseAnnot}}}});
 
-  if (pageEl) pageEl.classList.add('active');
-  if (tabEl) tabEl.classList.add('active');
+// JUTARNJE vs VEČERNJE chart
+const meEl = document.getElementById('me-chart');
+if (meEl && morningSys.length && eveningSys.length) {
+  const meAll = [...morningSys,...morningDia,...eveningSys,...eveningDia].filter(v=>v!=null);
+  const meMin = meAll.length?Math.max(50,Math.min(...meAll)-10):50;
+  const meMax = meAll.length?Math.min(210,Math.max(...meAll)+15):210;
+  const meLabels = Array.from({length:Math.max(morningSys.length,eveningSys.length)},(_,i)=>'Mj. '+(i+1));
+  new Chart(meEl,{type:'line',data:{labels:meLabels,datasets:[
+    {label:'🌅 Jut. Sistolni', data:morningSys, borderColor:'#f59e0b',borderWidth:2,pointRadius:3,tension:0.3,fill:false},
+    {label:'🌅 Jut. Dijastolni',data:morningDia,borderColor:'#fbbf24',borderWidth:2,pointRadius:3,tension:0.3,fill:false,borderDash:[4,3]},
+    {label:'🌙 Več. Sistolni',  data:eveningSys, borderColor:'#8b5cf6',borderWidth:2,pointRadius:3,tension:0.3,fill:false},
+    {label:'🌙 Več. Dijastolni',data:eveningDia, borderColor:'#a78bfa',borderWidth:2,pointRadius:3,tension:0.3,fill:false,borderDash:[4,3]},
+  ]},options:mkBase(meMin,meMax)});
+}
+function downloadReport() {
+  const html = document.documentElement.outerHTML;
+  const blob = new Blob([html], {type:'text/html;charset=utf-8;'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = document.title.replace(/\s+/g,'_') + '.html';
+  a.click();
+}
+<\/script>
+</body></html>`;
+
+
+  // Store for download button
+  window._reportHtml = html;
+  window._reportFilename = `izvjestaj_pritisak_${from}_${to}.html`;
+
+  // Open in new tab
+  const blob2 = new Blob([html], {type:'text/html;charset=utf-8;'});
+  const url = URL.createObjectURL(blob2);
+  window.open(url, '_blank');
+
+  closeShareModal();
+  showToast('✅ Izvještaj otvoren!');
 }
 
-function showToast(msg) {
-  const toast = document.getElementById('toast');
-  toast.textContent = msg;
-  toast.classList.add('show');
-  setTimeout(() => toast.classList.remove('show'), 3000);
+// ── IMPORT CSV ────────────────────────────────────────────
+function openImportModal() {
+  document.getElementById('csv-import-input').value = '';
+  document.getElementById('import-filename').style.display = 'none';
+  document.getElementById('import-filename').textContent = '';
+  document.getElementById('import-preview').style.display = 'none';
+  document.getElementById('import-preview').textContent = '';
+  document.getElementById('import-drop-zone').style.borderColor = 'var(--border)';
+  const btn = document.getElementById('import-confirm-btn');
+  btn.style.opacity = '0.4';
+  btn.style.pointerEvents = 'none';
+  window._importData = null;
+  document.getElementById('import-modal').style.display = 'flex';
 }
-
-async function handleZipUpload(event) {
+function closeImportModal() {
+  document.getElementById('import-modal').style.display = 'none';
+}
+function previewImport(event) {
   const file = event.target.files[0];
   if (!file) return;
-
-  showToast('📂 Učitavam ZIP...');
-
-  try {
-    const data = await Samsung.parseZip(file);
-
-    if (Object.keys(data).length === 0) {
-      showError('❌ Nije pronađena zdravstvena data u ZIP fajlu');
-      return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      const parsed = JSON.parse(ev.target.result);
+      if (!Array.isArray(parsed)) throw new Error('Nije niz');
+      window._importData = parsed;
+      const fnEl = document.getElementById('import-filename');
+      fnEl.textContent = '📄 ' + file.name;
+      fnEl.style.display = 'block';
+      document.getElementById('import-drop-zone').style.borderColor = 'var(--accent)';
+      const prev = document.getElementById('import-preview');
+      prev.textContent = '✅ Pronađeno ' + parsed.length + ' mjerenja u fajlu.';
+      prev.style.display = 'block';
+      const btn = document.getElementById('import-confirm-btn');
+      btn.style.opacity = '1';
+      btn.style.pointerEvents = 'auto';
+    } catch(err) {
+      window._importData = null;
+      const prev = document.getElementById('import-preview');
+      prev.textContent = '⚠️ Neispravan JSON fajl: ' + err.message;
+      prev.style.display = 'block';
     }
-
-    displaySamsungData(data);
-    showToast('✅ Samsung Health data učitana!');
-  } catch (err) {
-    showError('❌ Greška pri učitavanju: ' + err.message);
-  }
-}
-
-function showError(msg) {
-  const container = document.getElementById('error-container');
-  container.innerHTML = `<div class="error-msg">${msg}</div>`;
-  setTimeout(() => container.innerHTML = '', 5000);
-}
-
-function displaySamsungData(data) {
-  const content = document.getElementById('samsung-content');
-  content.style.display = 'block';
-
-  // Hide upload box
-  document.getElementById('upload-box').style.display = 'none';
-
-  // Display stats
-  displayStats(data);
-
-  // Display data type filters
-  displayDataTypeFilters(data);
-
-  // Display charts
-  displayCharts(data);
-}
-
-function displayStats(data) {
-  const statsContainer = document.getElementById('stats-container');
-  let html = '<div class="stats-grid">';
-
-  const typeConfig = {
-    steps: { label: '👟 Koraci', unit: 'koraka', multiply: 1 },
-    heart_rate: { label: '❤️ Srce', unit: 'bpm', multiply: 1 },
-    oxygen: { label: '🫁 SpO₂', unit: '%', multiply: 1 },
-    sleep: { label: '😴 San', unit: 'h', multiply: 1/3600000 }, // ms to hours
-    calories: { label: '🔥 Kalorije', unit: 'kcal', multiply: 1 },
-    distance: { label: '🚶 Distanca', unit: 'km', multiply: 1 }
   };
-
-  for (const [type, entries] of Object.entries(data)) {
-    if (!typeConfig[type] || entries.length === 0) continue;
-
-    const config = typeConfig[type];
-    const values = entries
-      .map(e => {
-        const val = parseFloat(e.value || e.steps || e.heart_rate || e.oxygen || e.sleep || 0);
-        return isNaN(val) ? 0 : val * config.multiply;
-      })
-      .filter(v => v > 0);
-
-    if (values.length === 0) continue;
-
-    const total = values.reduce((a, b) => a + b, 0);
-    const avg = (total / values.length).toFixed(1);
-    const max = Math.max(...values).toFixed(1);
-
-    html += `
-      <div class="stat-card">
-        <div class="stat-label">${config.label}</div>
-        <div class="stat-value">${total.toFixed(0)}</div>
-        <div class="stat-unit">${config.unit} (prosek: ${avg})</div>
-      </div>
-    `;
-  }
-
-  html += '</div>';
-  statsContainer.innerHTML = html;
-}
-
-function displayDataTypeFilters(data) {
-  const filter = document.getElementById('data-types');
-  let html = '';
-
-  for (const type of Object.keys(data)) {
-    if (data[type].length === 0) continue;
-    const label = Samsung.getDataLabel(type);
-    html += `<div class="type-toggle active" onclick="toggleDataType('${type}', this)">${label}</div>`;
-  }
-
-  filter.innerHTML = html;
-}
-
-function toggleDataType(type, el) {
-  el.classList.toggle('active');
-  // Refresh charts (simplified)
-}
-
-function displayCharts(data) {
-  const container = document.getElementById('charts-container');
-  let html = '';
-
-  const typeConfig = {
-    steps: { label: '👟 Koraci po danima', unit: 'koraka', color: '#58a6ff' },
-    heart_rate: { label: '❤️ Otkucaji srca', unit: 'bpm', color: '#f85149' },
-    oxygen: { label: '🫁 Kiseonik (SpO₂)', unit: '%', color: '#3fb950' },
-    sleep: { label: '😴 San po danima', unit: 'sati', color: '#8b5cf6', divide: 3600000 },
-    calories: { label: '🔥 Kalorije po danima', unit: 'kcal', color: '#d29922' },
-    distance: { label: '🚶 Distanca po danima', unit: 'km', color: '#58a6ff' }
+  reader.onerror = function() {
+    showToast('⚠️ Ne mogu pročitati fajl');
   };
-
-  for (const [type, entries] of Object.entries(data)) {
-    if (!typeConfig[type] || entries.length === 0) continue;
-
-    const config = typeConfig[type];
-    const chartData = aggregateByDate(entries, type, config.divide || 1);
-
-    html += `
-      <div class="chart-card">
-        <div class="chart-title">${config.label}</div>
-        <div class="chart-wrap">
-          <canvas id="chart-${type}"></canvas>
-        </div>
-      </div>
-    `;
-  }
-
-  container.innerHTML = html;
-
-  // Render actual charts
-  setTimeout(() => {
-    for (const [type, entries] of Object.entries(data)) {
-      if (!typeConfig[type] || entries.length === 0) continue;
-      const config = typeConfig[type];
-      const chartData = aggregateByDate(entries, type, config.divide || 1);
-      renderChart(`chart-${type}`, chartData, config);
-    }
-  }, 100);
+  reader.readAsText(file, 'UTF-8');
 }
-
-function aggregateByDate(entries, type, divide = 1) {
-  const byDate = {};
-
-  entries.forEach(entry => {
-    let dateStr = entry.date || entry.start_time || entry.time || '';
-    if (!dateStr) return;
-
-    // Extract just the date part
-    dateStr = dateStr.split('T')[0].split(' ')[0];
-    if (!dateStr.match(/^\d{4}-\d{2}-\d{2}/)) return;
-
-    const value = parseFloat(entry.value || entry.steps || entry.heart_rate || entry.oxygen || 0);
-    if (isNaN(value)) return;
-
-    const finalValue = value / divide;
-
-    if (!byDate[dateStr]) {
-      byDate[dateStr] = [];
-    }
-    byDate[dateStr].push(finalValue);
+function importJSON() {
+  const imported = window._importData;
+  if (!imported) { showToast('⚠️ Nema odabranog fajla'); return; }
+  const existing = load();
+  const existingIds = new Set(existing.map(function(e){ return e.dt; }));
+  var added = 0, skipped = 0;
+  imported.forEach(function(entry) {
+    if (!entry.dt || !entry.sys || !entry.dia) { skipped++; return; }
+    if (existingIds.has(entry.dt)) { skipped++; return; }
+    existing.push(entry);
+    existingIds.add(entry.dt);
+    added++;
   });
-
-  // Convert to sorted array
-  const sorted = Object.entries(byDate)
-    .sort((a, b) => new Date(a[0]) - new Date(b[0]))
-    .slice(-30); // Last 30 days
-
-  return {
-    labels: sorted.map(d => d[0]),
-    values: sorted.map(d => {
-      const vals = d[1];
-      // For most types, use average; for steps/calories, use sum
-      if (['steps', 'calories', 'distance', 'sleep'].includes(type)) {
-        return vals.reduce((a, b) => a + b, 0);
-      }
-      return (vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1);
-    })
-  };
+  existing.sort(function(a,b){ return new Date(b.dt) - new Date(a.dt); });
+  save(existing);
+  window._importData = null;
+  closeImportModal();
+  showToast('✅ Uvezeno ' + added + ', preskočeno ' + skipped);
+  renderHistory();
+  renderCharts();
 }
 
-function renderChart(canvasId, chartData, config) {
-  const ctx = document.getElementById(canvasId);
-  if (!ctx) return;
-
-  new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: chartData.labels,
-      datasets: [{
-        label: config.label,
-        data: chartData.values,
-        borderColor: config.color,
-        backgroundColor: config.color.replace('1', '0.1'),
-        fill: true,
-        tension: 0.4,
-        pointRadius: 3,
-        pointBackgroundColor: config.color,
-        pointBorderColor: '#0d1117',
-        pointBorderWidth: 2
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false }
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          grid: { color: '#30363d', drawBorder: false },
-          ticks: { color: '#7d8590', font: { size: 10 } }
-        },
-        x: {
-          grid: { display: false },
-          ticks: { color: '#7d8590', font: { size: 9 } }
-        }
-      }
-    }
-  });
+// ── DELETE ────────────────────────────────────────────────
+function openDeleteModal() {
+  document.getElementById('del-select').style.display = 'block';
+  document.getElementById('del-confirm').style.display = 'none';
+  _delPending = null;
+  document.getElementById('delete-modal').style.display = 'flex';
+}
+function closeDeleteModal() {
+  document.getElementById('delete-modal').style.display = 'none';
 }
 
-// ─── DRAG & DROP ──────────────────────────────────────────
-const uploadBox = document.getElementById('upload-box');
-uploadBox.addEventListener('dragover', (e) => {
-  e.preventDefault();
-  uploadBox.classList.add('dragover');
-});
-uploadBox.addEventListener('dragleave', () => {
-  uploadBox.classList.remove('dragover');
-});
-uploadBox.addEventListener('drop', (e) => {
-  e.preventDefault();
-  uploadBox.classList.remove('dragover');
-  const files = e.dataTransfer.files;
-  if (files[0]?.name.endsWith('.zip')) {
-    document.getElementById('samsung-zip').files = files;
-    handleZipUpload({ target: { files } });
+function deleteByDays(days) {
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - days);
+  const before = load();
+  const after = before.filter(e => new Date(e.dt) < cutoff);
+  const count = before.length - after.length;
+  if (count === 0) { showToast('⚠️ Nema mjerenja u tom periodu'); return; }
+  save(after);
+  renderHistory(); renderCharts();
+  closeDeleteModal();
+  showToast('🗑️ Obrisano ' + count + ' mjerenja');
+}
+
+let _delPending = null;
+function askDelete(type, days) {
+  const entries = load();
+  let count, msg;
+  if (type === 'all') {
+    count = entries.length;
+    if (!count) { showToast('⚠️ Nema podataka'); return; }
+    msg = 'Obrisaće se sva <strong>' + count + '</strong> mjerenja.<br>Ova akcija je nepovratna!';
+    _delPending = { type: 'all' };
   } else {
-    showError('❌ Molimo uploaduj ZIP fajl');
+    const cut = new Date(); cut.setDate(cut.getDate() - days);
+    count = entries.filter(e => new Date(e.dt) >= cut).length;
+    if (!count) { showToast('⚠️ Nema mjerenja u tom periodu'); return; }
+    msg = 'Obrisaće se <strong>' + count + '</strong> mjerenja iz zadnjih ' + days + ' dana.<br>Ova akcija je nepovratna!';
+    _delPending = { type: 'days', days };
   }
+  document.getElementById('del-confirm-msg').innerHTML = msg;
+  document.getElementById('del-select').style.display = 'none';
+  document.getElementById('del-confirm').style.display = 'block';
+}
+function doDelete() {
+  if (!_delPending) return;
+  if (_delPending.type === 'all') {
+    save([]); showToast('🗑️ Sva istorija obrisana');
+  } else {
+    const cut = new Date(); cut.setDate(cut.getDate() - _delPending.days);
+    const after = load().filter(e => new Date(e.dt) < cut);
+    const n = load().length - after.length;
+    save(after); showToast('🗑️ Obrisano ' + n + ' mjerenja');
+  }
+  _delPending = null;
+  renderHistory(); renderCharts();
+  closeDeleteModal();
+}
+function deleteAll() {
+  const count = load().length;
+  if (count === 0) { showToast('⚠️ Nema podataka'); return; }
+  save([]);
+  renderHistory(); renderCharts();
+  closeDeleteModal();
+  showToast('🗑️ Sva istorija obrisana');
+}
+// ── HELP MODAL ────────────────────────────────────────────
+function openHelpModal() {
+  document.getElementById('help-modal').style.display = 'flex';
+}
+function closeHelpModal() {
+  document.getElementById('help-modal').style.display = 'none';
+}
+
+// ── SORT ──────────────────────────────────────────────────
+let sortAsc = false;
+function toggleSort() {
+  sortAsc = !sortAsc;
+  document.getElementById('sort-btn').textContent = sortAsc ? '↑ Stariji' : '↓ Noviji';
+  renderHistory();
+}
+
+let toastT;
+function showToast(m) {
+  const t=document.getElementById('toast');
+  t.textContent=m; t.classList.add('show');
+  clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// ── PWA INSTALL ───────────────────────────────────────────
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault(); deferredPrompt=e;
+  document.getElementById('install-banner').classList.add('show');
 });
+function installPWA() {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then(()=>{ deferredPrompt=null; document.getElementById('install-banner').classList.remove('show'); });
+}
 
+// ── SERVICE WORKER (inline) ───────────────────────────────
+// ── PWA ICON + MANIFEST ──────────────────────────────────
+function generateAppIcon() {
+  const c = document.createElement('canvas');
+  c.width = 512; c.height = 512;
+  const ctx = c.getContext('2d');
+  // Background circle
+  ctx.fillStyle = '#0d1117';
+  ctx.beginPath();
+  ctx.roundRect(0, 0, 512, 512, 100);
+  ctx.fill();
+  // Heart shape
+  ctx.fillStyle = '#e84545';
+  ctx.beginPath();
+  const x = 256, y = 230, size = 160;
+  ctx.moveTo(x, y + size * 0.35);
+  ctx.bezierCurveTo(x, y, x - size * 0.6, y, x - size * 0.6, y + size * 0.35);
+  ctx.bezierCurveTo(x - size * 0.6, y + size * 0.7, x, y + size * 1.05, x, y + size * 1.05);
+  ctx.bezierCurveTo(x, y + size * 1.05, x + size * 0.6, y + size * 0.7, x + size * 0.6, y + size * 0.35);
+  ctx.bezierCurveTo(x + size * 0.6, y, x, y, x, y + size * 0.35);
+  ctx.fill();
+  // ECG line on heart
+  ctx.strokeStyle = '#fff';
+  ctx.lineWidth = 14;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  ctx.moveTo(156, 280);
+  ctx.lineTo(196, 280);
+  ctx.lineTo(216, 240);
+  ctx.lineTo(236, 330);
+  ctx.lineTo(256, 220);
+  ctx.lineTo(276, 330);
+  ctx.lineTo(296, 280);
+  ctx.lineTo(356, 280);
+  ctx.stroke();
+  return c.toDataURL('image/png');
+}
+
+const iconDataUrl = generateAppIcon();
+
+// Set apple-touch-icon
+document.getElementById('apple-icon').href = iconDataUrl;
+
+// Inject manifest with icon
+const manifestData = {
+  name: 'Mjerač Pritiska',
+  short_name: 'Pritisak',
+  description: 'Praćenje krvnog pritiska i pulsa',
+  start_url: './',
+  display: 'standalone',
+  background_color: '#0d1117',
+  theme_color: '#0d1117',
+  orientation: 'portrait',
+  icons: [
+    { src: iconDataUrl, sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
+    { src: iconDataUrl, sizes: '192x192', type: 'image/png' }
+  ]
+};
+const manifestBlob = new Blob([JSON.stringify(manifestData)], {type: 'application/manifest+json'});
+document.getElementById('pwa-manifest').href = URL.createObjectURL(manifestBlob);
+
+// ── SERVICE WORKER ────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  const swCode = `
+    const CACHE='pritisak-v3';
+    self.addEventListener('install', e => {
+      e.waitUntil(caches.open(CACHE).then(c => c.addAll(['./'])).then(()=>self.skipWaiting()));
+    });
+    self.addEventListener('activate', e => {
+      e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));
+    });
+    self.addEventListener('fetch', e => {
+      e.respondWith(caches.match(e.request).then(cached => cached || fetch(e.request).then(res => {
+        if(res&&res.status===200){ const cl=res.clone(); caches.open(CACHE).then(c=>c.put(e.request,cl)); }
+        return res;
+      }).catch(()=>cached)));
+    });
+  `;
+  const blob = new Blob([swCode], {type:'application/javascript'});
+  navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{});
+}
+
+// ── INIT ──────────────────────────────────────────────────
+setNow();
+setInterval(updateTag, 60000);
 </script>
-
 </body>
 </html>
