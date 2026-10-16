@@ -2,8 +2,8 @@
 <html lang="bs">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <meta name="theme-color" content="#0d1117" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#0a0b10" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Pritisak" />
@@ -11,238 +11,424 @@
   <link rel="manifest" id="pwa-manifest" />
   <link rel="apple-touch-icon" id="apple-icon" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
     :root {
-      --bg: #0d1117;
-      --surface: #161b22;
-      --surface2: #1f2937;
-      --border: #30363d;
-      --text: #e6edf3;
-      --text-muted: #7d8590;
-      --accent: #58a6ff;
-      --accent2: #3fb950;
-      --warn: #f85149;
-      --tag-morning: #d29922;
-      --tag-evening: #8b5cf6;
-      --tag-other: #6b7280;
-      --radius: 12px;
-      --mono: 'DM Mono', monospace;
-      --serif: 'Instrument Serif', serif;
+      --bg: #0a0b10;
+      --surface: #13151d;
+      --surface2: #1b1e29;
+      --surface3: #232736;
+      --border: rgba(255,255,255,0.07);
+      --border-strong: rgba(255,255,255,0.13);
+      --text: #f3f4f8;
+      --text-muted: #8a90a2;
+      --text-faint: #565c6e;
+      --accent: #8b9cff;
+      --accent-soft: rgba(139,156,255,0.14);
+      --accent2: #34d399;
+      --rose: #ff5c7a;
+      --rose-2: #ff8a5b;
+      --warn: #ff5d6c;
+      --tag-morning: #fbbf24;
+      --tag-evening: #a78bfa;
+      --tag-other: #94a3b8;
+      --radius: 20px;
+      --radius-sm: 14px;
+      --mono: 'Manrope', system-ui, -apple-system, sans-serif;
+      --serif: 'Manrope', system-ui, -apple-system, sans-serif;
+      --font: 'Manrope', system-ui, -apple-system, sans-serif;
+      --grad: linear-gradient(135deg, #ff5c7a 0%, #ff8a5b 100%);
+      --safe-b: env(safe-area-inset-bottom, 0px);
+      --safe-t: env(safe-area-inset-top, 0px);
     }
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-    body { background: var(--bg); color: var(--text); font-family: var(--mono); min-height: 100dvh; overscroll-behavior: none; }
+    html { background: var(--bg); }
+    body {
+      background:
+        radial-gradient(900px 500px at 110% -10%, rgba(255,92,122,0.10), transparent 60%),
+        radial-gradient(700px 500px at -20% 0%, rgba(139,156,255,0.10), transparent 60%),
+        var(--bg);
+      background-attachment: fixed;
+      color: var(--text); font-family: var(--font);
+      min-height: 100dvh; overscroll-behavior: none;
+      font-feature-settings: "tnum" 1, "cv11" 1;
+      -webkit-font-smoothing: antialiased;
+    }
+    button { font-family: inherit; }
+    .num { font-variant-numeric: tabular-nums; }
 
+    /* ── HEADER ─────────────────────────────── */
     header {
       position: sticky; top: 0; z-index: 100;
-      background: rgba(13,17,23,0.92); backdrop-filter: blur(12px);
+      background: rgba(10,11,16,0.72);
+      backdrop-filter: saturate(160%) blur(20px); -webkit-backdrop-filter: saturate(160%) blur(20px);
       border-bottom: 1px solid var(--border);
-      padding: 14px 20px 12px;
-      display: flex; align-items: center; justify-content: space-between;
+      padding: calc(12px + var(--safe-t)) 16px 12px;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
     }
-    .header-title { font-family: var(--serif); font-size: 22px; letter-spacing: -0.3px; display: flex; align-items: center; gap: 8px; }
+    .brand { display: flex; align-items: center; gap: 11px; min-width: 0; }
+    .brand-mark {
+      width: 38px; height: 38px; border-radius: 12px; flex-shrink: 0;
+      background: var(--grad); display: grid; place-items: center;
+      box-shadow: 0 6px 18px -6px rgba(255,92,122,0.65), inset 0 1px 0 rgba(255,255,255,0.25);
+    }
+    .brand-name { font-size: 19px; font-weight: 800; letter-spacing: -0.4px; line-height: 1.1; }
+    .brand-sub { font-size: 11px; color: var(--text-faint); font-weight: 600; letter-spacing: 0.2px; }
+    .header-actions { display: flex; gap: 6px; flex-shrink: 0; }
     .icon-btn {
-      background: var(--surface); border: 1px solid var(--border); color: var(--text-muted);
-      width: 36px; height: 36px; border-radius: 8px;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; transition: all 0.2s;
+      position: relative;
+      background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+      width: 40px; height: 40px; border-radius: 13px;
+      display: grid; place-items: center;
+      cursor: pointer; transition: background .2s, border-color .2s, transform .12s;
     }
-    .icon-btn:hover { color: var(--accent); border-color: var(--accent); }
-    .icon-btn:active { background: var(--surface2); transform: scale(0.95); }
+    .icon-btn:hover { background: var(--surface3); border-color: var(--border-strong); }
+    .icon-btn:active { transform: scale(0.92); }
     .icon-btn svg { display: block; }
 
-    nav {
-      display: flex; flex-direction: row; flex-wrap: nowrap;
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      position: sticky; top: 63px; z-index: 99;
-      width: 100%;
+    /* ── TAB BAR (bottom) ───────────────────── */
+    nav.tabbar {
+      position: fixed; z-index: 120;
+      left: 50%; transform: translateX(-50%);
+      bottom: calc(14px + var(--safe-b));
+      width: min(420px, calc(100% - 28px));
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px;
+      padding: 6px;
+      background: rgba(22,24,33,0.78);
+      backdrop-filter: saturate(170%) blur(22px); -webkit-backdrop-filter: saturate(170%) blur(22px);
+      border: 1px solid var(--border-strong);
+      border-radius: 24px;
+      box-shadow: 0 18px 40px -12px rgba(0,0,0,0.7);
     }
     .tab {
-      flex: 1 1 0; min-width: 0; padding: 10px 4px; text-align: center;
-      font-size: 11px; font-family: var(--mono); letter-spacing: 0.5px;
-      color: var(--text-muted); cursor: pointer;
-      border-bottom: 2px solid transparent; transition: all 0.2s;
-      text-transform: uppercase;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+      padding: 8px 4px 7px; border-radius: 18px;
+      font-size: 11px; font-weight: 700; letter-spacing: 0.2px;
+      color: var(--text-muted); cursor: pointer; user-select: none;
+      transition: color .2s, background .25s;
     }
-    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-    .tab-icon { display: block; font-size: 18px; margin-bottom: 2px; }
+    .tab svg { width: 22px; height: 22px; transition: transform .25s; }
+    .tab:active svg { transform: scale(0.88); }
+    .tab.active { color: var(--text); background: rgba(255,255,255,0.08); }
+    .tab.active svg { color: var(--rose); }
 
-    .page { display: none; padding: 20px 16px 100px; }
-    .page.active { display: block; }
+    .page { display: none; padding: 18px 16px calc(120px + var(--safe-b)); max-width: 560px; margin: 0 auto; }
+    .page.active { display: block; animation: pageIn .35s cubic-bezier(.2,.8,.2,1); }
+    @keyframes pageIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 
-    .form-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; }
-    .form-card h2 { font-family: var(--serif); font-size: 18px; margin-bottom: 16px; }
+    .page-head { display: flex; align-items: center; justify-content: space-between; margin: 4px 2px 14px; gap: 10px; }
+    .page-title { font-size: 26px; font-weight: 800; letter-spacing: -0.8px; }
+    .eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: var(--text-faint); margin: 0 2px 8px; }
 
-    .datetime-row {
-      background: var(--bg); border: 1px solid var(--border); border-radius: 10px;
-      margin-bottom: 14px;
-      display: flex;
+    .form-card, .card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0)) , var(--surface);
+      border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 16px; margin-bottom: 14px;
     }
-    .datetime-row input[type=date],
-    .datetime-row input[type=time] {
-      background: none; border: none; color: var(--accent);
-      font-family: var(--mono); outline: none; cursor: pointer;
-      -webkit-appearance: none; appearance: none;
-      color-scheme: dark; width: 100%; display: block;
-      line-height: 1.2;
+
+    /* ── DATE / TIME PICKER ─────────────────── */
+    .dt-card { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+    .dt-tile {
+      position: relative; overflow: hidden;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 12px 14px 13px;
+      cursor: pointer; transition: border-color .2s, background .2s, transform .12s;
+      min-height: 86px; display: flex; flex-direction: column; justify-content: space-between;
     }
-    .datetime-row input[type=date] { border-bottom: 1px solid var(--border); }
-    .dt-sep { display: none; }
+    .dt-tile:hover { border-color: var(--border-strong); }
+    .dt-tile:active { transform: scale(0.98); }
+    .dt-tile:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+    .dt-label { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: var(--text-muted); }
+    .dt-label svg { color: var(--accent); }
+    .dt-value { font-size: 19px; font-weight: 700; letter-spacing: -0.3px; margin-top: 8px; white-space: nowrap; }
+    .dt-value.big { font-size: 32px; font-weight: 800; letter-spacing: -1px; line-height: 1; }
+    .dt-sub { font-size: 12px; color: var(--text-muted); font-weight: 600; margin-top: 2px; }
+    .dt-native {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      opacity: 0; cursor: pointer; border: 0; color-scheme: dark;
+      font-size: 16px; /* avoids iOS zoom */
+    }
+    .dt-native::-webkit-calendar-picker-indicator { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+    .dt-quick { display: flex; gap: 6px; margin-bottom: 16px; overflow-x: auto; scrollbar-width: none; }
+    .dt-quick::-webkit-scrollbar { display: none; }
+    .qbtn {
+      flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 13px; border-radius: 999px;
+      background: transparent; border: 1px solid var(--border-strong); color: var(--text-muted);
+      font-size: 12.5px; font-weight: 700; cursor: pointer; transition: all .15s;
+    }
+    .qbtn:hover { color: var(--text); background: var(--surface2); }
+    .qbtn:active { transform: scale(0.95); }
+    .qbtn.primary { color: #0a0b10; background: var(--accent); border-color: var(--accent); }
 
-    .tag-preview { font-size: 11px; padding: 3px 8px; border-radius: 20px; font-weight: 500; letter-spacing: 0.5px; white-space: nowrap; }
-    .tag-jutarnje { background: rgba(210,153,34,0.15); color: var(--tag-morning); }
-    .tag-vecernje { background: rgba(139,92,246,0.15); color: var(--tag-evening); }
-    .tag-ostalo { background: rgba(107,114,128,0.15); color: var(--tag-other); }
+    .tag-preview { font-size: 12px; padding: 6px 11px; border-radius: 999px; font-weight: 700; white-space: nowrap; border: 1px solid transparent; }
+    .tag-jutarnje { background: rgba(251,191,36,0.12); color: var(--tag-morning); border-color: rgba(251,191,36,0.22); }
+    .tag-vecernje { background: rgba(167,139,250,0.13); color: var(--tag-evening); border-color: rgba(167,139,250,0.24); }
+    .tag-ostalo { background: rgba(148,163,184,0.12); color: var(--tag-other); border-color: rgba(148,163,184,0.2); }
 
-    .bp-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 14px; }
-    .input-group label { display: block; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
+    /* ── BP INPUTS ──────────────────────────── */
+    .bp-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+    .input-group {
+      background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm);
+      padding: 11px 8px 10px; text-align: center; transition: border-color .2s, box-shadow .2s;
+    }
+    .input-group:focus-within { border-color: var(--c, var(--accent)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--c, var(--accent)) 18%, transparent); }
+    .input-group label { display: flex; align-items: center; justify-content: center; gap: 5px; font-size: 10.5px; font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px; }
+    .input-group label::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--c, var(--accent)); }
     .input-group input {
-      width: 100%; background: var(--bg); border: 1px solid var(--border);
-      border-radius: 8px; padding: 10px 12px;
-      font-family: var(--mono); font-size: 20px; color: var(--text);
-      text-align: center; outline: none; transition: border-color 0.2s; -webkit-appearance: none;
+      width: 100%; background: transparent; border: 0;
+      font-family: var(--font); font-size: 34px; font-weight: 800; letter-spacing: -1px; color: var(--text);
+      text-align: center; outline: none; -webkit-appearance: none; appearance: none; -moz-appearance: textfield;
+      font-variant-numeric: tabular-nums; padding: 2px 0;
     }
-    .input-group input:focus { border-color: var(--accent); }
-    .input-group input::placeholder { color: var(--border); font-size: 16px; }
-    .input-group .unit { font-size: 9px; color: var(--text-muted); text-align: center; margin-top: 4px; letter-spacing: 0.5px; }
+    .input-group input::-webkit-outer-spin-button, .input-group input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    .input-group input::placeholder { color: var(--text-faint); opacity: .6; }
+    .input-group .unit { font-size: 11px; color: var(--text-faint); font-weight: 700; }
+    .ig-sys { --c: #8b9cff; } .ig-dia { --c: #34d399; } .ig-pulse { --c: #ff5c7a; }
+
+    .live-status { min-height: 28px; display: flex; align-items: center; gap: 8px; margin: 0 2px 12px; font-size: 12.5px; color: var(--text-muted); font-weight: 600; }
 
     .comment-input {
-      width: 100%; background: var(--bg); border: 1px solid var(--border);
-      border-radius: 8px; padding: 10px 12px;
-      font-family: var(--mono); font-size: 13px; color: var(--text);
-      outline: none; resize: none; height: 64px; margin-bottom: 14px; transition: border-color 0.2s;
+      width: 100%; background: var(--surface2); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 12px 14px;
+      font-family: var(--font); font-size: 15px; color: var(--text);
+      outline: none; resize: none; height: 70px; margin-bottom: 14px; transition: border-color .2s, box-shadow .2s;
     }
-    .comment-input:focus { border-color: var(--accent); }
-    .comment-input::placeholder { color: var(--border); }
+    .comment-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+    .comment-input::placeholder { color: var(--text-faint); }
 
     .btn-primary {
-      width: 100%; padding: 14px; background: var(--accent); color: #0d1117;
-      border: none; border-radius: 10px; font-family: var(--mono);
-      font-size: 14px; font-weight: 500; letter-spacing: 0.5px; cursor: pointer; transition: all 0.15s;
+      width: 100%; padding: 15px; background: var(--grad); color: #fff;
+      border: none; border-radius: 16px; font-family: var(--font);
+      font-size: 15px; font-weight: 800; letter-spacing: 0.1px; cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      box-shadow: 0 10px 24px -10px rgba(255,92,122,0.7), inset 0 1px 0 rgba(255,255,255,0.22);
+      transition: transform .12s, filter .2s, opacity .2s;
     }
-    .btn-primary:active { transform: scale(0.98); opacity: 0.9; }
+    .btn-primary:hover { filter: brightness(1.06); }
+    .btn-primary:active { transform: scale(0.98); }
+    .btn-secondary {
+      width: 100%; padding: 13px; background: var(--surface2); color: var(--text);
+      border: 1px solid var(--border); border-radius: 14px; font-family: var(--font);
+      font-size: 14px; font-weight: 700; cursor: pointer; transition: all .15s; text-align: center; display: block;
+    }
+    .btn-secondary:hover { background: var(--surface3); }
+    .btn-secondary:active { transform: scale(0.98); }
+    .btn-danger {
+      width: 100%; padding: 13px; background: rgba(255,93,108,0.12); color: var(--warn);
+      border: 1px solid rgba(255,93,108,0.3); border-radius: 14px; font-family: var(--font);
+      font-size: 14px; font-weight: 800; cursor: pointer; transition: all .15s;
+    }
+    .btn-danger:active { transform: scale(0.98); }
+    .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
     .success-flash {
       display: none; align-items: center; gap: 8px;
-      background: rgba(63,185,80,0.1); border: 1px solid rgba(63,185,80,0.3);
-      border-radius: 8px; padding: 10px 14px; font-size: 13px; color: var(--accent2); margin-top: 10px;
+      background: rgba(52,211,153,0.1); border: 1px solid rgba(52,211,153,0.28);
+      border-radius: 14px; padding: 11px 14px; font-size: 14px; font-weight: 700; color: var(--accent2); margin-top: 10px;
     }
-    .success-flash.show { display: flex; }
+    .success-flash.show { display: flex; animation: pageIn .3s ease; }
 
-    .filter-row { display: flex; gap: 6px; margin-bottom: 14px; overflow-x: auto; padding-bottom: 2px; }
-    .filter-row::-webkit-scrollbar { display: none; }
-    div[style*='overflow-x:auto']::-webkit-scrollbar { display: none; }
-    .filter-chip {
-      flex-shrink: 0; padding: 6px 12px; border-radius: 20px; font-size: 11px;
-      letter-spacing: 0.5px; cursor: pointer; border: 1px solid var(--border);
-      background: var(--surface); color: var(--text-muted); transition: all 0.15s;
+    .legend-row { display: flex; gap: 14px; flex-wrap: wrap; padding: 2px 4px; }
+    .legend { display: flex; gap: 14px; margin-top: 12px; flex-wrap: wrap; }
+    .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--text-muted); }
+    .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+    /* ── CHIPS ──────────────────────────────── */
+    .chip-row { display: flex; gap: 6px; margin-bottom: 14px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+    .chip-row::-webkit-scrollbar { display: none; }
+    .filter-chip, .range-chip, .sort-chip {
+      flex-shrink: 0; padding: 8px 14px; border-radius: 999px; font-size: 13px; font-weight: 700;
+      cursor: pointer; border: 1px solid var(--border); background: var(--surface); color: var(--text-muted);
+      transition: all .15s; white-space: nowrap; user-select: none; font-family: var(--font);
     }
-    .filter-chip.active { background: var(--accent); border-color: var(--accent); color: #0d1117; }
+    .filter-chip:active, .range-chip:active, .sort-chip:active { transform: scale(0.95); }
+    .filter-chip.active { background: var(--text); border-color: var(--text); color: var(--bg); }
+    .sort-chip { display: inline-flex; align-items: center; gap: 6px; }
+
+    .segmented { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 2px; padding: 4px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; margin-bottom: 12px; }
+    .segmented .range-chip { border: 0; background: transparent; padding: 9px 4px; border-radius: 12px; text-align: center; font-size: 12.5px; }
+    .segmented .range-chip.active { background: var(--surface3); color: var(--text); box-shadow: 0 2px 8px rgba(0,0,0,0.35); }
+
+    /* ── HISTORY ────────────────────────────── */
+    .grp-year, .grp-month {
+      display: flex; align-items: center; justify-content: space-between;
+      cursor: pointer; user-select: none; transition: background .15s;
+    }
+    .grp-year { padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; }
+    .grp-month { padding: 10px 6px 8px; }
+    .grp-left { display: flex; align-items: center; gap: 10px; }
+    .grp-arrow { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 7px; background: var(--surface2); color: var(--text-muted); transition: transform .25s; }
+    .grp-year .grp-title { font-size: 16px; font-weight: 800; letter-spacing: -0.3px; }
+    .grp-month .grp-title { font-size: 13px; font-weight: 800; letter-spacing: 0.6px; text-transform: uppercase; color: var(--text-muted); }
+    .grp-count { font-size: 12px; font-weight: 700; color: var(--text-faint); background: var(--surface2); padding: 3px 9px; border-radius: 999px; }
 
     .entry-card {
       background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 14px 16px; margin-bottom: 10px;
+      border-radius: 18px; padding: 14px 14px 12px 16px; margin-bottom: 8px;
       position: relative; overflow: hidden;
     }
-    .entry-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; }
+    .entry-card::before { content: ''; position: absolute; left: 0; top: 14px; bottom: 14px; width: 3px; border-radius: 0 3px 3px 0; }
     .entry-card.jutarnje::before { background: var(--tag-morning); }
     .entry-card.vecernje::before { background: var(--tag-evening); }
     .entry-card.ostalo::before { background: var(--tag-other); }
-
-    .entry-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
-    .entry-datetime { font-size: 11px; color: var(--text-muted); line-height: 1.5; }
-    .del-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px 6px; border-radius: 6px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
-    .del-btn:hover { background: var(--surface2); }
-    .del-btn:active { color: var(--warn); transform: scale(0.9); }
+    .entry-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+    .entry-bp { display: flex; align-items: baseline; gap: 3px; flex-wrap: wrap; }
+    .bp-value { font-size: 30px; font-weight: 800; letter-spacing: -1px; color: var(--text); line-height: 1; font-variant-numeric: tabular-nums; }
+    .bp-sep { color: var(--text-faint); font-size: 22px; font-weight: 600; }
+    .bp-unit { font-size: 12px; color: var(--text-faint); margin-left: 4px; font-weight: 700; }
+    .entry-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 8px; font-size: 12.5px; font-weight: 600; color: var(--text-muted); }
+    .entry-meta .dot { width: 3px; height: 3px; border-radius: 50%; background: var(--text-faint); }
+    .entry-pulse { display: inline-flex; align-items: center; gap: 5px; color: var(--text-muted); }
+    .entry-pulse b { color: var(--rose); font-weight: 800; }
+    .entry-comment { font-size: 13px; color: var(--text-muted); border-top: 1px dashed var(--border-strong); margin-top: 10px; padding-top: 9px; line-height: 1.45; }
+    .entry-actions { display: flex; gap: 4px; }
+    .del-btn { background: var(--surface2); border: 1px solid var(--border); color: var(--text-muted); cursor: pointer; width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center; transition: all .15s; }
+    .del-btn:hover { color: var(--text); background: var(--surface3); }
+    .del-btn.danger:hover { color: var(--warn); }
+    .del-btn:active { transform: scale(0.9); }
     .del-btn svg { display: block; }
 
-    .entry-bp { display: flex; align-items: baseline; gap: 4px; margin-bottom: 4px; flex-wrap: wrap; }
-    .bp-value { font-size: 28px; letter-spacing: -1px; color: var(--text); line-height: 1; }
-    .bp-sep { color: var(--text-muted); font-size: 20px; }
-    .bp-unit { font-size: 11px; color: var(--text-muted); margin-left: 2px; }
-    .entry-pulse { font-size: 13px; color: var(--text-muted); margin-bottom: 4px; }
-    .entry-pulse span { color: var(--warn); }
-    .entry-comment { font-size: 12px; color: var(--text-muted); font-style: italic; border-top: 1px solid var(--border); margin-top: 6px; padding-top: 6px; }
-
-    .bp-status { font-size: 10px; letter-spacing: 0.5px; padding: 2px 7px; border-radius: 20px; display: inline-block; }
-    .bp-low     { background: rgba(88,166,255,0.12); color: #58a6ff; }
-    .bp-ideal   { background: rgba(63,185,80,0.15);  color: #3fb950; }
-    .bp-normal  { background: rgba(63,185,80,0.10);  color: #56d364; }
-    .bp-elevated{ background: rgba(210,153,34,0.15); color: #d29922; }
-    .bp-high1   { background: rgba(248,81,73,0.12);  color: #f85149; }
-    .bp-high2   { background: rgba(248,81,73,0.20);  color: #ff6b6b; }
-    .bp-crisis  { background: rgba(248,81,73,0.30);  color: #fff; font-weight:600; animation: pulse-warn 1s infinite; }
+    .bp-status { font-size: 11.5px; font-weight: 800; padding: 4px 9px; border-radius: 999px; display: inline-block; white-space: nowrap; }
+    .bp-low     { background: rgba(96,165,250,0.14); color: #7cb4ff; }
+    .bp-ideal   { background: rgba(52,211,153,0.15); color: #34d399; }
+    .bp-normal  { background: rgba(52,211,153,0.10); color: #6ee7b7; }
+    .bp-elevated{ background: rgba(251,191,36,0.14); color: #fbbf24; }
+    .bp-high1   { background: rgba(255,138,91,0.15); color: #ff9b6e; }
+    .bp-high2   { background: rgba(255,93,108,0.17); color: #ff6b7a; }
+    .bp-crisis  { background: #ff3b5c; color: #fff; animation: pulse-warn 1s infinite; }
     @keyframes pulse-warn { 0%,100%{opacity:1} 50%{opacity:0.6} }
 
-    .empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); }
-    .empty-state .emoji { font-size: 48px; display: block; margin-bottom: 12px; }
-    .empty-state p { font-size: 13px; }
+    .empty-state { text-align: center; padding: 64px 20px; color: var(--text-muted); }
+    .empty-state .emoji { width: 64px; height: 64px; border-radius: 20px; background: var(--surface); border: 1px solid var(--border); display: grid; place-items: center; margin: 0 auto 14px; font-size: 28px; }
+    .empty-state p { font-size: 14px; line-height: 1.5; font-weight: 600; }
 
-    .chart-controls { display: flex; gap: 6px; margin-bottom: 16px; overflow-x: auto; }
-    .chart-controls::-webkit-scrollbar { display: none; }
-    .range-chip {
-      flex-shrink: 0; padding: 6px 12px; border-radius: 20px; font-size: 11px;
-      cursor: pointer; border: 1px solid var(--border); background: var(--surface); color: var(--text-muted); transition: all 0.15s;
-    }
-    .range-chip.active { background: var(--surface2); border-color: var(--accent); color: var(--accent); }
+    /* ── CHARTS ─────────────────────────────── */
+    .chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 14px; }
+    .chart-card h3 { font-size: 15px; font-weight: 800; letter-spacing: -0.2px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: baseline; }
+    .chart-card h3 small { font-size: 12px; color: var(--text-faint); font-weight: 700; }
+    .chart-wrap { position: relative; height: 210px; }
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 13px 12px; position: relative; overflow: hidden; }
+    .stat-card::after { content: ''; position: absolute; left: 12px; right: 12px; bottom: 0; height: 3px; border-radius: 3px 3px 0 0; background: var(--c); opacity: .85; }
+    .stat-label { font-size: 11px; font-weight: 800; letter-spacing: 0.6px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+    .stat-value { font-size: 28px; font-weight: 800; color: var(--text); letter-spacing: -1px; line-height: 1; font-variant-numeric: tabular-nums; }
+    .stat-unit { font-size: 11px; color: var(--text-faint); font-weight: 700; margin-top: 4px; }
 
-    .chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 16px; }
-    .chart-card h3 { font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 14px; }
-    .chart-wrap { position: relative; height: 200px; }
-
-    .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 16px; }
-    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px; text-align: center; }
-    .stat-label { font-size: 9px; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
-    .stat-value { font-size: 22px; color: var(--text); letter-spacing: -0.5px; line-height: 1; }
-    .stat-unit { font-size: 9px; color: var(--text-muted); }
-
-    .legend { display: flex; gap: 12px; margin-top: 10px; flex-wrap: wrap; }
-    .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-muted); }
-    .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
-
+    /* ── TOAST / BANNER ─────────────────────── */
     .toast {
-      position: fixed; bottom: 80px; left: 50%;
-      transform: translateX(-50%) translateY(20px);
-      background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 8px; padding: 10px 16px; font-size: 13px;
-      opacity: 0; transition: all 0.3s; z-index: 999; white-space: nowrap;
+      position: fixed; bottom: calc(100px + var(--safe-b)); left: 50%;
+      transform: translateX(-50%) translateY(16px) scale(.96);
+      background: rgba(35,39,54,0.95); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-strong);
+      border-radius: 999px; padding: 11px 18px; font-size: 14px; font-weight: 700;
+      opacity: 0; transition: all .3s cubic-bezier(.2,.8,.2,1); z-index: 999; white-space: nowrap; pointer-events: none;
+      box-shadow: 0 12px 30px -10px rgba(0,0,0,0.6);
     }
-    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
     .install-banner {
-      display: none; position: fixed; bottom: 0; left: 0; right: 0;
-      background: var(--surface2); border-top: 1px solid var(--border);
-      padding: 12px 16px; z-index: 200; align-items: center; gap: 10px;
+      display: none; position: fixed; left: 14px; right: 14px; bottom: calc(96px + var(--safe-b));
+      background: var(--surface2); border: 1px solid var(--border-strong); border-radius: 18px;
+      padding: 10px 10px 10px 16px; z-index: 200; align-items: center; gap: 10px;
+      box-shadow: 0 12px 30px -10px rgba(0,0,0,0.6);
     }
     .install-banner.show { display: flex; }
-    .install-banner p { flex: 1; font-size: 13px; color: var(--text-muted); }
-    .install-btn { background: var(--accent); color: #0d1117; border: none; border-radius: 8px; padding: 8px 14px; font-family: var(--mono); font-size: 12px; cursor: pointer; font-weight: 500; }
-    .close-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 16px; }
-    .btn-secondary { width:100%; padding:11px; background:var(--surface2); color:var(--text); border:1px solid var(--border); border-radius:10px; font-family:var(--mono); font-size:12px; cursor:pointer; transition:all 0.15s; margin-bottom:0; text-align:center; display:block; }
-    .btn-secondary:active { background:var(--border); }
+    .install-banner p { flex: 1; font-size: 14px; font-weight: 600; color: var(--text-muted); }
+    .install-btn { background: var(--grad); color: #fff; border: none; border-radius: 12px; padding: 9px 14px; font-size: 13px; cursor: pointer; font-weight: 800; }
+    .close-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 16px; width: 32px; height: 32px; }
+
+    /* ── SHEETS / MODALS ────────────────────── */
+    .sheet-backdrop {
+      display: none; position: fixed; inset: 0; z-index: 500;
+      background: rgba(4,5,8,0.62); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+      padding: 12px; align-items: flex-end; overflow-y: auto;
+      animation: fadeIn .2s ease;
+    }
+    .sheet {
+      background: var(--surface); border: 1px solid var(--border-strong);
+      border-radius: 26px; padding: 8px 18px calc(18px + var(--safe-b));
+      width: 100%; max-width: 480px; margin: auto auto 0;
+      box-shadow: 0 -10px 50px -10px rgba(0,0,0,0.6);
+      animation: sheetUp .32s cubic-bezier(.2,.9,.25,1);
+    }
+    .sheet::before { content: ''; display: block; width: 38px; height: 5px; border-radius: 3px; background: var(--border-strong); margin: 0 auto 12px; }
+    @media (min-width: 640px) {
+      .sheet-backdrop { align-items: center; }
+      .sheet { margin: auto; padding-bottom: 18px; }
+      .sheet::before { display: none; }
+      .sheet { padding-top: 18px; }
+    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes sheetUp { from { transform: translateY(40px); opacity: .4; } to { transform: none; opacity: 1; } }
+    .sheet-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
+    .sheet-title { font-size: 20px; font-weight: 800; letter-spacing: -0.4px; }
+    .sheet-desc { font-size: 13.5px; color: var(--text-muted); margin-bottom: 16px; line-height: 1.55; }
+    .sheet-close {
+      background: var(--surface2); border: 1px solid var(--border); color: var(--text-muted);
+      width: 34px; height: 34px; border-radius: 50%; cursor: pointer; flex-shrink: 0;
+      display: grid; place-items: center; transition: all .15s;
+    }
+    .sheet-close:hover { color: var(--text); background: var(--surface3); }
+    .field-label { font-size: 11px; font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+    .field-input {
+      width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 12px;
+      padding: 11px 12px; font-family: var(--font); font-size: 15px; font-weight: 600; color: var(--text); outline: none; color-scheme: dark;
+    }
+    .field-input:focus { border-color: var(--accent); }
+
+    .menu-list { display: flex; flex-direction: column; gap: 6px; margin: 6px 0 12px; }
+    .menu-item {
+      display: flex; align-items: center; gap: 14px; width: 100%; text-align: left;
+      background: var(--surface2); border: 1px solid var(--border); border-radius: 16px;
+      padding: 13px 14px; color: var(--text); cursor: pointer; transition: all .15s;
+    }
+    .menu-item:hover { background: var(--surface3); }
+    .menu-item:active { transform: scale(0.98); }
+    .menu-ico { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; flex-shrink: 0; background: var(--accent-soft); color: var(--accent); }
+    .menu-item.danger .menu-ico { background: rgba(255,93,108,0.12); color: var(--warn); }
+    .menu-txt b { display: block; font-size: 15px; font-weight: 800; }
+    .menu-txt span { display: block; font-size: 12.5px; color: var(--text-muted); font-weight: 600; margin-top: 1px; }
+
+    .drop-zone { border: 2px dashed var(--border-strong); border-radius: 18px; padding: 26px 16px; text-align: center; margin-bottom: 14px; cursor: pointer; transition: border-color .2s, background .2s; }
+    .drop-zone:hover { background: var(--surface2); }
+    .note-box { border-radius: 14px; padding: 12px 14px; font-size: 13px; line-height: 1.55; }
+
+    .range-list { display: flex; flex-direction: column; gap: 7px; margin-bottom: 18px; }
+    .range-row {
+      display: grid; grid-template-columns: 12px 1fr auto; align-items: center; gap: 12px;
+      background: color-mix(in srgb, var(--c) 9%, var(--surface2)); border: 1px solid color-mix(in srgb, var(--c) 22%, transparent);
+      border-radius: 14px; padding: 11px 13px;
+    }
+    .range-row .rdot { width: 10px; height: 10px; border-radius: 50%; background: var(--c); box-shadow: 0 0 0 4px color-mix(in srgb, var(--c) 18%, transparent); }
+    .range-row .rname { font-size: 14px; font-weight: 800; }
+    .range-row .rdesc { font-size: 12px; color: var(--text-muted); font-weight: 600; margin-top: 1px; }
+    .range-row .rval { font-size: 13px; font-weight: 800; color: var(--c); white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .help-h { font-size: 17px; font-weight: 800; margin: 6px 0 2px; }
   </style>
 </head>
 <body>
 
 <header>
-  <div class="header-title" style="flex-direction:column;align-items:flex-start;gap:2px;"><div style="display:flex;align-items:center;gap:8px;"><span>🫀</span> Pritisak</div><span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);">v6.1.7</span></div>
-  <div style="display:flex;gap:8px;">
-    <button class="icon-btn" onclick="openImportModal()" title="Import backup">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+  <div class="brand">
+    <div class="brand-mark">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/><path d="M3.22 12H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27"/></svg>
+    </div>
+    <div>
+      <div class="brand-name">Pritisak</div>
+      <div class="brand-sub">v7.0.0</div>
+    </div>
+  </div>
+  <div class="header-actions">
+    <button class="icon-btn" onclick="openShareModal()" title="Izvještaj" aria-label="Izvještaj">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M8 17v-3"/><path d="M12 17v-6"/><path d="M16 17v-2"/></svg>
     </button>
-    <button class="icon-btn" onclick="openExportModal()" title="Export backup">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    <button class="icon-btn" onclick="openHelpModal()" title="Opsezi pritiska" aria-label="Opsezi pritiska">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
     </button>
-    <button class="icon-btn" onclick="openShareModal()" title="Generiši izvještaj">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-    </button>
-    <button class="icon-btn" onclick="openHelpModal()" title="Opsezi pritiska">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-    </button>
-    <button class="icon-btn" onclick="openDeleteModal()" title="Brisanje podataka">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+    <button class="icon-btn" onclick="openMoreModal()" title="Podaci" aria-label="Podaci">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg>
     </button>
   </div>
 </header>
@@ -250,332 +436,307 @@
 <!-- Hidden file input for import -->
 <input type="file" id="csv-import-input" accept=".json" style="display:none" onchange="previewImport(event)" />
 
+<!-- MORE (DATA) SHEET -->
+<div id="more-modal" class="sheet-backdrop" onclick="if(event.target===this)closeMoreModal()">
+  <div class="sheet">
+    <div class="sheet-head">
+      <div class="sheet-title">Podaci</div>
+      <button class="sheet-close" onclick="closeMoreModal()" aria-label="Zatvori"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="menu-list">
+      <button class="menu-item" onclick="closeMoreModal();openImportModal()">
+        <span class="menu-ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></span>
+        <span class="menu-txt"><b>Uvezi backup</b><span>Učitaj mjerenja iz JSON fajla</span></span>
+      </button>
+      <button class="menu-item" onclick="closeMoreModal();openExportModal()">
+        <span class="menu-ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></span>
+        <span class="menu-txt"><b>Izvezi backup</b><span>Sačuvaj sva mjerenja kao JSON</span></span>
+      </button>
+      <button class="menu-item danger" onclick="closeMoreModal();openDeleteModal()">
+        <span class="menu-ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></span>
+        <span class="menu-txt"><b>Brisanje podataka</b><span>Obriši period ili cijelu istoriju</span></span>
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- IMPORT MODAL -->
-<div id="import-modal" onclick="if(event.target===this)closeImportModal()" style="display:none; position:fixed; inset:0; z-index:500; background:rgba(0,0,0,0.7); padding:20px; align-items:flex-end;">
-  <div style="background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:20px; width:100%; max-width:480px; margin:0 auto;">
-    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
-      <div style="font-family:var(--serif); font-size:18px;">⬆️ Import backup</div>
-      <button onclick="closeImportModal()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);width:32px;height:32px;border-radius:8px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
+<div id="import-modal" class="sheet-backdrop" onclick="if(event.target===this)closeImportModal()">
+  <div class="sheet">
+    <div class="sheet-head">
+      <div class="sheet-title">Uvezi backup</div>
+      <button class="sheet-close" onclick="closeImportModal()" aria-label="Zatvori"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
     </div>
-    <div style="font-size:12px; color:var(--text-muted); margin-bottom:16px; line-height:1.6;">Odaberi JSON fajl koji si prethodno exportovao. Odaberi JSON fajl koji si prethodno exportovao.</div>
-
-    <div id="import-drop-zone" style="border:2px dashed var(--border); border-radius:10px; padding:24px 16px; text-align:center; margin-bottom:14px; cursor:pointer; transition:border-color 0.2s;" id="import-drop-zone-inner" onclick="document.getElementById('csv-import-input').click()">
-      <div style="font-size:28px; margin-bottom:8px;">📂</div>
-      <div style="font-size:13px; color:var(--text);">Tapni da odabereš fajl</div>
-      <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">Podržani format: .json</div>
-      <div id="import-filename" style="font-size:12px; color:var(--accent); margin-top:8px; display:none;"></div>
+    <div class="sheet-desc">Odaberi JSON fajl koji si prethodno izvezao. Postojeća mjerenja ostaju, duplikati se preskaču.</div>
+    <div id="import-drop-zone" class="drop-zone" onclick="document.getElementById('csv-import-input').click()">
+      <div style="font-size:30px; margin-bottom:8px;">📂</div>
+      <div style="font-size:15px; font-weight:800;">Tapni da odabereš fajl</div>
+      <div style="font-size:12.5px; color:var(--text-muted); margin-top:4px; font-weight:600;">Podržani format: .json</div>
+      <div id="import-filename" style="font-size:13px; color:var(--accent); margin-top:10px; display:none; font-weight:700;"></div>
     </div>
-
-    <div id="import-preview" style="display:none; background:rgba(63,185,80,0.08); border:1px solid rgba(63,185,80,0.2); border-radius:8px; padding:10px 14px; font-size:12px; color:var(--accent2); margin-bottom:14px;"></div>
-
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+    <div id="import-preview" class="note-box" style="display:none; background:rgba(52,211,153,0.08); border:1px solid rgba(52,211,153,0.22); color:var(--accent2); margin-bottom:14px; font-weight:700;"></div>
+    <div class="btn-row">
       <button class="btn-secondary" onclick="closeImportModal()">Odustani</button>
-      <button id="import-confirm-btn" class="btn-primary" style="margin:0; opacity:0.4; pointer-events:none;" onclick="importJSON()">📥 Uvezi</button>
+      <button id="import-confirm-btn" class="btn-primary" style="opacity:0.4; pointer-events:none;" onclick="importJSON()">Uvezi</button>
     </div>
   </div>
 </div>
 
 <!-- EXPORT MODAL -->
-<div id="export-modal" onclick="if(event.target===this)closeExportModal()" style="display:none; position:fixed; inset:0; z-index:500; background:rgba(0,0,0,0.7); padding:20px; align-items:flex-end;">
-  <div style="background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:20px; width:100%; max-width:480px; margin:0 auto;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-      <div style="font-family:var(--serif); font-size:18px;">⬇️ Export</div>
-      <button onclick="closeExportModal()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);width:32px;height:32px;border-radius:8px;font-size:16px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;">✕</button>
+<div id="export-modal" class="sheet-backdrop" onclick="if(event.target===this)closeExportModal()">
+  <div class="sheet">
+    <div class="sheet-head">
+      <div class="sheet-title">Izvezi backup</div>
+      <button class="sheet-close" onclick="closeExportModal()" aria-label="Zatvori"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
     </div>
-    <div style="font-size:12px; color:var(--text-muted); margin-bottom:16px;">Exportovaće se sva mjerenja kao JSON backup fajl.</div>
-    <div id="export-count" style="font-size:13px; color:var(--accent); margin-bottom:16px;"></div>
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+    <div class="sheet-desc">Sva mjerenja biće sačuvana kao JSON backup fajl.</div>
+    <div id="export-count" class="note-box" style="background:var(--accent-soft); color:var(--accent); margin-bottom:16px; font-weight:600;"></div>
+    <div class="btn-row">
       <button class="btn-secondary" onclick="closeExportModal()">Odustani</button>
-      <button class="btn-primary" style="margin:0;" onclick="doExportJSON()">💾 Sačuvaj JSON</button>
+      <button class="btn-primary" onclick="doExportJSON()">Sačuvaj JSON</button>
     </div>
   </div>
 </div>
 
 <!-- SHARE MODAL -->
-<div id="share-modal" onclick="if(event.target===this)closeShareModal()" style="display:none; position:fixed; inset:0; z-index:500; background:rgba(0,0,0,0.7); padding:16px; align-items:center; overflow-y:auto;">
-  <div style="background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:20px; width:100%; max-width:480px; margin:auto;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-      <div style="font-family:var(--serif); font-size:18px;">📤 Izvještaj</div>
-      <button onclick="closeShareModal()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);width:32px;height:32px;border-radius:8px;font-size:16px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;">✕</button>
+<div id="share-modal" class="sheet-backdrop" onclick="if(event.target===this)closeShareModal()">
+  <div class="sheet">
+    <div class="sheet-head" style="margin-bottom:16px;">
+      <div class="sheet-title">Izvještaj</div>
+      <button class="sheet-close" onclick="closeShareModal()" aria-label="Zatvori"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
     </div>
-
-    <div style="font-size:11px; letter-spacing:0.5px; text-transform:uppercase; color:var(--text-muted); margin-bottom:8px;">Period</div>
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px;">
+    <div class="field-label">Period</div>
+    <div class="btn-row" style="margin-bottom:16px;">
       <div>
-        <label style="font-size:10px; color:var(--text-muted); display:block; margin-bottom:4px;">Od</label>
-        <input type="date" id="share-from" style="width:100%; background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:8px 10px; font-family:var(--mono); font-size:13px; color:var(--text); outline:none;" />
+        <div style="font-size:12px; color:var(--text-muted); margin-bottom:5px; font-weight:700;">Od</div>
+        <input type="date" id="share-from" class="field-input" />
       </div>
       <div>
-        <label style="font-size:10px; color:var(--text-muted); display:block; margin-bottom:4px;">Do</label>
-        <input type="date" id="share-to" style="width:100%; background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:8px 10px; font-family:var(--mono); font-size:13px; color:var(--text); outline:none;" />
+        <div style="font-size:12px; color:var(--text-muted); margin-bottom:5px; font-weight:700;">Do</div>
+        <input type="date" id="share-to" class="field-input" />
       </div>
     </div>
-
-    <div style="font-size:11px; letter-spacing:0.5px; text-transform:uppercase; color:var(--text-muted); margin-bottom:8px;">Mjerenja</div>
-    <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:16px;">
+    <div class="field-label">Mjerenja</div>
+    <div class="chip-row" style="flex-wrap:wrap;">
       <div class="filter-chip active" id="stag-sve" onclick="setShareTag('sve')">Sve</div>
       <div class="filter-chip" id="stag-jutarnje" onclick="setShareTag('jutarnje')">🌅 Jutarnje</div>
       <div class="filter-chip" id="stag-vecernje" onclick="setShareTag('vecernje')">🌙 Večernje</div>
       <div class="filter-chip" id="stag-ostalo" onclick="setShareTag('ostalo')">🕐 Ostalo</div>
     </div>
-
-    <div id="share-preview" style="font-size:12px; color:var(--accent); margin-bottom:16px;"></div>
-
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+    <div id="share-preview" style="font-size:13.5px; font-weight:700; color:var(--accent); margin-bottom:16px;"></div>
+    <div class="btn-row">
       <button class="btn-secondary" onclick="closeShareModal()">Odustani</button>
-      <button class="btn-primary" style="margin:0;" onclick="generateReport()">📊 Generiši</button>
+      <button class="btn-primary" onclick="generateReport()">Generiši</button>
     </div>
   </div>
 </div>
 
 <!-- HELP MODAL -->
-<div id="help-modal" onclick="if(event.target===this)closeHelpModal()" style="display:none; position:fixed; inset:0; z-index:500; background:rgba(0,0,0,0.7); padding:16px; align-items:center; overflow-y:auto;">
-  <div style="background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:20px; width:100%; max-width:480px; margin:auto;">
-    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
-      <div style="font-family:var(--serif); font-size:20px;">ℹ️ Opsezi krvnog pritiska</div>
-      <button onclick="closeHelpModal()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);width:32px;height:32px;border-radius:8px;font-size:16px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;">✕</button>
+<div id="help-modal" class="sheet-backdrop" onclick="if(event.target===this)closeHelpModal()">
+  <div class="sheet">
+    <div class="sheet-head">
+      <div class="sheet-title">Opsezi krvnog pritiska</div>
+      <button class="sheet-close" onclick="closeHelpModal()" aria-label="Zatvori"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
     </div>
-    <div style="font-size:11px; color:var(--text-muted); margin-bottom:18px;">Opšte smjernice za odrasle osobe (mmHg)</div>
-
-    <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:18px;">
-      <div style="display:grid; grid-template-columns:28px 1fr auto; align-items:center; gap:10px; background:rgba(88,166,255,0.08); border:1px solid rgba(88,166,255,0.2); border-radius:10px; padding:10px 12px;">
-        <div style="width:12px;height:12px;border-radius:50%;background:#58a6ff;margin:auto;"></div>
-        <div><div style="font-size:13px;color:var(--text);">Nizak pritisak</div><div style="font-size:11px;color:var(--text-muted);">Hipotenzija — problem samo uz simptome</div></div>
-        <div style="font-size:12px;color:#58a6ff;text-align:right;white-space:nowrap;">&lt;90 / &lt;60</div>
-      </div>
-      <div style="display:grid; grid-template-columns:28px 1fr auto; align-items:center; gap:10px; background:rgba(63,185,80,0.10); border:1px solid rgba(63,185,80,0.25); border-radius:10px; padding:10px 12px;">
-        <div style="width:12px;height:12px;border-radius:50%;background:#3fb950;margin:auto;"></div>
-        <div><div style="font-size:13px;color:var(--text);">Idealan</div><div style="font-size:11px;color:var(--text-muted);">Optimalne vrijednosti za zdravu odraslu osobu</div></div>
-        <div style="font-size:12px;color:#3fb950;text-align:right;white-space:nowrap;">&lt;120 / &lt;80</div>
-      </div>
-      <div style="display:grid; grid-template-columns:28px 1fr auto; align-items:center; gap:10px; background:rgba(63,185,80,0.07); border:1px solid rgba(63,185,80,0.15); border-radius:10px; padding:10px 12px;">
-        <div style="width:12px;height:12px;border-radius:50%;background:#56d364;margin:auto;"></div>
-        <div><div style="font-size:13px;color:var(--text);">Normalan</div><div style="font-size:11px;color:var(--text-muted);">Prihvatljive vrijednosti, bez zabrinutosti</div></div>
-        <div style="font-size:12px;color:#56d364;text-align:right;white-space:nowrap;">120–129 / 80–84</div>
-      </div>
-      <div style="display:grid; grid-template-columns:28px 1fr auto; align-items:center; gap:10px; background:rgba(210,153,34,0.10); border:1px solid rgba(210,153,34,0.25); border-radius:10px; padding:10px 12px;">
-        <div style="width:12px;height:12px;border-radius:50%;background:#d29922;margin:auto;"></div>
-        <div><div style="font-size:13px;color:var(--text);">Visoko normalan</div><div style="font-size:11px;color:var(--text-muted);">Pred-hipertenzija — vrijedi pratiti</div></div>
-        <div style="font-size:12px;color:#d29922;text-align:right;white-space:nowrap;">130–139 / 85–89</div>
-      </div>
-      <div style="display:grid; grid-template-columns:28px 1fr auto; align-items:center; gap:10px; background:rgba(248,81,73,0.08); border:1px solid rgba(248,81,73,0.2); border-radius:10px; padding:10px 12px;">
-        <div style="width:12px;height:12px;border-radius:50%;background:#f85149;margin:auto;"></div>
-        <div><div style="font-size:13px;color:var(--text);">Visok I — blaga hipertenzija</div><div style="font-size:11px;color:var(--text-muted);">Konzultacija s ljekarom preporučena</div></div>
-        <div style="font-size:12px;color:#f85149;text-align:right;white-space:nowrap;">140–159 / 90–99</div>
-      </div>
-      <div style="display:grid; grid-template-columns:28px 1fr auto; align-items:center; gap:10px; background:rgba(248,81,73,0.14); border:1px solid rgba(248,81,73,0.3); border-radius:10px; padding:10px 12px;">
-        <div style="width:12px;height:12px;border-radius:50%;background:#ff6b6b;margin:auto;"></div>
-        <div><div style="font-size:13px;color:var(--text);">Visok II — umjerena hipertenzija</div><div style="font-size:11px;color:var(--text-muted);">Potrebna ljekarska pažnja</div></div>
-        <div style="font-size:12px;color:#ff6b6b;text-align:right;white-space:nowrap;">160–179 / 100–109</div>
-      </div>
-      <div style="display:grid; grid-template-columns:28px 1fr auto; align-items:center; gap:10px; background:rgba(248,81,73,0.25); border:1px solid rgba(248,81,73,0.5); border-radius:10px; padding:10px 12px;">
-        <div style="width:12px;height:12px;border-radius:50%;background:#fff;margin:auto;"></div>
-        <div><div style="font-size:13px;color:#fff;font-weight:600;">⚠️ Hipertenzivna kriza</div><div style="font-size:11px;color:#ffb3b0;">Hitna medicinska pomoć odmah!</div></div>
-        <div style="font-size:12px;color:#fff;text-align:right;white-space:nowrap;">&gt;180 / &gt;110</div>
-      </div>
+    <div class="sheet-desc" style="margin-bottom:12px;">Opšte smjernice za odrasle osobe (mmHg)</div>
+    <div class="range-list">
+      <div class="range-row" style="--c:#7cb4ff"><span class="rdot"></span><div><div class="rname">Nizak pritisak</div><div class="rdesc">Hipotenzija — problem samo uz simptome</div></div><div class="rval">&lt;90 / &lt;60</div></div>
+      <div class="range-row" style="--c:#34d399"><span class="rdot"></span><div><div class="rname">Idealan</div><div class="rdesc">Optimalne vrijednosti za zdravu odraslu osobu</div></div><div class="rval">&lt;120 / &lt;80</div></div>
+      <div class="range-row" style="--c:#6ee7b7"><span class="rdot"></span><div><div class="rname">Normalan</div><div class="rdesc">Prihvatljive vrijednosti, bez zabrinutosti</div></div><div class="rval">120–129 / 80–84</div></div>
+      <div class="range-row" style="--c:#fbbf24"><span class="rdot"></span><div><div class="rname">Visoko normalan</div><div class="rdesc">Pred-hipertenzija — vrijedi pratiti</div></div><div class="rval">130–139 / 85–89</div></div>
+      <div class="range-row" style="--c:#ff9b6e"><span class="rdot"></span><div><div class="rname">Visok I — blaga hipertenzija</div><div class="rdesc">Konzultacija s ljekarom preporučena</div></div><div class="rval">140–159 / 90–99</div></div>
+      <div class="range-row" style="--c:#ff6b7a"><span class="rdot"></span><div><div class="rname">Visok II — umjerena hipertenzija</div><div class="rdesc">Potrebna ljekarska pažnja</div></div><div class="rval">160–179 / 100–109</div></div>
+      <div class="range-row" style="--c:#ff3b5c"><span class="rdot"></span><div><div class="rname">⚠️ Hipertenzivna kriza</div><div class="rdesc">Hitna medicinska pomoć odmah!</div></div><div class="rval">&gt;180 / &gt;110</div></div>
     </div>
-
-    <div style="background:rgba(88,166,255,0.06); border:1px solid rgba(88,166,255,0.15); border-radius:10px; padding:12px; font-size:12px; color:var(--text-muted); line-height:1.6; margin-bottom:16px;">
+    <div class="note-box" style="background:var(--accent-soft); color:var(--text-muted); margin-bottom:18px;">
       💡 <strong style="color:var(--text);">Napomena:</strong> Jedno mjerenje ne znači dijagnozu. Pritisak varira u zavisnosti od stresa, fizičke aktivnosti i doba dana. Ako su vrijednosti često van normalnog opsega — konsultuj se s ljekarom.
     </div>
-
-    <div style="font-family:var(--serif); font-size:16px; margin-bottom:4px; margin-top:6px;">Puls (srčana frekvencija)</div>
-    <div style="font-size:11px; color:var(--text-muted); margin-bottom:12px;">Opšte smjernice za odrasle osobe u mirovanju (bpm)</div>
-
-    <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:18px;">
-      <div style="display:grid; grid-template-columns:28px 1fr auto; align-items:center; gap:10px; background:rgba(88,166,255,0.08); border:1px solid rgba(88,166,255,0.2); border-radius:10px; padding:10px 12px;">
-        <div style="width:12px;height:12px;border-radius:50%;background:#58a6ff;margin:auto;"></div>
-        <div><div style="font-size:13px;color:var(--text);">Nizak puls (bradikardija)</div><div style="font-size:11px;color:var(--text-muted);">Problem samo uz simptome (vrtoglavica, umor)</div></div>
-        <div style="font-size:12px;color:#58a6ff;text-align:right;white-space:nowrap;">&lt; 60</div>
-      </div>
-      <div style="display:grid; grid-template-columns:28px 1fr auto; align-items:center; gap:10px; background:rgba(63,185,80,0.10); border:1px solid rgba(63,185,80,0.25); border-radius:10px; padding:10px 12px;">
-        <div style="width:12px;height:12px;border-radius:50%;background:#3fb950;margin:auto;"></div>
-        <div><div style="font-size:13px;color:var(--text);">Normalan</div><div style="font-size:11px;color:var(--text-muted);">Zdrava srčana frekvencija u mirovanju</div></div>
-        <div style="font-size:12px;color:#3fb950;text-align:right;white-space:nowrap;">60 – 99</div>
-      </div>
-      <div style="display:grid; grid-template-columns:28px 1fr auto; align-items:center; gap:10px; background:rgba(210,153,34,0.10); border:1px solid rgba(210,153,34,0.25); border-radius:10px; padding:10px 12px;">
-        <div style="width:12px;height:12px;border-radius:50%;background:#d29922;margin:auto;"></div>
-        <div><div style="font-size:13px;color:var(--text);">Umjereno visok (tahikardija)</div><div style="font-size:11px;color:var(--text-muted);">Može biti od stresa, kafe, napora — prati trend</div></div>
-        <div style="font-size:12px;color:#d29922;text-align:right;white-space:nowrap;">100 – 119</div>
-      </div>
-      <div style="display:grid; grid-template-columns:28px 1fr auto; align-items:center; gap:10px; background:rgba(248,81,73,0.10); border:1px solid rgba(248,81,73,0.25); border-radius:10px; padding:10px 12px;">
-        <div style="width:12px;height:12px;border-radius:50%;background:#f85149;margin:auto;"></div>
-        <div><div style="font-size:13px;color:var(--text);">Visok puls</div><div style="font-size:11px;color:var(--text-muted);">Konzultacija s ljekarom preporučena</div></div>
-        <div style="font-size:12px;color:#f85149;text-align:right;white-space:nowrap;">120+</div>
-      </div>
+    <div class="help-h">Puls (srčana frekvencija)</div>
+    <div class="sheet-desc" style="margin-bottom:12px;">Opšte smjernice za odrasle osobe u mirovanju (bpm)</div>
+    <div class="range-list">
+      <div class="range-row" style="--c:#7cb4ff"><span class="rdot"></span><div><div class="rname">Nizak puls (bradikardija)</div><div class="rdesc">Problem samo uz simptome (vrtoglavica, umor)</div></div><div class="rval">&lt; 60</div></div>
+      <div class="range-row" style="--c:#34d399"><span class="rdot"></span><div><div class="rname">Normalan</div><div class="rdesc">Zdrava srčana frekvencija u mirovanju</div></div><div class="rval">60 – 99</div></div>
+      <div class="range-row" style="--c:#fbbf24"><span class="rdot"></span><div><div class="rname">Umjereno visok (tahikardija)</div><div class="rdesc">Može biti od stresa, kafe, napora — prati trend</div></div><div class="rval">100 – 119</div></div>
+      <div class="range-row" style="--c:#ff6b7a"><span class="rdot"></span><div><div class="rname">Visok puls</div><div class="rdesc">Konzultacija s ljekarom preporučena</div></div><div class="rval">120+</div></div>
     </div>
-
     <button class="btn-primary" onclick="closeHelpModal()">Razumijem</button>
   </div>
 </div>
 
 <!-- DELETE MODAL -->
-<div id="delete-modal" onclick="if(event.target===this)closeDeleteModal()" style="display:none; position:fixed; inset:0; z-index:500; background:rgba(0,0,0,0.7); padding:20px; align-items:flex-end;">
-  <div style="background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:20px; width:100%; max-width:480px; margin:0 auto;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-      <div style="font-family:var(--serif); font-size:18px;">Brisanje podataka</div>
-      <button onclick="closeDeleteModal()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);width:32px;height:32px;border-radius:8px;font-size:16px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;">✕</button>
+<div id="delete-modal" class="sheet-backdrop" onclick="if(event.target===this)closeDeleteModal()">
+  <div class="sheet">
+    <div class="sheet-head">
+      <div class="sheet-title">Brisanje podataka</div>
+      <button class="sheet-close" onclick="closeDeleteModal()" aria-label="Zatvori"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
     </div>
-    <div style="font-size:12px; color:var(--text-muted); margin-bottom:20px;">Odaberi šta želiš obrisati. Ova akcija je nepovratna!</div>
-
+    <div class="sheet-desc">Odaberi šta želiš obrisati. Ova akcija je nepovratna!</div>
     <div id="del-select">
-      <div style="margin-bottom:10px;">
-        <div style="font-size:11px; letter-spacing:0.5px; text-transform:uppercase; color:var(--text-muted); margin-bottom:8px;">Obriši po periodu</div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
-          <button class="btn-secondary" onclick="askDelete('days',7)">Zadnjih 7 dana</button>
-          <button class="btn-secondary" onclick="askDelete('days',30)">Zadnjih 30 dana</button>
-          <button class="btn-secondary" onclick="askDelete('days',90)">Zadnja 3 mj.</button>
-          <button class="btn-secondary" onclick="askDelete('days',365)">Zadnja godina</button>
-        </div>
+      <div class="field-label">Obriši po periodu</div>
+      <div class="btn-row" style="margin-bottom:16px;">
+        <button class="btn-secondary" onclick="askDelete('days',7)">Zadnjih 7 dana</button>
+        <button class="btn-secondary" onclick="askDelete('days',30)">Zadnjih 30 dana</button>
+        <button class="btn-secondary" onclick="askDelete('days',90)">Zadnja 3 mj.</button>
+        <button class="btn-secondary" onclick="askDelete('days',365)">Zadnja godina</button>
       </div>
-      <div style="margin-bottom:16px;">
-        <div style="font-size:11px; letter-spacing:0.5px; text-transform:uppercase; color:var(--text-muted); margin-bottom:8px;">Obriši sve</div>
-        <button style="width:100%; padding:12px; background:rgba(248,81,73,0.12); color:var(--warn); border:1px solid rgba(248,81,73,0.3); border-radius:10px; font-family:var(--mono); font-size:13px; cursor:pointer;" onclick="askDelete('all')">⚠️ Obriši cjelokupnu istoriju</button>
-      </div>
+      <div class="field-label">Obriši sve</div>
+      <button class="btn-danger" style="margin-bottom:16px;" onclick="askDelete('all')">⚠️ Obriši cjelokupnu istoriju</button>
       <button class="btn-secondary" onclick="closeDeleteModal()">Odustani</button>
     </div>
     <div id="del-confirm" style="display:none;">
-      <div id="del-confirm-msg" style="font-size:14px; color:var(--text); margin-bottom:20px; line-height:1.5;"></div>
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+      <div id="del-confirm-msg" style="font-size:15px; font-weight:600; margin-bottom:20px; line-height:1.5;"></div>
+      <div class="btn-row">
         <button class="btn-secondary" onclick="document.getElementById('del-confirm').style.display='none';document.getElementById('del-select').style.display='block';">Odustani</button>
-        <button onclick="doDelete()" style="padding:12px; background:rgba(248,81,73,0.15); color:var(--warn); border:1px solid rgba(248,81,73,0.4); border-radius:10px; font-family:var(--mono); font-size:13px; cursor:pointer; font-weight:600;">🗑️ Potvrdi</button>
+        <button class="btn-danger" onclick="doDelete()">Potvrdi brisanje</button>
       </div>
     </div>
   </div>
 </div>
 
 <!-- EDIT MODAL -->
-<div id="edit-modal" onclick="if(event.target===this)closeEditModal()" style="display:none; position:fixed; inset:0; z-index:500; background:rgba(0,0,0,0.7); padding:20px; align-items:flex-end; overflow-y:auto;">
-  <div style="background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:20px; width:100%; max-width:480px; margin:0 auto;">
-    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
-      <div style="font-family:var(--serif); font-size:18px;">✏️ Uredi mjerenje</div>
+<div id="edit-modal" class="sheet-backdrop" onclick="if(event.target===this)closeEditModal()">
+  <div class="sheet">
+    <div class="sheet-head" style="margin-bottom:14px;">
+      <div class="sheet-title">Uredi mjerenje</div>
       <div style="display:flex;align-items:center;gap:8px;">
         <span class="tag-preview" id="edit-tag-display">—</span>
-        <button onclick="closeEditModal()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);width:32px;height:32px;border-radius:8px;font-size:16px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;">✕</button>
+        <button class="sheet-close" onclick="closeEditModal()" aria-label="Zatvori"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
       </div>
     </div>
-
-    <div class="datetime-row" style="margin-bottom:14px; flex-direction:column; align-items:stretch; gap:0; padding:14px 16px;">
-      <input type="date" id="edit-date" style="width:100%; font-size:22px; padding-bottom:8px; border-bottom:1px solid var(--border);" />
-      <input type="time" id="edit-time" style="width:100%; font-size:28px; font-weight:500; letter-spacing:2px; padding-top:8px;" />
-    </div>
-
-    <div class="bp-grid" style="margin-bottom:14px;">
-      <div class="input-group">
-        <label>Sistolni</label>
-        <input type="number" id="edit-sys" min="60" max="250" inputmode="numeric" />
-        <div class="unit">mmHg</div>
+    <div class="dt-card">
+      <div class="dt-tile">
+        <span class="dt-label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Datum</span>
+        <div><div class="dt-value" id="edit-date-text">—</div><div class="dt-sub" id="edit-date-sub">&nbsp;</div></div>
+        <input type="date" id="edit-date" class="dt-native" onclick="openPicker(this)" aria-label="Datum" />
       </div>
-      <div class="input-group">
-        <label>Dijastolni</label>
-        <input type="number" id="edit-dia" min="40" max="150" inputmode="numeric" />
-        <div class="unit">mmHg</div>
-      </div>
-      <div class="input-group">
-        <label>Puls</label>
-        <input type="number" id="edit-pulse" min="30" max="250" inputmode="numeric" />
-        <div class="unit">bpm</div>
+      <div class="dt-tile">
+        <span class="dt-label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Vrijeme</span>
+        <div class="dt-value big num" id="edit-time-text">--:--</div>
+        <input type="time" id="edit-time" class="dt-native" onclick="openPicker(this)" aria-label="Vrijeme" />
       </div>
     </div>
-
-    <textarea class="comment-input" id="edit-comment" placeholder="Komentar (opcionalno)..." style="margin-bottom:10px;"></textarea>
-
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:4px;">
+    <div class="dt-quick">
+      <button class="qbtn" onclick="shiftTime('edit',-60)">−1 h</button>
+      <button class="qbtn" onclick="shiftTime('edit',-15)">−15 min</button>
+      <button class="qbtn" onclick="shiftTime('edit',15)">+15 min</button>
+      <button class="qbtn" onclick="shiftTime('edit',60)">+1 h</button>
+    </div>
+    <div class="bp-grid">
+      <div class="input-group ig-sys"><label>Sis</label><input type="number" id="edit-sys" min="60" max="250" inputmode="numeric" /><div class="unit">mmHg</div></div>
+      <div class="input-group ig-dia"><label>Dia</label><input type="number" id="edit-dia" min="40" max="150" inputmode="numeric" /><div class="unit">mmHg</div></div>
+      <div class="input-group ig-pulse"><label>Puls</label><input type="number" id="edit-pulse" min="30" max="250" inputmode="numeric" /><div class="unit">bpm</div></div>
+    </div>
+    <textarea class="comment-input" id="edit-comment" placeholder="Komentar (opcionalno)…"></textarea>
+    <div class="btn-row">
       <button class="btn-secondary" onclick="closeEditModal()">Odustani</button>
-      <button class="btn-primary" style="margin:0;" onclick="saveEdit()">💾 Sačuvaj</button>
+      <button class="btn-primary" onclick="saveEdit()">Sačuvaj</button>
     </div>
   </div>
 </div>
 
-
-<nav>
-  <div class="tab active" onclick="switchTab('unos', this)"><span class="tab-icon">➕</span>Unos</div>
-  <div class="tab" onclick="switchTab('istorija', this)"><span class="tab-icon">📋</span>Istorija</div>
-  <div class="tab" onclick="switchTab('grafik', this)"><span class="tab-icon">📈</span>Grafik</div>
+<nav class="tabbar">
+  <div class="tab active" onclick="switchTab('unos', this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>Unos
+  </div>
+  <div class="tab" onclick="switchTab('istorija', this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>Istorija
+  </div>
+  <div class="tab" onclick="switchTab('grafik', this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m7 15 4-5 3 3 5-7"/></svg>Grafik
+  </div>
 </nav>
 
 <!-- UNOS -->
 <div id="page-unos" class="page active">
+  <div class="page-head">
+    <div class="page-title">Novo mjerenje</div>
+    <span class="tag-preview" id="tag-display">—</span>
+  </div>
   <div class="form-card">
-    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
-      <h2 style="margin-bottom:0;">Novo mjerenje</h2>
-      <span class="tag-preview" id="tag-display">—</span>
+    <div class="dt-card">
+      <div class="dt-tile">
+        <span class="dt-label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Datum</span>
+        <div><div class="dt-value" id="inp-date-text">—</div><div class="dt-sub" id="inp-date-sub">&nbsp;</div></div>
+        <input type="date" id="inp-date" class="dt-native" onclick="openPicker(this)" aria-label="Datum" />
+      </div>
+      <div class="dt-tile">
+        <span class="dt-label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Vrijeme</span>
+        <div class="dt-value big num" id="inp-time-text">--:--</div>
+        <input type="time" id="inp-time" class="dt-native" onclick="openPicker(this)" aria-label="Vrijeme" />
+      </div>
     </div>
-    <div class="datetime-row" style="flex-direction:column; align-items:stretch; gap:0; padding:14px 16px; position:relative;">
-      <input type="date" id="inp-date" style="width:100%; font-size:22px; padding-bottom:8px;" />
-      <input type="time" id="inp-time" style="width:100%; font-size:28px; font-weight:500; letter-spacing:2px;" />
-      <button onclick="setNow()" title="Postavi trenutno vrijeme" style="position:absolute; top:10px; right:12px; background:rgba(56,182,255,0.12); border:1px solid rgba(56,182,255,0.35); color:#38b6ff; border-radius:8px; padding:5px 12px; font-size:12px; font-weight:600; letter-spacing:1px; cursor:pointer; font-family:inherit; display:flex; align-items:center; gap:5px;">⏱ SADA</button>
+    <div class="dt-quick">
+      <button class="qbtn primary" onclick="setNow()" title="Postavi trenutno vrijeme">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M9 2h6"/></svg>Sada
+      </button>
+      <button class="qbtn" onclick="shiftTime('inp',-15)">−15 min</button>
+      <button class="qbtn" onclick="shiftTime('inp',-30)">−30 min</button>
+      <button class="qbtn" onclick="shiftTime('inp',-60)">−1 h</button>
+      <button class="qbtn" onclick="shiftTime('inp',-1440)">Juče</button>
     </div>
+
     <div class="bp-grid">
-      <div class="input-group">
-        <label>Sistolni</label>
-        <input type="number" id="inp-sys" placeholder="120" min="60" max="250" inputmode="numeric" />
-        <div class="unit">mmHg</div>
-      </div>
-      <div class="input-group">
-        <label>Dijastolni</label>
-        <input type="number" id="inp-dia" placeholder="80" min="40" max="150" inputmode="numeric" />
-        <div class="unit">mmHg</div>
-      </div>
-      <div class="input-group">
-        <label>Puls</label>
-        <input type="number" id="inp-pulse" placeholder="72" min="30" max="250" inputmode="numeric" />
-        <div class="unit">bpm</div>
-      </div>
+      <div class="input-group ig-sys"><label>Sis</label><input type="number" id="inp-sys" placeholder="120" min="60" max="250" inputmode="numeric" /><div class="unit">mmHg</div></div>
+      <div class="input-group ig-dia"><label>Dia</label><input type="number" id="inp-dia" placeholder="80" min="40" max="150" inputmode="numeric" /><div class="unit">mmHg</div></div>
+      <div class="input-group ig-pulse"><label>Puls</label><input type="number" id="inp-pulse" placeholder="72" min="30" max="250" inputmode="numeric" /><div class="unit">bpm</div></div>
     </div>
-    <textarea class="comment-input" id="inp-comment" placeholder="Komentar (opcionalno)..."></textarea>
-    <button class="btn-primary" onclick="saveEntry()">💾 Sačuvaj mjerenje</button>
+    <div class="live-status" id="live-status">Unesi sistolni i dijastolni pritisak</div>
+    <textarea class="comment-input" id="inp-comment" placeholder="Komentar (opcionalno)…"></textarea>
+    <button class="btn-primary" onclick="saveEntry()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Sačuvaj mjerenje
+    </button>
     <div class="success-flash" id="success-flash">✅ Mjerenje sačuvano!</div>
   </div>
-  <div style="padding:4px 4px 8px; display:flex; flex-direction:column; gap:8px;">
-    <div class="legend-item"><div class="legend-dot" style="background:var(--tag-morning)"></div> 🌅 Jutarnje · 06–10h</div>
-    <div class="legend-item"><div class="legend-dot" style="background:var(--tag-evening)"></div> 🌙 Večernje · 20–24h</div>
-    <div class="legend-item"><div class="legend-dot" style="background:var(--tag-other)"></div> 🕐 Ostalo</div>
+  <div class="legend-row">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--tag-morning)"></div>Jutarnje · 06–10h</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--tag-evening)"></div>Večernje · 20–24h</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--tag-other)"></div>Ostalo</div>
   </div>
 </div>
 
 <!-- ISTORIJA -->
 <div id="page-istorija" class="page">
-  <div style="display:flex; gap:6px; margin-bottom:12px; overflow-x:auto; padding-bottom:2px; -webkit-overflow-scrolling:touch; scrollbar-width:none;">
-    <div class="filter-chip active" style="flex-shrink:0;" onclick="setFilter('sve', this)">Sve</div>
-    <div class="filter-chip" style="flex-shrink:0;" onclick="setFilter('jutarnje', this)">🌅 Jutarnje</div>
-    <div class="filter-chip" style="flex-shrink:0;" onclick="setFilter('vecernje', this)">🌙 Večernje</div>
-    <div class="filter-chip" style="flex-shrink:0;" onclick="setFilter('ostalo', this)">🕐 Ostalo</div>
-    <button id="sort-btn" onclick="toggleSort()" style="flex-shrink:0; padding:6px 12px; border-radius:20px; font-size:11px; letter-spacing:0.5px; cursor:pointer; border:1px solid var(--border); background:var(--surface); color:var(--text-muted); white-space:nowrap; font-family:var(--mono);">↓ Noviji</button>
+  <div class="page-head"><div class="page-title">Istorija</div><button id="sort-btn" class="sort-chip" onclick="toggleSort()">↓ Noviji</button></div>
+  <div class="chip-row">
+    <div class="filter-chip active" onclick="setFilter('sve', this)">Sve</div>
+    <div class="filter-chip" onclick="setFilter('jutarnje', this)">🌅 Jutarnje</div>
+    <div class="filter-chip" onclick="setFilter('vecernje', this)">🌙 Večernje</div>
+    <div class="filter-chip" onclick="setFilter('ostalo', this)">🕐 Ostalo</div>
   </div>
   <div id="entries-list"></div>
 </div>
 
 <!-- GRAFIK -->
 <div id="page-grafik" class="page">
-  <div class="chart-controls">
-    <div class="range-chip active" onclick="setRange(7, this)">7 dana</div>
-    <div class="range-chip" onclick="setRange(14, this)">14 dana</div>
-    <div class="range-chip" onclick="setRange(30, this)">30 dana</div>
-    <div class="range-chip" onclick="setRange(90, this)">3 mj.</div>
+  <div class="page-head"><div class="page-title">Grafik</div></div>
+  <div class="segmented">
+    <div class="range-chip active" onclick="setRange(7, this)">7 d</div>
+    <div class="range-chip" onclick="setRange(14, this)">14 d</div>
+    <div class="range-chip" onclick="setRange(30, this)">30 d</div>
+    <div class="range-chip" onclick="setRange(90, this)">3 mj</div>
     <div class="range-chip" onclick="setRange(0, this)">Sve</div>
   </div>
-  <div style="display:flex; gap:6px; margin-bottom:14px; overflow-x:auto; padding-bottom:2px; -webkit-overflow-scrolling:touch; scrollbar-width:none;">
-    <div class="filter-chip active" style="flex-shrink:0;" onclick="setChartTag('sve', this)">Sve</div>
-    <div class="filter-chip" style="flex-shrink:0;" onclick="setChartTag('jutarnje', this)">🌅 Jutarnje</div>
-    <div class="filter-chip" style="flex-shrink:0;" onclick="setChartTag('vecernje', this)">🌙 Večernje</div>
-    <div class="filter-chip" style="flex-shrink:0;" onclick="setChartTag('ostalo', this)">🕐 Ostalo</div>
+  <div class="chip-row">
+    <div class="filter-chip active" onclick="setChartTag('sve', this)">Sve</div>
+    <div class="filter-chip" onclick="setChartTag('jutarnje', this)">🌅 Jutarnje</div>
+    <div class="filter-chip" onclick="setChartTag('vecernje', this)">🌙 Večernje</div>
+    <div class="filter-chip" onclick="setChartTag('ostalo', this)">🕐 Ostalo</div>
   </div>
   <div class="stats-grid">
-    <div class="stat-card"><div class="stat-label">Prosjek SIS</div><div class="stat-value" id="avg-sys">—</div><div class="stat-unit">mmHg</div></div>
-    <div class="stat-card"><div class="stat-label">Prosjek DIA</div><div class="stat-value" id="avg-dia">—</div><div class="stat-unit">mmHg</div></div>
-    <div class="stat-card"><div class="stat-label">Prosjek Puls</div><div class="stat-value" id="avg-pulse">—</div><div class="stat-unit">bpm</div></div>
+    <div class="stat-card" style="--c:#8b9cff"><div class="stat-label">Ø Sis</div><div class="stat-value" id="avg-sys">—</div><div class="stat-unit">mmHg</div></div>
+    <div class="stat-card" style="--c:#34d399"><div class="stat-label">Ø Dia</div><div class="stat-value" id="avg-dia">—</div><div class="stat-unit">mmHg</div></div>
+    <div class="stat-card" style="--c:#ff5c7a"><div class="stat-label">Ø Puls</div><div class="stat-value" id="avg-pulse">—</div><div class="stat-unit">bpm</div></div>
   </div>
   <div class="chart-card">
-    <h3>Pritisak (mmHg)</h3>
+    <h3>Pritisak <small>mmHg</small></h3>
     <div class="chart-wrap"><canvas id="bp-chart"></canvas></div>
-    <div class="legend" style="margin-top:12px;">
-      <div class="legend-item"><div class="legend-dot" style="background:#58a6ff"></div> Sistolni</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#3fb950"></div> Dijastolni</div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#8b9cff"></div>Sistolni</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#34d399"></div>Dijastolni</div>
     </div>
   </div>
   <div class="chart-card">
-    <h3>Puls (bpm)</h3>
+    <h3>Puls <small>bpm</small></h3>
     <div class="chart-wrap"><canvas id="pulse-chart"></canvas></div>
   </div>
 </div>
@@ -619,15 +780,64 @@ function fmtTime(dt) {
   return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
 }
 
+// ── DATE/TIME HELPERS ─────────────────────────────────────
+const pad2 = n => String(n).padStart(2,'0');
+// Local YYYY-MM-DD (toISOString je UTC → poslije ponoći davao jučerašnji datum)
+const localISODate = d => d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate());
+const localHM = d => pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+const DAYS_BS = ['Nedjelja','Ponedjeljak','Utorak','Srijeda','Četvrtak','Petak','Subota'];
+const MON_SHORT = ['jan','feb','mar','apr','maj','jun','jul','aug','sep','okt','nov','dec'];
+
+function openPicker(input) {
+  try { if (input.showPicker) input.showPicker(); } catch(e) {}
+}
+
+function syncDT(prefix) {
+  const dv = document.getElementById(prefix+'-date').value;
+  const tv = document.getElementById(prefix+'-time').value;
+  const dText = document.getElementById(prefix+'-date-text');
+  const dSub  = document.getElementById(prefix+'-date-sub');
+  const tText = document.getElementById(prefix+'-time-text');
+  if (tText) tText.textContent = tv || '--:--';
+  if (!dText) return;
+  if (!dv) { dText.textContent = '—'; dSub.innerHTML = '&nbsp;'; return; }
+  const d = new Date(dv+'T00:00:00');
+  dText.textContent = d.getDate() + '. ' + MON_SHORT[d.getMonth()] + ' ' + d.getFullYear() + '.';
+  const today = new Date(); today.setHours(0,0,0,0);
+  const diff = Math.round((d - today) / 86400000);
+  dSub.textContent = diff===0 ? 'Danas' : diff===-1 ? 'Juče' : diff===1 ? 'Sutra' : DAYS_BS[d.getDay()];
+}
+
+function shiftTime(prefix, mins) {
+  const di = document.getElementById(prefix+'-date');
+  const ti = document.getElementById(prefix+'-time');
+  const base = (di.value && ti.value) ? new Date(di.value+'T'+ti.value) : new Date();
+  base.setMinutes(base.getMinutes() + mins);
+  di.value = localISODate(base);
+  ti.value = localHM(base);
+  if (prefix==='inp') updateTag(); else updateEditTag();
+}
+
 // ── FORM ──────────────────────────────────────────────────
 function setNow() {
   const n = new Date();
-  document.getElementById('inp-date').value = n.toISOString().slice(0,10);
-  document.getElementById('inp-time').value = n.toTimeString().slice(0,5);
+  document.getElementById('inp-date').value = localISODate(n);
+  document.getElementById('inp-time').value = localHM(n);
   updateTag();
 }
 
+function updateLiveStatus() {
+  const s = parseInt(document.getElementById('inp-sys').value);
+  const d = parseInt(document.getElementById('inp-dia').value);
+  const el = document.getElementById('live-status');
+  if (!s || !d || s<60 || d<40) { el.textContent = 'Unesi sistolni i dijastolni pritisak'; return; }
+  const st = bpStatus(s, d);
+  el.innerHTML = `Procjena: <span class="bp-status ${st.cls}">${st.label}</span>`;
+}
+['inp-sys','inp-dia'].forEach(id => document.getElementById(id).addEventListener('input', updateLiveStatus));
+
 function updateTag() {
+  syncDT('inp');
   const t = document.getElementById('inp-time').value;
   if (!t) return;
   const tag = getTag(parseInt(t.split(':')[0]));
@@ -636,8 +846,10 @@ function updateTag() {
   el.className = 'tag-preview tag-' + tag;
 }
 
-document.getElementById('inp-time').addEventListener('change', updateTag);
-document.getElementById('inp-date').addEventListener('change', updateTag);
+['input','change'].forEach(ev => {
+  document.getElementById('inp-time').addEventListener(ev, updateTag);
+  document.getElementById('inp-date').addEventListener(ev, updateTag);
+});
 
 function saveEntry() {
   const date = document.getElementById('inp-date').value;
@@ -661,6 +873,7 @@ function saveEntry() {
   document.getElementById('inp-dia').value = '';
   document.getElementById('inp-pulse').value = '';
   document.getElementById('inp-comment').value = '';
+  updateLiveStatus();
   setNow();
 
   const f = document.getElementById('success-flash');
@@ -724,7 +937,7 @@ function renderHistory() {
   const c = document.getElementById('entries-list');
 
   if (!filtered.length) {
-    c.innerHTML = `<div class="empty-state"><span class="emoji">📭</span><p>Nema mjerenja.<br>Dodaj prvo mjerenje!</p></div>`;
+    c.innerHTML = `<div class="empty-state"><span class="emoji">📭</span><p>Nema mjerenja.<br><span style="color:var(--text-faint)">Dodaj prvo mjerenje na kartici Unos.</span></p></div>`;
     return;
   }
 
@@ -758,18 +971,15 @@ function renderHistory() {
     const yrCount = months.reduce((sum, mk) => sum + byYear[yr][mk].length, 0);
 
     html += `
-    <div style="margin-bottom:6px;">
-      <div id="yhdr-${yr}" data-open="${yrOpen}" onclick="toggleYear(${yr})"
-        style="display:flex;align-items:center;justify-content:space-between;
-               padding:10px 14px;background:var(--surface2);border:1px solid var(--border);
-               border-radius:10px;cursor:pointer;user-select:none;margin-bottom:${yrOpen?'6px':'0'};">
-        <div style="display:flex;align-items:center;gap:8px;">
-          <span class="grp-arrow" style="color:var(--accent);font-size:12px;transition:transform 0.2s;transform:${yrOpen?'rotate(90deg)':'rotate(0deg)'};">▶</span>
-          <span style="font-size:14px;font-weight:600;color:var(--text);">${yr}</span>
+    <div style="margin-bottom:10px;">
+      <div id="yhdr-${yr}" class="grp-year" data-open="${yrOpen}" onclick="toggleYear(${yr})" style="margin-bottom:${yrOpen?'4px':'0'};">
+        <div class="grp-left">
+          <span class="grp-arrow" style="transform:${yrOpen?'rotate(90deg)':'rotate(0deg)'};"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></span>
+          <span class="grp-title">${yr}</span>
         </div>
-        <span style="font-size:11px;color:var(--text-muted);">${yrCount} mjerenja</span>
+        <span class="grp-count">${yrCount}</span>
       </div>
-      <div id="grp-${yr}" style="display:${yrOpen?'block':'none'}; padding-left:10px;">`;
+      <div id="grp-${yr}" style="display:${yrOpen?'block':'none'};">`;
 
     months.forEach(moKey => {
       const moNum = parseInt(moKey.split('-')[1]);
@@ -778,45 +988,42 @@ function renderHistory() {
       const moOpen = expandedGroups.has(moKey);
 
       html += `
-        <div style="margin-bottom:6px;">
-          <div id="mhdr-${moKey}" data-open="${moOpen}" onclick="toggleMonth(${yr},${moNum})"
-            style="display:flex;align-items:center;justify-content:space-between;
-                   padding:8px 12px;background:var(--surface);border:1px solid var(--border);
-                   border-radius:8px;cursor:pointer;user-select:none;margin-bottom:${moOpen?'6px':'0'};">
-            <div style="display:flex;align-items:center;gap:8px;">
-              <span class="grp-arrow" style="color:var(--text-muted);font-size:11px;transition:transform 0.2s;transform:${moOpen?'rotate(90deg)':'rotate(0deg)'};">▶</span>
-              <span style="font-size:13px;color:var(--text);">${moName} ${yr}</span>
+        <div>
+          <div id="mhdr-${moKey}" class="grp-month" data-open="${moOpen}" onclick="toggleMonth(${yr},${moNum})">
+            <div class="grp-left">
+              <span class="grp-arrow" style="width:18px;height:18px;background:none;transform:${moOpen?'rotate(90deg)':'rotate(0deg)'};"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></span>
+              <span class="grp-title">${moName}</span>
             </div>
-            <span style="font-size:11px;color:var(--text-muted);">${moEntries.length} mjerenja</span>
+            <span class="grp-count">${moEntries.length} mjerenja</span>
           </div>
           <div id="grp-${moKey}" style="display:${moOpen?'block':'none'};">`;
 
       moEntries.forEach(e => {
         const st = bpStatus(e.sys, e.dia);
+        const dd = new Date(e.dt);
         html += `<div class="entry-card ${e.tag}">
           <div class="entry-top">
-            <div class="entry-datetime">
-              <div>${fmtDate(e.dt)}</div>
-              <div>${fmtTime(e.dt)} · <span class="tag-preview tag-${e.tag}" style="font-size:9px;padding:1px 6px;">${tagLabel(e.tag)}</span></div>
+            <div>
+              <div class="entry-bp">
+                <span class="bp-value">${e.sys}</span><span class="bp-sep">/</span><span class="bp-value">${e.dia}</span><span class="bp-unit">mmHg</span>
+              </div>
+              <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;"><span class="bp-status ${st.cls}">${st.label}</span><span class="tag-preview tag-${e.tag}" style="font-size:11.5px;padding:3px 9px;">${tagLabel(e.tag)}</span></div>
             </div>
-            <div style="display:flex;gap:6px;">
-              <button class="del-btn" onclick="openEditModal(${e.id})" style="color:var(--accent);" title="Uredi">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            <div class="entry-actions">
+              <button class="del-btn" onclick="openEditModal(${e.id})" title="Uredi" aria-label="Uredi">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
               </button>
-              <button class="del-btn" onclick="delEntry(${e.id})" title="Obriši">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+              <button class="del-btn danger" onclick="delEntry(${e.id})" title="Obriši" aria-label="Obriši">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
               </button>
             </div>
           </div>
-          <div class="entry-bp">
-            <span class="bp-value">${e.sys}</span>
-            <span class="bp-sep">/</span>
-            <span class="bp-value">${e.dia}</span>
-            <span class="bp-unit">mmHg</span>
-            <span class="bp-status ${st.cls}" style="margin-left:8px;">${st.label}</span>
+          <div class="entry-meta">
+            <span class="num">${fmtTime(e.dt)}</span><span class="dot"></span>
+            <span>${DAYS_BS[dd.getDay()].slice(0,3)}, ${fmtDate(e.dt)}</span>
+            ${e.pulse ? `<span class="dot"></span><span class="entry-pulse">♥ <b>${e.pulse}</b> bpm</span>` : ''}
           </div>
-          ${e.pulse ? `<div class="entry-pulse">❤️ Puls: <span>${e.pulse}</span> bpm</div>` : ''}
-          ${e.comment ? `<div class="entry-comment">💬 ${e.comment}</div>` : ''}
+          ${e.comment ? `<div class="entry-comment">${e.comment}</div>` : ''}
         </div>`;
       });
 
@@ -845,8 +1052,8 @@ function openEditModal(id) {
   editingId = id;
 
   const dt = new Date(entry.dt);
-  document.getElementById('edit-date').value = dt.toISOString().slice(0,10);
-  document.getElementById('edit-time').value = dt.toTimeString().slice(0,5);
+  document.getElementById('edit-date').value = localISODate(dt);
+  document.getElementById('edit-time').value = localHM(dt);
   document.getElementById('edit-sys').value = entry.sys;
   document.getElementById('edit-dia').value = entry.dia;
   document.getElementById('edit-pulse').value = entry.pulse || '';
@@ -858,6 +1065,7 @@ function openEditModal(id) {
 }
 
 function updateEditTag() {
+  syncDT('edit');
   const t = document.getElementById('edit-time').value;
   if (!t) return;
   const tag = getTag(parseInt(t.split(':')[0]));
@@ -866,8 +1074,10 @@ function updateEditTag() {
   el.className = 'tag-preview tag-' + tag;
 }
 
-document.getElementById('edit-time').addEventListener('change', updateEditTag);
-document.getElementById('edit-date').addEventListener('change', updateEditTag);
+['input','change'].forEach(ev => {
+  document.getElementById('edit-time').addEventListener(ev, updateEditTag);
+  document.getElementById('edit-date').addEventListener(ev, updateEditTag);
+});
 
 function closeEditModal() {
   document.getElementById('edit-modal').style.display = 'none';
@@ -917,6 +1127,7 @@ function setChartTag(tag, el) {
 }
 
 function renderCharts() {
+  if (window.Chart) { Chart.defaults.font.family = 'Manrope, system-ui, sans-serif'; }
   const all = load();
   let data;
   if (!currentRange) {
@@ -949,15 +1160,15 @@ function renderCharts() {
     plugins:{
       legend:{display:false},
       tooltip:{
-        backgroundColor:'#1f2937', borderColor:'#30363d', borderWidth:1,
-        titleColor:'#7d8590', bodyColor:'#e6edf3',
-        titleFont:{family:'DM Mono',size:10}, bodyFont:{family:'DM Mono',size:12},
-        padding:10, cornerRadius:8
+        backgroundColor:'rgba(27,30,41,0.96)', borderColor:'rgba(255,255,255,0.12)', borderWidth:1,
+        titleColor:'#8a90a2', bodyColor:'#f3f4f8',
+        titleFont:{family:"Manrope, system-ui, sans-serif",size:11,weight:'600'}, bodyFont:{family:"Manrope, system-ui, sans-serif",size:13,weight:'700'},
+        padding:12, cornerRadius:12, boxPadding:4, usePointStyle:true
       }
     },
     scales:{
-      x:{ticks:{color:'#7d8590',font:{family:'DM Mono',size:9},maxRotation:45,maxTicksLimit:8},grid:{color:'#21262d'}},
-      y:{ticks:{color:'#7d8590',font:{family:'DM Mono',size:10}},grid:{color:'#21262d'}}
+      x:{ticks:{color:'#565c6e',font:{family:"Manrope, system-ui, sans-serif",size:10,weight:'600'},maxRotation:0,autoSkip:true,maxTicksLimit:5},grid:{display:false},border:{display:false}},
+      y:{ticks:{color:'#565c6e',font:{family:"Manrope, system-ui, sans-serif",size:11,weight:'600'},maxTicksLimit:6},grid:{color:'rgba(255,255,255,0.05)'},border:{display:false}}
     }
   };
 
@@ -973,8 +1184,8 @@ function renderCharts() {
     data:{
       labels,
       datasets:[
-        {label:'Sistolni',data:data.map(e=>e.sys),borderColor:'#58a6ff',backgroundColor:'rgba(88,166,255,0.08)',borderWidth:2,pointRadius:4,pointBackgroundColor:'#58a6ff',tension:0.3,fill:false},
-        {label:'Dijastolni',data:data.map(e=>e.dia),borderColor:'#3fb950',backgroundColor:'rgba(63,185,80,0.06)',borderWidth:2,pointRadius:4,pointBackgroundColor:'#3fb950',tension:0.3,fill:false}
+        {label:'Sistolni',data:data.map(e=>e.sys),borderColor:'#8b9cff',backgroundColor:'rgba(139,156,255,0.10)',borderWidth:2.5,pointRadius:3,pointHoverRadius:6,pointBackgroundColor:'#13151d',pointBorderColor:'#8b9cff',pointBorderWidth:2,tension:0.35,fill:'+1'},
+        {label:'Dijastolni',data:data.map(e=>e.dia),borderColor:'#34d399',backgroundColor:'rgba(52,211,153,0.06)',borderWidth:2.5,pointRadius:3,pointHoverRadius:6,pointBackgroundColor:'#13151d',pointBorderColor:'#34d399',pointBorderWidth:2,tension:0.35,fill:false}
       ]
     },
     options:bpBase
@@ -993,7 +1204,7 @@ function renderCharts() {
     type:'line',
     data:{
       labels,
-      datasets:[{label:'Puls',data:pulseData,borderColor:'#f85149',backgroundColor:'rgba(248,81,73,0.08)',borderWidth:2,pointRadius:4,pointBackgroundColor:'#f85149',tension:0.3,fill:false,spanGaps:true}]
+      datasets:[{label:'Puls',data:pulseData,borderColor:'#ff5c7a',backgroundColor:(ctx)=>{const {chart}=ctx;const a=chart.chartArea;if(!a)return 'rgba(255,92,122,0.1)';const g=chart.ctx.createLinearGradient(0,a.top,0,a.bottom);g.addColorStop(0,'rgba(255,92,122,0.28)');g.addColorStop(1,'rgba(255,92,122,0)');return g;},borderWidth:2.5,pointRadius:3,pointHoverRadius:6,pointBackgroundColor:'#13151d',pointBorderColor:'#ff5c7a',pointBorderWidth:2,tension:0.35,fill:true,spanGaps:true}]
     },
     options:pulseBase
   });
@@ -1030,7 +1241,7 @@ function doExportJSON() {
   const blob = new Blob([json], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'pritisak_' + new Date().toISOString().slice(0,10) + '.json';
+  a.download = 'pritisak_' + localISODate(new Date()) + '.json';
   a.click();
   closeExportModal();
   showToast('✅ JSON exportovan');
@@ -1049,8 +1260,8 @@ function openShareModal() {
   // default: last 30 days
   const to = new Date();
   const from = new Date(); from.setDate(from.getDate()-30);
-  document.getElementById('share-to').value = to.toISOString().slice(0,10);
-  document.getElementById('share-from').value = from.toISOString().slice(0,10);
+  document.getElementById('share-to').value = localISODate(to);
+  document.getElementById('share-from').value = localISODate(from);
   shareTag = 'sve';
   document.querySelectorAll('[id^="stag-"]').forEach(el=>el.classList.remove('active'));
   document.getElementById('stag-sve').classList.add('active');
@@ -1742,6 +1953,13 @@ function deleteAll() {
   showToast('🗑️ Sva istorija obrisana');
 }
 // ── HELP MODAL ────────────────────────────────────────────
+function openMoreModal() { document.getElementById('more-modal').style.display = 'flex'; }
+function closeMoreModal() { document.getElementById('more-modal').style.display = 'none'; }
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  document.querySelectorAll('.sheet-backdrop').forEach(m => { if (m.style.display === 'flex') m.style.display = 'none'; });
+});
+
 function openHelpModal() {
   document.getElementById('help-modal').style.display = 'flex';
 }
@@ -1783,12 +2001,14 @@ function generateAppIcon() {
   c.width = 512; c.height = 512;
   const ctx = c.getContext('2d');
   // Background circle
-  ctx.fillStyle = '#0d1117';
+  const bgG = ctx.createLinearGradient(0, 0, 512, 512);
+  bgG.addColorStop(0, '#ff5c7a'); bgG.addColorStop(1, '#ff8a5b');
+  ctx.fillStyle = bgG;
   ctx.beginPath();
-  ctx.roundRect(0, 0, 512, 512, 100);
+  ctx.roundRect(0, 0, 512, 512, 112);
   ctx.fill();
   // Heart shape
-  ctx.fillStyle = '#e84545';
+  ctx.fillStyle = 'rgba(255,255,255,0.95)';
   ctx.beginPath();
   const x = 256, y = 230, size = 160;
   ctx.moveTo(x, y + size * 0.35);
@@ -1798,7 +2018,7 @@ function generateAppIcon() {
   ctx.bezierCurveTo(x + size * 0.6, y, x, y, x, y + size * 0.35);
   ctx.fill();
   // ECG line on heart
-  ctx.strokeStyle = '#fff';
+  ctx.strokeStyle = '#ff5c7a';
   ctx.lineWidth = 14;
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
@@ -1827,8 +2047,8 @@ const manifestData = {
   description: 'Praćenje krvnog pritiska i pulsa',
   start_url: './',
   display: 'standalone',
-  background_color: '#0d1117',
-  theme_color: '#0d1117',
+  background_color: '#0a0b10',
+  theme_color: '#0a0b10',
   orientation: 'portrait',
   icons: [
     { src: iconDataUrl, sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
@@ -1841,7 +2061,7 @@ document.getElementById('pwa-manifest').href = URL.createObjectURL(manifestBlob)
 // ── SERVICE WORKER ────────────────────────────────────────
 if ('serviceWorker' in navigator) {
   const swCode = `
-    const CACHE='pritisak-v3';
+    const CACHE='pritisak-v4';
     self.addEventListener('install', e => {
       e.waitUntil(caches.open(CACHE).then(c => c.addAll(['./'])).then(()=>self.skipWaiting()));
     });
