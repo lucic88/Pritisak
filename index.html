@@ -8,8 +8,9 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Pritisak" />
   <title>Mjerač Pritiska</title>
-  <link rel="manifest" id="pwa-manifest" />
-  <link rel="apple-touch-icon" id="apple-icon" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -417,7 +418,7 @@
     </div>
     <div>
       <div class="brand-name">Pritisak</div>
-      <div class="brand-sub">v7.0.0</div>
+      <div class="brand-sub">v7.1.0</div>
     </div>
   </div>
   <div class="header-actions">
@@ -1994,89 +1995,13 @@ function installPWA() {
   deferredPrompt.userChoice.then(()=>{ deferredPrompt=null; document.getElementById('install-banner').classList.remove('show'); });
 }
 
-// ── SERVICE WORKER (inline) ───────────────────────────────
-// ── PWA ICON + MANIFEST ──────────────────────────────────
-function generateAppIcon() {
-  const c = document.createElement('canvas');
-  c.width = 512; c.height = 512;
-  const ctx = c.getContext('2d');
-  // Background circle
-  const bgG = ctx.createLinearGradient(0, 0, 512, 512);
-  bgG.addColorStop(0, '#ff5c7a'); bgG.addColorStop(1, '#ff8a5b');
-  ctx.fillStyle = bgG;
-  ctx.beginPath();
-  ctx.roundRect(0, 0, 512, 512, 112);
-  ctx.fill();
-  // Heart shape
-  ctx.fillStyle = 'rgba(255,255,255,0.95)';
-  ctx.beginPath();
-  const x = 256, y = 230, size = 160;
-  ctx.moveTo(x, y + size * 0.35);
-  ctx.bezierCurveTo(x, y, x - size * 0.6, y, x - size * 0.6, y + size * 0.35);
-  ctx.bezierCurveTo(x - size * 0.6, y + size * 0.7, x, y + size * 1.05, x, y + size * 1.05);
-  ctx.bezierCurveTo(x, y + size * 1.05, x + size * 0.6, y + size * 0.7, x + size * 0.6, y + size * 0.35);
-  ctx.bezierCurveTo(x + size * 0.6, y, x, y, x, y + size * 0.35);
-  ctx.fill();
-  // ECG line on heart
-  ctx.strokeStyle = '#ff5c7a';
-  ctx.lineWidth = 14;
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-  ctx.beginPath();
-  ctx.moveTo(156, 280);
-  ctx.lineTo(196, 280);
-  ctx.lineTo(216, 240);
-  ctx.lineTo(236, 330);
-  ctx.lineTo(256, 220);
-  ctx.lineTo(276, 330);
-  ctx.lineTo(296, 280);
-  ctx.lineTo(356, 280);
-  ctx.stroke();
-  return c.toDataURL('image/png');
-}
-
-const iconDataUrl = generateAppIcon();
-
-// Set apple-touch-icon
-document.getElementById('apple-icon').href = iconDataUrl;
-
-// Inject manifest with icon
-const manifestData = {
-  name: 'Mjerač Pritiska',
-  short_name: 'Pritisak',
-  description: 'Praćenje krvnog pritiska i pulsa',
-  start_url: './',
-  display: 'standalone',
-  background_color: '#0a0b10',
-  theme_color: '#0a0b10',
-  orientation: 'portrait',
-  icons: [
-    { src: iconDataUrl, sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
-    { src: iconDataUrl, sizes: '192x192', type: 'image/png' }
-  ]
-};
-const manifestBlob = new Blob([JSON.stringify(manifestData)], {type: 'application/manifest+json'});
-document.getElementById('pwa-manifest').href = URL.createObjectURL(manifestBlob);
-
 // ── SERVICE WORKER ────────────────────────────────────────
+// Pravi sw.js + manifest.webmanifest su potrebni da Chrome instalira pravu
+// aplikaciju (WebAPK) — u app drawer-u i bez Chrome bedža na ikonici.
 if ('serviceWorker' in navigator) {
-  const swCode = `
-    const CACHE='pritisak-v4';
-    self.addEventListener('install', e => {
-      e.waitUntil(caches.open(CACHE).then(c => c.addAll(['./'])).then(()=>self.skipWaiting()));
-    });
-    self.addEventListener('activate', e => {
-      e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));
-    });
-    self.addEventListener('fetch', e => {
-      e.respondWith(caches.match(e.request).then(cached => cached || fetch(e.request).then(res => {
-        if(res&&res.status===200){ const cl=res.clone(); caches.open(CACHE).then(c=>c.put(e.request,cl)); }
-        return res;
-      }).catch(()=>cached)));
-    });
-  `;
-  const blob = new Blob([swCode], {type:'application/javascript'});
-  navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{});
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js', { scope: './' }).catch(()=>{});
+  });
 }
 
 // ── INIT ──────────────────────────────────────────────────
